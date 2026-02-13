@@ -1,0 +1,1 @@
+import{s}from"./AdminApp-ChTaPRE2.js";const o=async r=>{try{return(await s.post("newsletter/subscribe",{email:r})).data}catch(e){throw console.error("BIBRAH => ",e),e}},n=async()=>{try{return(await s.get("newsletter/admin/count-subscribers")).data}catch(r){return console.error(r),null}};export{n as g,o as s};

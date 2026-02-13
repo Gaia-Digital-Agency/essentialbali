@@ -1,0 +1,1 @@
+import{b as s,j as e,A as n,d as r}from"./AdminApp-ChTaPRE2.js";const o=window.__INITIAL_DATA__,t=document.getElementById("root");if(!t)throw new Error("Missing #root element");t.hasChildNodes()&&o?s.hydrateRoot(t,e.jsx(n,{initialData:o,children:e.jsx(r,{})})):s.createRoot(t).render(e.jsx(n,{initialData:o,children:e.jsx(r,{})}));

@@ -1,0 +1,161 @@
+// src/contexts/AuthContext.tsx
+import React, { 
+  createContext, 
+  useContext, 
+  useState, 
+  useEffect, 
+  ReactNode 
+} from 'react';
+// import { AuthContextType, User, AuthState } from '../types/auth.type'
+import { User } from '../types/auth.type';
+
+
+const AuthContext = createContext<any | undefined>(undefined);
+
+export const useAuth = (): any => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [authState, setAuthState] = useState<any>({
+    isAuthenticated: false,
+    user: null,
+    loading: true,
+  });
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = (): void => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const userData = localStorage.getItem('userData');
+      
+      if (token && userData) {
+        const parsedUser: User = JSON.parse(userData);
+        
+        // Validasi basic token (opsional: tambahkan JWT validation)
+        if (isValidToken(token)) {
+          setAuthState({
+            isAuthenticated: true,
+            user: parsedUser,
+            loading: false,
+          });
+        } else {
+          // Token tidak valid, clear storage
+          clearAuthStorage();
+          setAuthState({
+            isAuthenticated: false,
+            user: null,
+            loading: false,
+          });
+        }
+      } else {
+        setAuthState({
+          isAuthenticated: false,
+          user: null,
+          loading: false,
+        });
+      }
+    } catch (error) {
+      console.error('Error checking auth status:', error);
+      clearAuthStorage();
+      setAuthState({
+        isAuthenticated: false,
+        user: null,
+        loading: false,
+      });
+    }
+  };
+
+  const login = (userData: User, token: string): void => {
+    try {
+      // Combine user data dengan token
+      const userWithToken: User = {
+        ...userData,
+        token
+      };
+      
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('userData', JSON.stringify(userWithToken));
+      
+      setAuthState({
+        isAuthenticated: true,
+        user: userWithToken,
+        loading: false,
+      });
+      
+      console.log('✅ Login successful:', userData.name);
+    } catch (error) {
+      console.error('❌ Error during login:', error);
+      throw new Error('Failed to save authentication data');
+    }
+  };
+
+  const logout = (): void => {
+    try {
+      clearAuthStorage();
+      setAuthState({
+        isAuthenticated: false,
+        user: null,
+        loading: false,
+      });
+      
+      console.log('✅ Logout successful');
+      
+      // Refresh halaman untuk clear state
+      window.location.href = '/signin';
+    } catch (error) {
+      console.error('❌ Error during logout:', error);
+    }
+  };
+
+  // Helper function untuk clear storage
+  const clearAuthStorage = (): void => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    localStorage.removeItem('refreshToken');
+  };
+
+  // Basic token validation (bisa ditingkatkan dengan JWT decode)
+  const isValidToken = (token: string): boolean => {
+    try {
+      // Basic validation: token tidak kosong dan punya format yang benar
+      if (!token || token.trim() === '') return false;
+      
+      // Jika menggunakan JWT, bisa decode dan check expiry
+      // const payload = JSON.parse(atob(token.split('.')[1]));
+      // const currentTime = Date.now() / 1000;
+      // return payload.exp > currentTime;
+      
+      return true; // Sementara return true untuk demo
+    } catch (error) {
+      console.error('Error validating token:', error);
+      return false;
+    }
+  };
+
+  const value: any = {
+    isAuthenticated: authState.isAuthenticated,
+    user: authState.user,
+    loading: authState.loading,
+    login,
+    logout,
+    checkAuthStatus,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};

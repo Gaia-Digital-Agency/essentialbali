@@ -1,0 +1,65 @@
+import React, { useEffect, useState } from "react"
+import { getTemplateByUrl } from "../../../services/template.service"
+import { BaseTemplateLocation, BaseTemplateSubLocation } from "../../../types/template.type"
+import TemplatesMap from "../../../lib/map/TemplatesMap"
+import ComponentCard from "../../../components/common/ComponentCard"
+import Input from "../../../components/form/input/InputField"
+
+type TemplateTypes = "country" | "city" | "region" | "global"
+type LocationTemplatesProps = {
+    template: TemplateTypes
+}
+
+const LocationTemplates: React.FC<LocationTemplatesProps> = ({template}) => {
+    // const []
+    const [content, setContent] = useState<BaseTemplateLocation | BaseTemplateSubLocation | boolean>(false)
+
+    useEffect(() => {
+        (async() => {
+            try {
+                const getTemplate = await getTemplateByUrl('/home')
+                if(getTemplate?.status_code != 200 && typeof getTemplate?.data !== 'boolean' && getTemplate?.data) {
+                    setContent(JSON.parse(getTemplate.data.content))
+                    return true
+                }
+                if(template == 'global') {
+                    setContent(TemplatesMap.Home.schema)
+                } else {
+                    setContent(TemplatesMap.SubHome.schema)
+                }
+                return
+            } catch (e) {
+                console.log(e)
+            }
+        })()
+    }, [])
+
+    const contentChangeHandler = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
+        setContent(prev => {
+            return {...prev, [field]: e.target.value}
+        })
+    }
+
+    if(content) {
+        return (
+            <>
+            <ComponentCard title="Templet">
+                {
+                    Object.keys(content).map(key => {
+                        console.log(content[key as keyof typeof content])
+                        console.log(key)
+                        return (
+                            <>
+                                <div>{key}</div>
+                                <Input onChange={(e) => {contentChangeHandler(e, key)}} value={content[key as keyof typeof content]}></Input>
+                            </>
+                        )
+                    })
+                }
+            </ComponentCard>
+            </>
+        )
+    }
+}
+
+export default LocationTemplates

@@ -1,0 +1,242 @@
+import React, {SetStateAction, useEffect, useRef, useState} from 'react'
+import { useParams, Outlet } from 'react-router-dom'
+import { getAllCategory } from '../services/category.service'
+import { Category } from '../types/category.type'
+import { getAllLocations } from '../services/location.service'
+import 'react-loading-skeleton/dist/skeleton.css'
+import { CloseIcon } from '../icons'
+import Header from '../pages/Front/Templates/Header'
+import { useGSAP } from '@gsap/react'
+import Footer from '../pages/Front/Templates/Footer'
+
+export type RegionProps = {id: number, slug: string, name: string, id_parent?: number}
+export type CityProps = {id: number, slug: string, name: string, id_parent?: number, regions: RegionProps[]}
+export type CountryProps = {id: number, slug: string, name: string, cities: CityProps[]}
+
+export type SelectedCategoryContextProps = {
+    selectedCategory: SelectedCategoryProps
+}
+export type SetActualRouteContextProps = {
+    setActualRoute: SetActualRouteProps
+}
+
+export type ActualRouteContextProps = {
+    actualRoute: ActualRouteProps
+}
+
+export type LocationsContextProps = {
+    locations: CountryProps[]
+}
+
+export type SetSelectedCategoryProps = React.Dispatch<React.SetStateAction<Category>>
+export type SetActualRouteProps = React.Dispatch<React.SetStateAction<ActualRouteProps>>
+
+export type ActualRouteProps = {country?: CountryProps, city?: CityProps, region?: RegionProps, category?: Category, article?: string} | undefined
+export type SelectedCategoryProps = Category | undefined
+
+export type IsReadyRenderHeaderContextProps = {isReadyRenderHeader: IsReadyRenderHeaderProps}
+export type IsReadyRenderHeaderProps = {locations: boolean, menus: boolean, logo: boolean}
+
+export type IsReadyRenderContextProps = {isReadyRender: IsReadyRenderProps}
+export type IsReadyRenderProps = boolean
+
+type MenuProps = {label: string, url: string, category?: Category}
+type ResponseMenuProps = {label: string, url?: string, linkCategory: number}
+
+export type GetRelativeRouteContextProps = {
+    getRelativeRoute: (toReplace: GetRelativeRouteProps) => string
+}
+
+type GetRelativeRouteProps = {
+    country?: string,
+    city?: string,
+    region?: string,
+    category?: string,
+}
+
+export type AvailableCategoriesProps = {
+    availableCategories: Category[]
+}
+
+export type NotificationContextProps = {
+    notification: NotificationProps[],
+    setNotification: React.Dispatch<SetStateAction<NotificationProps[]>>
+}
+
+type NotificationProps = {
+    message: string,
+    type: 'fail' | 'success' | 'neutral',
+}
+
+const NotificationElement: React.FC<NotificationProps> = (notif) => {
+    const notifRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const notifEl = notifRef.current
+        if(!notifEl) return
+        setTimeout(() => {
+            notifEl.style.display = 'none'
+        }, 7500)
+    }, [])
+
+    const {contextSafe} = useGSAP({scope: notifRef})
+
+    const onIconClick = contextSafe(() => {
+        const notifEl = notifRef.current
+        if(!notifEl) return
+        notifEl.style.display = 'none'
+    })
+
+    let _className = 'pl-10 pr-6 py-4 flex gap-x-4 items-center z-50 relative '
+    if(notif.type == 'fail') {
+        _className += 'bg-front-red text-white'
+    }
+    if(notif.type == 'neutral') {
+        _className += 'bg-front-black text-white'
+    }
+
+    return (
+        <>
+            <div ref={notifRef} className={_className}>{notif.message} <CloseIcon className='cursor-pointer' onClick={onIconClick} /></div>
+        </>
+    )
+}
+
+const FrontLayout: React.FC = () => {
+    const [locations, setLocations] = useState<CountryProps[] | undefined>(undefined)
+    const [availableCategories, setAvailableCategories] = useState<Category[] | undefined>(undefined)
+    // const [selectedLocations, setSelectedLocations] = useState<CountryProps>()
+
+    const [selectedCategory, setSelectedCategory] = useState<SelectedCategoryProps>(undefined)
+    const [actualRoute, setActualRoute] = useState<ActualRouteProps>(undefined)
+
+    const [menus, setMenus] = useState<MenuProps[]>([])
+
+    const [notification, setNotification] = useState<NotificationProps[]>([])
+
+    const [isReadyRender, setIsReadyRender] = useState<IsReadyRenderProps>(false)
+    const [isReadyRenderHeader, setIsReadyRenderHeader] = useState<IsReadyRenderHeaderProps>({locations: false, menus: false, logo: false})
+
+    const params = useParams()
+
+    useEffect(() => {
+        (async () => {
+            const getCategory = await getAllCategory()
+            if(getCategory.data) {
+                setAvailableCategories(getCategory.data)
+                setIsReadyRenderHeader(prev => {
+                    return {...prev, menus: true}
+                })
+            }
+        })()
+    }, [])
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const allLocation = await getAllLocations()
+                if(allLocation) {
+                    setLocations(allLocation)
+                }
+            } catch(e) {
+                console.log(e)
+            }
+        })()
+    }, [])
+
+    useEffect(() => {
+        if (!availableCategories || !locations) {
+            return;
+        }
+        console.log(availableCategories)
+        const newRoute: { [key: string]: any } = {};
+        let isNotFound = false;
+        let isArticle = false
+        console.log(params)
+
+        const getCategoryBySlug = (slug: string) => availableCategories.find(cat => cat.slug_title === slug);
+        if (params?.country) {
+            const categoryAsFirstParam = getCategoryBySlug(params.country);
+            console.log(categoryAsFirstParam, 'cateasfirst')
+            if (categoryAsFirstParam) {
+                newRoute.category = categoryAsFirstParam;
+            } else {
+                const foundCountry = locations.find(c => c.slug === params.country);
+                if (foundCountry) {
+                    newRoute.country = foundCountry;
+                } else {
+                    isNotFound = true;
+                }
+            }
+        }
+
+        if (!isNotFound && newRoute.country && params?.city) {
+            const categoryAsSecondParam = getCategoryBySlug(params.city);
+            if (categoryAsSecondParam) {
+                newRoute.category = categoryAsSecondParam;
+                if (params?.region) {
+                    newRoute.article = params.region;
+                    isArticle = true
+                }
+            } else {
+                const foundCity = newRoute.country.cities.find((c: CityProps) => c.slug === params.city);
+                if (foundCity) {
+                    newRoute.city = foundCity;
+                }
+            }
+        }
+
+        if (!isNotFound && newRoute.city && params?.region && !isArticle) {
+            const categoryAsThirdParam = getCategoryBySlug(params.region);
+            if(categoryAsThirdParam){
+                newRoute.category = categoryAsThirdParam
+            } else {
+                const foundRegion = newRoute.city.regions.find((r: RegionProps) => r.slug === params.region);
+                if (foundRegion) {
+                    newRoute.region = foundRegion;
+                }
+            }
+        }
+
+        if (!isNotFound && newRoute.region && params?.category) {
+            if(isArticle) {
+                console.error('should navigate, too many params')
+            } else {
+                const foundCategory = getCategoryBySlug(params.category);
+                if (foundCategory) {
+                    newRoute.category = foundCategory;
+                }
+            }
+        }
+        if (isNotFound) {
+            setActualRoute({});
+            console.error("Route not found, redirecting to 404.");
+        } else {
+            setActualRoute(newRoute);
+        }
+
+        setIsReadyRender(true);
+        setIsReadyRenderHeader(prev => ({ ...prev, locations: true }));
+
+    }, [availableCategories, locations, params]);
+
+    console.log(actualRoute)
+    return (
+        <>
+            
+            <Header isReadyRenderHeader={isReadyRenderHeader} actualRoute={actualRoute} availableCategories={availableCategories} locations={locations} />
+            <Outlet />
+            {
+                // notification.length &&
+                //     <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+                //         {notification.map((notif) => (
+                //             <NotificationElement message={notif.message} type={notif.type} />
+                //         ))}
+                //     </div>
+            }
+            <Footer locations={locations} />
+        </>
+    )
+}
+
+export default FrontLayout

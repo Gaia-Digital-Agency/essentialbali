@@ -1,0 +1,163 @@
+// import { BrowserRouter as Router, Routes, Route } from "react-router";
+// import ProtectedRoute from "./components/ProtectedRoute";
+// import SignIn from "./pages/AuthPages/SignIn";
+// import SignUp from "./pages/AuthPages/SignUp";
+// import NotFound from "./pages/OtherPage/NotFound";
+// import UserProfiles from "./pages/UserProfiles";
+// import FormElements from "./pages/Forms/FormElements";
+// import Blank from "./pages/Blank";
+// import MstCategories from "./pages/Master/Categories/MstCategories";
+// import AppLayout from "./layout/AppLayout";
+// import { ScrollToTop } from "./components/common/ScrollToTop";
+// import Home from "./pages/Dashboard/Home";
+// import MstTags from "./pages/Master/Tags/MstTags";
+// import MstLocations from "./pages/Master/Locations/MstLocations";
+// import Users from "./pages/UserManagement/Users";
+// import Registration from "./pages/UserManagement/Registration";
+// import FrontLayout from "./layout/FrontLayout";
+// import Front from "./pages/Front/Front";
+// import MstTemplates from "./pages/Master/Templates/MstTemplates";
+// import LocationTemplates from "./pages/Master/Templates/LocationTemplates";
+// import LocationAdminLayout from "./layout/LocationAdminLayout";
+// import MstArticle from "./pages/Master/Article/MstArticle";
+// import FormArticle from "./pages/Master/Article/FormArticle";
+// import ArticleAdmin from "./layout/ArticleAdmin";
+// import EditArticle from "./pages/Master/Article/EditArticle";
+
+// export default function App() {
+//   return (
+//     <>
+//       <Router>
+//         <ScrollToTop />
+//         <Routes>
+
+
+//           <Route path="/" element={<FrontLayout />}>
+//             <Route index element={<Front />} />
+//             <Route path=":country" element={<Front />} />
+//             <Route path=":country/:region" element={<Front />} />
+//             <Route path=":country/:region/:city" element={<Front />} />
+//             <Route path=":category" element={<Front />} />
+//             <Route path=":country/:category" element={<Front />} />
+//             <Route path=":country/:region/:category" element={<Front />} />
+//             <Route path=":country/:region/:city/:category" element={<Front />} />
+//           </Route>
+
+//           {/* Dashboard Layout */}
+//           <Route path="/signin" element={<SignIn />} />
+//           <Route path="/admin" element={<AppLayout />}>
+//             <Route
+//               index
+//               element={
+//                 <ProtectedRoute>
+//                   <Home />
+//                 </ProtectedRoute>
+//               }
+//             />
+//             <Route
+//               path="mst_locations"
+//               element={
+//                 <ProtectedRoute>
+//                   <MstLocations />
+//                 </ProtectedRoute>
+//               }
+//             />
+//             <Route
+//               path="mst_categories"
+//               element={
+//                 <ProtectedRoute>
+//                   <MstCategories />
+//                 </ProtectedRoute>
+//               }
+//             />
+//             <Route
+//               path="mst_tags"
+//               element={
+//                 <ProtectedRoute>
+//                   <MstTags />
+//                 </ProtectedRoute>
+//               }
+//             />
+//             <Route
+//               path="mst_templates"
+//               element={
+//                 <ProtectedRoute>
+//                   <MstTemplates />
+//                 </ProtectedRoute>
+//               }
+//             />
+//             <Route
+//               path="mst_article"
+//               element={
+//                 <ProtectedRoute>
+//                   <ArticleAdmin />
+//                 </ProtectedRoute>
+//               }
+//             >
+//               <Route index element={
+//                   <ProtectedRoute>
+//                     <MstArticle />
+//                   </ProtectedRoute>
+//               } />
+
+//               <Route 
+//                 path="add"
+//                 element={
+//                   <ProtectedRoute>
+//                     <EditArticle action="add" />
+//                   </ProtectedRoute>
+
+//                 }
+//               />
+//               <Route 
+//                 path="edit/:id"
+//                 element={
+//                   <ProtectedRoute>
+//                     <EditArticle action="edit" />
+//                   </ProtectedRoute>
+
+//                 }
+//               />
+
+//               <Route path=":country" element={
+//                 <ProtectedRoute>
+//                     <FormArticle />
+//                 </ProtectedRoute>
+//               } />
+
+//             </Route>
+//             <Route
+//               path="users"
+//               element={
+//                 <ProtectedRoute>
+//                   <Users />
+//                 </ProtectedRoute>
+//               }
+//             />
+//             <Route
+//               path="registration"
+//               element={
+//                 <ProtectedRoute>
+//                   <Registration />
+//                 </ProtectedRoute>
+//               }
+//             />
+//             <Route path="edit" element={<LocationAdminLayout/>}>
+//               <Route path="location" element={<LocationAdminLayout />}>
+//                 <Route index element={<LocationTemplates template="global" />}></Route>
+//                 <Route path=":country" element={<LocationTemplates template="country" />}></Route>
+//                 <Route path=":country/:city" element={<LocationTemplates template="city" />}></Route>
+//                 <Route path=":country/:city/:region" element={<LocationTemplates template="region" />}></Route>
+//               </Route>
+//             </Route>
+//             <Route path="profile" element={<UserProfiles />} />
+//             <Route path="blank" element={<Blank />} />
+//             <Route path="form-elements" element={<FormElements />} />
+//           </Route>
+//           <Route path="/signup" element={<SignUp />} />
+//           <Route path="*" element={<NotFound />} />
+//         </Routes>
+//       </Router>
+//     </>
+//   );
+// }

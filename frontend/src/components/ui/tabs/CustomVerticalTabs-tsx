@@ -1,0 +1,99 @@
+import React, { useState } from "react";
+
+interface TabProps {
+    title: string
+    children: React.ReactNode
+}
+
+export const CustomVerticalTabsChild: React.FC<TabProps> = ({ title, children }) => {
+    return <>{children}</> // this is just a placeholder, logic lives in CustomVerticalTabs
+}
+
+export const CustomVerticalTabs: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    return (
+        <div className="flex">
+            <div className="w-64">
+                <TabList>{children}</TabList>
+            </div>
+            <div className="flex-1 p-4">
+                <TabContent>{children}</TabContent>
+            </div>
+        </div>
+    )
+}
+
+const TabList: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    return (
+        <ul className="space-y-1">
+            {React.Children.map(children, child => {
+                if (!React.isValidElement(child)) return null
+                return <RecursiveTab node={child} level={0} />
+            })}
+        </ul>
+    )
+}
+
+const RecursiveTab: React.FC<{ node: React.ReactElement; level: number }> = ({ node, level }) => {
+    const [open, setOpen] = useState(false)
+    const [active, setActive] = useState(false)
+
+    const title = node.props.title
+    const children = node.props.children
+
+    // check if it has nested CustomVerticalTabsChild
+    const hasChildren = React.Children.toArray(children).some(
+        c => React.isValidElement(c) && c.type === CustomVerticalTabsChild
+    )
+
+    return (
+        <li>
+            <button
+                className={`w-full text-left pl-${level * 4} py-1 hover:bg-gray-200 ${active ? "font-bold" : ""}`}
+                onClick={() => {
+                    setActive(true)
+                    if (hasChildren) setOpen(!open)
+                }}
+            >
+                {title}
+            </button>
+
+            {open && hasChildren && (
+                <ul className="ml-4 border-l border-gray-300 pl-2">
+                    {React.Children.map(children, child => {
+                        if (!React.isValidElement(child)) return null
+                        if (child.type === CustomVerticalTabsChild) {
+                            return <RecursiveTab node={child} level={level + 1} />
+                        }
+                        return null
+                    })}
+                </ul>
+            )}
+        </li>
+    )
+}
+
+const TabContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    return (
+        <div>
+            {React.Children.map(children, child => {
+                if (!React.isValidElement(child)) return null
+                return <RecursiveContent node={child} />
+            })}
+        </div>
+    )
+}
+
+const RecursiveContent: React.FC<{ node: React.ReactElement }> = ({ node }) => {
+    const children = node.props.children
+    return (
+        <div>
+            {React.Children.map(children, child => {
+                if (!React.isValidElement(child)) return child
+                if (child.type === CustomVerticalTabsChild) {
+                    return <RecursiveContent node={child} />
+                }
+                return child
+            })}
+        </div>
+    )
+}
