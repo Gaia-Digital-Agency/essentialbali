@@ -23,6 +23,8 @@
   --text-front-body--line-height: 1;
   --text-front-small: 14px;
   --text-front-small--line-height: 1;
+  --text-front-extra-small: 12px;
+  --text-front-extra-small--line-height: 1;
 }
 @media (min-width: 1280px) {
   :root {
@@ -44,6 +46,8 @@
     --text-front-body--line-height: 1;
     --text-front-small: 16px;
     --text-front-small--line-height: 1;
+    --text-front-extra-small: 14px;
+    --text-front-extra-small--line-height: 1;
   }
 }
 header .menus-wrapper .menu-link {
