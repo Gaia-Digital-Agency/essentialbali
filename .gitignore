@@ -108,5 +108,15 @@ database/cPanel.txt
 ./claude
 /claude
 
-#Frontend 
+#Frontend
 frontend/dist
+
+#Backend
+backend/uploads/
+backend/.env*
+
+.env
+**/.env*
+
+# Logs
+*.log
