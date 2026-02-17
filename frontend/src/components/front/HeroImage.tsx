@@ -18,7 +18,7 @@ import { ComponentTemplateHomeProps, PreContentProps } from "../../types/templat
 const HeroDescription: React.FC<React.PropsWithChildren> = ({children}) => {
     return (
         <>
-            <p className="text-white text-front-subtitle mb-6">{children || <Skeleton count={3}></Skeleton>}</p>
+            <p className="text-front-icewhite text-front-subtitle mb-6">{children || <Skeleton count={3}></Skeleton>}</p>
         </>
     )
 }
@@ -38,7 +38,7 @@ const HeroTitleWrapper: React.FC<React.PropsWithChildren> = (props) => {
 const HeroTitle: React.FC<React.PropsWithChildren<{className?: string}>> = (props) => {
     return (
         <>
-            <h1 className={`text-front-hero font-serif text-white ${props.className}`}>{props.children || <Skeleton count={2}></Skeleton>}</h1>
+            <h1 className={`text-front-hero font-serif text-front-icewhite ${props.className}`}>{props.children || <Skeleton count={2}></Skeleton>}</h1>
         </>
     )
 }
@@ -217,10 +217,10 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({preContent = [], admin
                                         return (
                                             <SwiperSlide key={`text-${i}`}>
                                                 <div className="md:max-w-3/4">
-                                                    <HeroTitle className={'mb-7'}>{item.title}</HeroTitle>
+                                                    <HeroTitle className={'mb-[20px]'}>{item.title}</HeroTitle>
                                                     <HeroDescription>{item?.sub_title}</HeroDescription>
-                                                    <div className="button-wrapper">
-                                                        <Button uppercase text="Read More" link={admin ? undefined : getPermalink(item)} />
+                                                    <div className="mt-[40px]">
+                                                        <Button type="secondary" text="Explore More" link={admin ? undefined : getPermalink(item)} />
                                                     </div>
                                                 </div>
                                             </SwiperSlide>
@@ -228,7 +228,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({preContent = [], admin
                                     }
                                 })}
                             </Swiper>
-                            <div className="grid grid-cols-3 gap-x-8 pt-12" ref={navigationRef}>
+                            {/* <div className="grid grid-cols-3 gap-x-8 pt-12" ref={navigationRef}>
                                 {content.map((item, i) => {
                                     if(item) {
                                         return (
@@ -247,7 +247,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({preContent = [], admin
                                         )
                                     }
                                 })}
-                            </div>
+                            </div> */}
                         </HeroTitleWrapper>
                     </div>
                 </section>

@@ -91,8 +91,8 @@ const Image: React.FC<ImageProps> = ({ url, ratio = "78%", mobileRatio, link, ov
                 style={{ aspectRatio: width && height ? `${width} / ${height}` : undefined }}
                 >
                 <div
-                    className="overlay absolute inset-0 w-full h-full bg-black z-[2]"
-                    style={{ opacity: overlay ? 0.4 : 0 }}
+                    className="overlay absolute inset-0 w-full h-full bg-front-navy z-[2]"
+                    style={{ opacity: overlay ? 0.6 : 0 }}
                 ></div>
                 {theImage()}
             </div>
