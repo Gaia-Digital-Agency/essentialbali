@@ -114,6 +114,7 @@ frontend/dist
 #Backend
 backend/uploads/
 backend/.env*
+google-cloud-key.json
 
 .env
 **/.env*
