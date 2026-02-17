@@ -62,7 +62,14 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true,
     }
-  });
+  },
+  {
+    tableName: "Users",
+    timestamps: true,
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
+  }
+);
 
   // relasi kalau ada
   User.associate = (models) => {
