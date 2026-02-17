@@ -107,3 +107,6 @@ database/cPanel.txt
 .claude
 ./claude
 /claude
+
+#Frontend 
+frontend/dist
