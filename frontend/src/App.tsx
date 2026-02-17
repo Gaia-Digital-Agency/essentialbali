@@ -8,6 +8,7 @@ import { AuthProvider } from "./context/AuthContext"
 import { HelmetProvider } from "react-helmet-async";
 
 type MainAppProps = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   initialData: any
 } & PropsWithChildren
 
