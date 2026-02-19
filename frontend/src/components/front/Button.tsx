@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { Link } from "react-router";
-import { ButtonChevron, ButtonChevronBorder } from "../../icons";
+import { ButtonChevron } from "../../icons";
 
 type ButtonProps = {
   text: string;
@@ -21,9 +21,8 @@ const Button: React.FC<ButtonProps> = ({
   onClick = () => {},
   uppercase = false,
   type = "primary",
-  borderOnly = false,
+  // borderOnly = false,
 }) => {
-  
   const buttonRef = useRef<HTMLDivElement | null>(null);
 
   const { contextSafe } = useGSAP({ scope: buttonRef });
@@ -69,25 +68,27 @@ const Button: React.FC<ButtonProps> = ({
   };
 
   const SecondaryButtonElement = () => {
-      return (
-          <div className={`button md:px-8 px-4 inline-flex text-front-body font-light cursor-pointer
+    return (
+      <div
+        className={`button md:px-8 px-4 inline-flex text-front-body font-light cursor-pointer
                           rounded-[5px] border border-front-white text-front-icewhite
-                          ${uppercase ? 'uppercase ' : ''}
-                          ${bigger ? 'py-4' : 'py-3'}`}
-              onMouseEnter={mouseEnterHandler}
-              onMouseLeave={mouseLeaveHandler}
-              ref={buttonRef}
-              onClick={onClick}>
-              {text}
-              <div className="icon overflow-hidden" style={{width: '0', color: 'white'}}>
-                  <div className="inner pl-2">
-                      {renderSVG()}
-                  </div>
-              </div>
-          </div>
-      )
-  }
-
+                          ${uppercase ? "uppercase " : ""}
+                          ${bigger ? "py-4" : "py-3"}`}
+        onMouseEnter={mouseEnterHandler}
+        onMouseLeave={mouseLeaveHandler}
+        ref={buttonRef}
+        onClick={onClick}
+      >
+        {text}
+        <div
+          className="icon overflow-hidden"
+          style={{ width: "0", color: "white" }}
+        >
+          <div className="inner pl-2">{renderSVG()}</div>
+        </div>
+      </div>
+    );
+  };
 
   let ComponentButton = SecondaryButtonElement;
   if (type === "primary") {

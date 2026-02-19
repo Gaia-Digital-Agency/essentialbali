@@ -1,11 +1,13 @@
 import React, {useContext, createContext, PropsWithChildren} from "react"
 
 type ContentContextProps = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     initialData: any
 }
 
 
 interface ContentProviderProps extends PropsWithChildren {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     initialData: any
 }
 

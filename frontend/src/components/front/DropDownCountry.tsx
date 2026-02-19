@@ -10,6 +10,7 @@ const DropDownCountry: React.FC = () => {
   const { taxonomies } = useTaxonomies()
   const navigate = useNavigate()
 
+  // console.log(taxonomies, 'taxonomies')
   const changeHandler = (val: string) => {
     const area = taxonomies?.countries?.find((country) => country.slug == val)
     if (area) {
@@ -30,17 +31,17 @@ const DropDownCountry: React.FC = () => {
     taxonomyOptions.length > 0
       ? taxonomyOptions
       : BALI_AREA_OPTIONS.map((area) => ({ value: area.slug, label: area.name }))
-
   return (
     <div className="dropdown-country-wrapper">
       <SelectNav
         onChange={changeHandler}
         options={options}
-        defaultLabel={"All Bali Areas"}
+        // options={[{ value: 'test', label: "test" }]}
+        defaultLabel={"All Areas"}
         value={actualRoute.country?.slug || undefined}
         classNames={{
-          singleValue: "dropdown-country-nav dropdown-country-input text-theme-front-red md:w-[260px] w-[190px]",
-          option: "dropdown-country-nav dropdown-country-option text-theme-front-red",
+          singleValue: "dropdown-country-nav dropdown-country-input ",
+          option: "dropdown-country-nav dropdown-country-option",
         }}
       ></SelectNav>
     </div>

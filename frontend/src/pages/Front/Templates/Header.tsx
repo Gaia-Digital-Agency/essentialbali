@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import NavLogo from "../../../components/front/NavLogo";
-import DropDownCountry from "../../../components/front/DropDownCountry";
+// import DropDownCountry from "../../../components/front/DropDownCountry";
 import MobileMenu from "../../../components/front/MobileMenu";
 import { HamburgerIcon } from "../../../icons";
 import { useTaxonomies } from "../../../context/TaxonomyContext";
@@ -10,6 +10,10 @@ import { Category } from "../../../types/category.type";
 import { getTemplateByUrl } from "../../../services/template.service";
 import { useHeaderContent } from "../../../context/HeaderContext";
 import { BALI_AREA_OPTIONS, isBaliAreaSlug } from "../../../utils/baliAreas";
+// import DropDownCountry from "../../../components/front/DropDownCountry";
+import { SearchIcon } from "lucide-react";
+import AreaMenuToggleButton from "../../../components/front/AreaMenuToggleButton";
+import AreaMenuPanel from "../../../components/front/AreaMenuPanel";
 
 const DESIRED_HEADER_MENUS = [
   { slug: "events", label: "Events" },
@@ -24,8 +28,7 @@ const DESIRED_HEADER_MENUS = [
 const MenuNav: React.FC<{
   menu: Category;
   menus: Category[];
-  index: number;
-}> = ({ menu, menus, index }) => {
+}> = ({ menu, menus }) => {
   const { taxonomies } = useTaxonomies();
   const { actualRoute } = useRoute();
 
@@ -71,11 +74,17 @@ const MenuNav: React.FC<{
 const Header: React.FC = () => {
   const { initialData } = useHeaderContent();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isAreaOpen, setIsAreaOpen] = useState<boolean>(false);
+  const [selectedAreaLabel, setSelectedAreaLabel] =
+    useState<string>("All Area");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [headerMenus, setHeaderMenus] = useState<any[]>(
     initialData?.header ?? [],
   );
   const [areaSearch, setAreaSearch] = useState<string>("");
   const { taxonomies } = useTaxonomies();
+  console.log(taxonomies);
   const { actualRoute } = useRoute();
   const navigate = useNavigate();
   const forcedMenuCategories = useMemo(() => {
@@ -184,9 +193,26 @@ const Header: React.FC = () => {
         className="relative top-0 left-0 right-0 z-[100] bg-front-icewhite mb-[20px]"
         role="banner"
       >
-        <div className="container mx-auto py-5 flex justify-between items-center gap-4">
-          <div className="logo-wrapper w-max flex items-center gap-3">
+        <div className="container mx-auto py-5 relative flex items-center justify-between gap-4 bg-front-icewhite h-[160px]">
+          <div className="w-max">
+            {/* <p>Left Content</p> */}
+            {/* <DropDownCountry /> */}
+            {/* <AreaMenuToggleButton label="All Area" /> */}
+            <AreaMenuToggleButton
+              label={selectedAreaLabel}
+              open={isAreaOpen}
+              onToggle={() => setIsAreaOpen((prev) => !prev)}
+            />
+          </div>
+
+          {/* LOGO CENTER */}
+          <div className="absolute left-1/2 -translate-x-1/2">
             <NavLogo url="/logo-header" to={toNav()} />
+          </div>
+
+          <div className="w-max">
+            {/* Icon Kaca pembesar / search */}
+            <SearchIcon className="w-[20px] h-[20px] cursor-pointer" />
           </div>
 
           <div
@@ -199,38 +225,14 @@ const Header: React.FC = () => {
 
         <div className="line bg-black h-[1px] w-full"></div>
 
-        <div className="container mx-auto py-4 hidden md:flex items-center gap-4 area-nav-tools">
-          <div className="min-w-[250px]">
-            <DropDownCountry />
-          </div>
-
-          <form
-            onSubmit={areaSearchSubmitHandler}
-            className="area-search-wrapper flex-1 flex items-center gap-2"
-          >
-            <input
-              type="text"
-              list="bali-areas-list"
-              value={areaSearch}
-              onChange={(event) => setAreaSearch(event.target.value)}
-              className="w-full border border-[#e5d8d8] px-4 py-3 text-front-body"
-              placeholder="Type a Bali area"
-            />
-            <datalist id="bali-areas-list">
-              {baliAreas.map((area) => (
-                <option value={area.name} key={`area-option-${area.slug}`} />
-              ))}
-            </datalist>
-            <button
-              type="submit"
-              className="bg-front-red text-white uppercase px-5 py-3 text-front-small font-semibold"
-            >
-              Go
-            </button>
-          </form>
-        </div>
-
-        <div className="line bg-black h-[1px] w-full"></div>
+        {/* <AreaMenuPanel open={isAreaOpen} /> */}
+        <AreaMenuPanel
+          open={isAreaOpen}
+          onSelect={(label: string) => {
+            setSelectedAreaLabel(label);
+            setIsAreaOpen(false);
+          }}
+        />
 
         <div className="mx-auto py-[15px] hidden md:block bg-front-navy">
           <nav
@@ -243,10 +245,11 @@ const Header: React.FC = () => {
                   menu={menu}
                   menus={forcedMenuCategories}
                   key={`header-menu-${menu.slug_title}`}
-                  index={index}
                 />
                 {index < forcedMenuCategories.length - 1 && (
-                  <span className="mx-2 pb-2 text-front-icewhite/40 text-[1em]">|</span>
+                  <span className="mx-2 pb-2 text-front-icewhite/40 text-[1em]">
+                    |
+                  </span>
                 )}
               </>
             ))}

@@ -26,7 +26,7 @@ const HeroDescription: React.FC<React.PropsWithChildren> = ({children}) => {
 const HeroTitleWrapper: React.FC<React.PropsWithChildren> = (props) => {
     return (
         <>
-            <div className="absolute bottom-20 left-0 right-0 z-10">
+            <div className="absolute bottom-20 ml-[50px] left-0 right-0 z-10">
                 <div className="container">
                     {props.children}
                 </div>
@@ -183,8 +183,8 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({preContent = [], admin
     if(content.length) {
         return (
             <>
-                <section>
-                    <div id="hero-article" className="relative">
+                <section className="container">
+                    <div id="hero-article" className="relative rounded-xl overflow-hidden">
                         <Swiper
                             onSwiper={(swiper) => imageRef.current = swiper}
                             slidesPerView={1}
@@ -195,7 +195,15 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({preContent = [], admin
                                 if(item) {
                                     return (
                                         <SwiperSlide key={`image-${i}`}>
-                                            <Image width="1920" height="1080" fetchPriority={i ? "low" : "high"} isLazy={i ? true : false } url={getFeaturedImageUrl(item, '16_9')} ratio={'max( calc(100vh - var(--nav-height)), 750px )'} mobileRatio="150%" overlay={true} alt={item?.featured_image_alt} />
+                                            <Image width="1920" 
+                                                    height="1080" 
+                                                    fetchPriority={i ? "low" : "high"} 
+                                                    isLazy={i ? true : false } 
+                                                    url={getFeaturedImageUrl(item, '16_9')} 
+                                                    ratio={'max( calc(100vh - var(--nav-height)), 750px )'} 
+                                                    mobileRatio="150%" 
+                                                    overlay={true} 
+                                                    alt={item?.featured_image_alt} />
                                             {/* <Image url={generateImageUrl(item.featured_image_url, item.id)} ratio={'calc(100vh - var(--nav-height))'} overlay={true} /> */}
                                         </SwiperSlide>
                                     )
