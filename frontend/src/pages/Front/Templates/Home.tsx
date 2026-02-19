@@ -13,6 +13,7 @@ import { useRoute } from "../../../context/RouteContext"
 import { getTemplateByUrl } from "../../../services/template.service"
 import { HomeTemplate as DefaultHomeTemplate } from "../../../lib/map/TemplatesMap"
 import pkg from "../../../lib/utils/Helmet"
+import BaliEssentialSection1 from "../../../components/front/BaliEssentialSection1"
 const {Helmet} = pkg
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || ''
@@ -36,8 +37,10 @@ const HomeTemplate: React.FC = () => {
                 const getTemplate = await getTemplateByUrl(urlToGet)
                 if(getTemplate?.data?.content && getTemplate.status_code == 200) {
                     setContent(JSON.parse(getTemplate.data.content))
+                    console.log("Get Data Template By Query from API")
                 } else {
                     setContent(DefaultHomeTemplate)
+                    console.log("Get Data Template By Query from Default")
                     // if(isV2){
                     //     // const theContent = await generateContent(DefaultHomeTemplate) 
                     // } else {
@@ -88,10 +91,11 @@ const HomeTemplate: React.FC = () => {
         <>
             {getHelmet()}
             <HeroImage preContent={heroImage} />
-            <Spacer />
+            {/* <Spacer />
             <div className="container">
                 <Advertisement />
-            </div>
+            </div> */}
+            <BaliEssentialSection1 preContent={ultimateGuide} />
             
             <Trending preContent={trending} />
             {

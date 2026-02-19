@@ -183,8 +183,8 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({preContent = [], admin
     if(content.length) {
         return (
             <>
-                <section className="container">
-                    <div id="hero-article" className="relative rounded-xl overflow-hidden">
+                <section className="bg-front-icewhite pt-[20px]">
+                    <div id="hero-article" className="container relative rounded-xl overflow-hidden">
                         <Swiper
                             onSwiper={(swiper) => imageRef.current = swiper}
                             slidesPerView={1}

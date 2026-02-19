@@ -78,7 +78,7 @@ const Image: React.FC<ImageProps> = ({ url, ratio = "78%", mobileRatio, link, ov
         //         </>
         //     )
         // }
-        return <img src={theUrl} fetchPriority={fetchPriority} width={width ?? undefined} height={height ?? undefined} style={{objectFit: fit}} loading={isLazy ? "lazy" : 'eager'} className={`absolute inset-0 w-full h-full z-[1]`} alt={alt} />
+        return <img src={theUrl} fetchPriority={fetchPriority} width={width ?? undefined} height={height ?? undefined} style={{objectFit: fit}} loading={isLazy ? "lazy" : 'eager'} className={`absolute inset-0 w-full h-full z-[1] rounded-[10px]`} alt={alt} />
     }
 
     const content = () => {

@@ -190,7 +190,7 @@ const Header: React.FC = () => {
   return (
     <>
       <header
-        className="relative top-0 left-0 right-0 z-[100] bg-front-icewhite mb-[20px]"
+        className="relative top-0 left-0 right-0 z-[100] bg-front-icewhite"
         role="banner"
       >
         <div className="container mx-auto py-5 relative flex items-center justify-between gap-4 bg-front-icewhite h-[160px]">

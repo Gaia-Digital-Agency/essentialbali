@@ -35,7 +35,7 @@ export const HomeTemplate = {
     trending: {
         articles: [0,0,0,0,0],
         rules: {
-            limit: 5
+            limit: 7
         },
         query: {
             useRoute: true,
