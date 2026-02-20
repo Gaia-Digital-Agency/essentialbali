@@ -1,39 +1,44 @@
-import React from "react"
-import { Link } from "react-router"
+import React from "react";
+import { Link } from "react-router";
 
 type TextLinkProps = {
-    text?: string,
-    link?: string,
-    color?: 'black' | 'gray' | 'white',
-    uppercase?: boolean
-}
+  text?: string;
+  link?: string;
+  color?: "black" | "gray" | "white";
+  uppercase?: boolean;
+};
 
-const TextLink: React.FC<TextLinkProps> = ({text = 'Read More', link = null, color = 'black', uppercase = false}) => {
-
-    const colorClass = () => {
-        if(color == 'black') {
-            return 'text-front-black decoration-front-black'
-        }
-        if(color == 'gray') {
-            return 'text-front-soft-gray decoration-front-soft-gray'
-        }
-        if(color == 'white') {
-            return 'text-white decoration-white'
-        }
+const TextLink: React.FC<TextLinkProps> = ({
+  text = "Read More",
+  link = null,
+  color = "black",
+  uppercase = false,
+}) => {
+  const colorClass = () => {
+    if (color == "black") {
+      return "text-front-black decoration-front-charcoal-grey";
     }
-
-    const renderText = (
-        <p className={`inline-block text-front-small tracking-[.2em] transition hover:text-front-red hover:decoration-front-red decoration-solid underline ${colorClass()}${uppercase ? ' uppercase' : ''}`}>{text}</p>
-    )
-
-    if(link) {
-        return (
-            <Link to={link}>
-                {renderText}
-            </Link>
-        )
+    if (color == "gray") {
+      return "text-front-soft-gray decoration-front-soft-gray";
     }
-    return renderText
-}
+    if (color == "white") {
+      return "text-white decoration-white";
+    }
+  };
 
-export default TextLink
+  const renderText = (
+    <p
+      className={`inline-block 
+                  text-front-small transition hover:text-front-charcoal-grey hover:decoration-front-charcoal-grey decoration-solid ${colorClass()} ${uppercase ? " uppercase" : "capitalize"}`}
+    >
+      {text}
+    </p>
+  );
+
+  if (link) {
+    return <Link to={link}>{renderText}</Link>;
+  }
+  return renderText;
+};
+
+export default TextLink;
