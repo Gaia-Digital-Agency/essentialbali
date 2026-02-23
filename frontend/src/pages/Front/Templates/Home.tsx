@@ -14,6 +14,7 @@ import { getTemplateByUrl } from "../../../services/template.service"
 import { HomeTemplate as DefaultHomeTemplate } from "../../../lib/map/TemplatesMap"
 import pkg from "../../../lib/utils/Helmet"
 import BaliEssentialSection1 from "../../../components/front/BaliEssentialSection1"
+import BaliEssentialSection2 from "../../../components/front/BaliEssentialSection2"
 const {Helmet} = pkg
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || ''
@@ -96,21 +97,25 @@ const HomeTemplate: React.FC = () => {
                 <Advertisement />
             </div> */}
             <BaliEssentialSection1 preContent={ultimateGuide} />
+            <BaliEssentialSection2 preContent={events} />
+            <BaliEssentialSection2 preContent={events} />
             
-            <Trending preContent={trending} />
-            {
+            {/* <Trending preContent={trending} /> */}
+            {/* {
                 isLocation &&
                 <>
                     <MostPopular preContent={mostPopular} />
                 </>
-            }
-            <EventsHome preContent={events} />
-            <UltimateGuide preContent={ultimateGuide} />
-            <LocalBali preContent={overseas} />
-            <div className="outer bg-front-section-grey">
+            } */}
+            {/* <EventsHome preContent={events} /> */}
+            {/* <UltimateGuide preContent={ultimateGuide} /> */}
+            {/* <LocalBali preContent={overseas} /> */}
+
+
+            <div className="outer bg-front-icewhite">
                 <Spacer />
-                <About />
-                    <Newsletter />
+                {/* <About /> */}
+                <Newsletter />
                 <Spacer />
             </div>
         </>

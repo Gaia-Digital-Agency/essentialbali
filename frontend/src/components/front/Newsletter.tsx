@@ -31,6 +31,7 @@ const Newsletter: React.FC = () => {
 
       setEmail("");
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error(error);
 
@@ -60,27 +61,27 @@ const Newsletter: React.FC = () => {
 
   return (
     <>
-      <section id="newsletter" className="bg-front-section-grey py-10">
-        <div className="container">
-          <div className="grid grid-cols-12 items-end">
+      <section id="newsletter" className="bg-front-icewhite">
+        <div className="container bg-gradient-to-r from-[#0B1D2B] to-[#4A6D8C] py-16 rounded-[10px]">
+          <div className="container grid grid-cols-12 items-end">
             <div className="md:col-span-6 col-span-12">
               <div className="title-wrapper mb-3">
-                <p className="text-front-section-title font-serif font-semibold">
-                  Newsletter
+                <p className="text-front-section-title font-serif text-front-dustly-slate">
+                  Get The Essential
                 </p>
               </div>
               <div className="description-wrapper">
-                <p className="text-front-body-big">
-                  Subscribe for the latest Bali updates, guides, and local picks.
+                <p className="font-sans text-front-icewhite font-light">
+                  Subscribe to capture the essence of the island’s most refined updates, delivered to your inbox every day
                 </p>
               </div>
             </div>
             <div className="md:col-span-6 col-span-12">
-              <div className="inner md:pl-10 flex items-center">
+              <div className="inner md:pl-10 flex flex-row gap-x-4 items-center">
                 <div className="input-wrapper flex-1">
                   <input
                     placeholder="Enter your email"
-                    className="w-full border-b border-[#5F5F5F] h-full py-4 pl-4"
+                    className="w-full border-b border-[#A3B1C2] h-full py-4 pl-4 text-front-icewhite"
                     onChange={changeHandler}
                     type="email"
                     value={email}
@@ -92,6 +93,7 @@ const Newsletter: React.FC = () => {
                     text="SUBSCRIBE"
                     onClick={clickHandler}
                     bigger={true}
+                    type="primary-white"
                   />
                 </div>
               </div>

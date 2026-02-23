@@ -27,6 +27,7 @@ type ImageProps = {
 };
 
 // const Image: React.FC<ImageProps> = ({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const Image = forwardRef<any, ImageProps>(
   (
     {

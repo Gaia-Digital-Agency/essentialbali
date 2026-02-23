@@ -67,6 +67,23 @@ const Button: React.FC<ButtonProps> = ({
     );
   };
 
+  const PrimaryWhiteButtonElement = () => {
+    return (
+      <div
+        className={`button md:px-8 px-4 inline-flex text-front-body font-light cursor-pointer 
+                            rounded-sm border !border-color-icewhite text-front-icewhite
+                            hover:bg-front-icewhite hover:text-front-navy hover:border-front-icewhite
+                            transition-all duration-300 ease-in-out
+                            ${uppercase ? "uppercase " : ""}
+                            ${bigger ? "py-4" : "py-3"} `}
+        ref={buttonRef}
+        onClick={onClick}
+      >
+        {text}
+      </div>
+    );
+  };
+
   const SecondaryButtonElement = () => {
     return (
       <div
@@ -93,6 +110,8 @@ const Button: React.FC<ButtonProps> = ({
   let ComponentButton = SecondaryButtonElement;
   if (type === "primary") {
     ComponentButton = PrimaryButtonElement;
+  } else if(type === "primary-white") {
+    ComponentButton = PrimaryWhiteButtonElement
   }
 
   if (link) {

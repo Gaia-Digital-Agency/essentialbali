@@ -10,12 +10,7 @@ import { ArticleApiResponseProps } from "../../types/article.type";
 import Image from "./Image";
 import TextLink from "./TextLink";
 import { Link } from "react-router";
-import {
-  ButtonChevron,
-  ButtonChevronBorder,
-  ButtonChevronBorderArang,
-  ButtonChevronBorderCharcoal,
-} from "../../icons";
+import { ButtonChevronBorderArang } from "../../icons";
 
 type BaliEssentialSectionMainProps = {
   content: ArticleApiResponseProps | undefined | 0;
@@ -36,7 +31,7 @@ const BaliEssentialSection1: React.FC<ComponentTemplateHomeProps> = ({
   // const {availableCategories} = useOutletContext<AvailableCategoriesProps>()
   // const {locations} = useOutletContext<LocationsContextProps>()
   const [content, setContent] = useState<PreContentProps>(preContent);
-  const { generateContent, getPermalink } = useArticle();
+  const { generateContent } = useArticle();
 
   const CATEGORY_SLUG = "featured";
 
@@ -101,9 +96,7 @@ const BaliEssentialSection1: React.FC<ComponentTemplateHomeProps> = ({
                           color="black"
                         />
                       </span>
-                      <span
-                        className="opacity-0 translate-x-4 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-x-0"
-                      >
+                      <span className="opacity-0 translate-x-4 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-x-0">
                         {renderSVG()}
                       </span>
                     </span>
@@ -131,12 +124,13 @@ const BaliEssentialSection1Main: React.FC<BaliEssentialSectionMainProps> = ({
   admin = false,
 }) => {
   const { getFeaturedImageUrl, getPermalink } = useArticle();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const imageRef = useRef<any>(null);
   if (content) {
     return (
       <>
         <div
-          className="w-[50%] py-8"
+          className="w-[50%] py-8 group"
           onMouseEnter={() => imageRef.current?.zoomIn()}
           onMouseLeave={() => imageRef.current?.zoomOut()}
         >
@@ -154,7 +148,8 @@ const BaliEssentialSection1Main: React.FC<BaliEssentialSectionMainProps> = ({
               News
             </p>
             <Link to={admin ? "" : getPermalink(content)}>
-              <h3 className="text-[32px] font-serif text-front-navy capitalize">
+              <h3 className="text-[32px] font-serif text-front-navy capitalize transition-all duration-300
+                        group-hover:[text-shadow:0_0_0.3px_currentColor]">
                 {content?.title}
               </h3>
               {/* <p className="text-front-title font-serif">{article.title}</p> */}
@@ -174,11 +169,12 @@ const SecondaryArticleItem: React.FC<{
   admin?: boolean;
 }> = ({ article, admin }) => {
   const { getFeaturedImageUrl, getPermalink } = useArticle();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const imageRef = useRef<any>(null);
 
   return (
     <div
-      className="h-[50%]"
+      className="h-[50%] group"
       onMouseEnter={() => imageRef.current?.zoomIn()}
       onMouseLeave={() => imageRef.current?.zoomOut()}
     >
@@ -198,14 +194,13 @@ const SecondaryArticleItem: React.FC<{
         </p>
 
         <Link to={admin ? "" : getPermalink(article)}>
-          <h3 className="text-[32px] font-serif text-front-navy capitalize">
+        {/* <p className="text-front-title text-front-grey font-serif"></p> */}
+          <p className="text-front-title font-serif text-front-navy capitalize 
+                        transition-all duration-300
+                        group-hover:[text-shadow:0_0_0.3px_currentColor]">
             {article?.title}
-          </h3>
-          {/* <p className="text-front-title font-serif">{article.title}</p> */}
+          </p>
         </Link>
-        {/* <h3 className="text-[32px] font-serif text-front-navy capitalize">
-          {article.title}
-        </h3> */}
       </div>
     </div>
   );
