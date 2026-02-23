@@ -15,6 +15,7 @@ import { HomeTemplate as DefaultHomeTemplate } from "../../../lib/map/TemplatesM
 import pkg from "../../../lib/utils/Helmet"
 import BaliEssentialSection1 from "../../../components/front/BaliEssentialSection1"
 import BaliEssentialSection2 from "../../../components/front/BaliEssentialSection2"
+import BaliEssentialSection3 from "../../../components/front/BaliEssentialSection3"
 const {Helmet} = pkg
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || ''
@@ -62,6 +63,7 @@ const HomeTemplate: React.FC = () => {
     const events = content.events ? content.events.articles : [0,0,0,0]
     const ultimateGuide = content.ultimateGuide ? content.ultimateGuide.articles : [0,0,0,0,0,0]
     const overseas = content.overseas ? content.overseas.articles : [0,0,0,0,0,0,0,0]
+    const section3 = content.section3 ? content.section3.articles  : [0,0]
     const getDeepestLocation = () => {
         if(actualRoute.region) return actualRoute.region.name
         if(actualRoute.city) return actualRoute.city.name
@@ -98,7 +100,7 @@ const HomeTemplate: React.FC = () => {
             </div> */}
             <BaliEssentialSection1 preContent={ultimateGuide} />
             <BaliEssentialSection2 preContent={events} />
-            <BaliEssentialSection2 preContent={events} />
+            <BaliEssentialSection3 preContent={section3} />
             
             {/* <Trending preContent={trending} /> */}
             {/* {
@@ -109,12 +111,11 @@ const HomeTemplate: React.FC = () => {
             } */}
             {/* <EventsHome preContent={events} /> */}
             {/* <UltimateGuide preContent={ultimateGuide} /> */}
-            {/* <LocalBali preContent={overseas} /> */}
+            <LocalBali preContent={overseas} />
 
 
             <div className="outer bg-front-icewhite">
                 <Spacer />
-                {/* <About /> */}
                 <Newsletter />
                 <Spacer />
             </div>

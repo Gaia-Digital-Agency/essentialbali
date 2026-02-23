@@ -1,5 +1,5 @@
 import { ArticleApiResponseProps } from "../../types/article.type"
-export type HomeTemplateKey = 'heroImage' | 'trending' | 'mostPopular' | 'events' | 'ultimateGuide' | 'overseas'
+export type HomeTemplateKey = 'heroImage' | 'trending' | 'mostPopular' | 'events' | 'ultimateGuide' | 'overseas' | 'section3'
 type TemplateFieldsProps = {
     articles: Array<ArticleApiResponseProps | 0>,
     rules: {
@@ -77,6 +77,18 @@ export const HomeTemplate = {
             useRoute: true,
             category: {
                 slug: 'ultimate-guide'
+            }
+        }
+    },
+    section3: {
+        articles: [0,0],
+        rules: {
+            limit: 2
+        },
+        query: {
+            useRoute: true,
+            category: {
+                slug: 'section-3'
             }
         }
     },

@@ -61,7 +61,7 @@ const Newsletter: React.FC = () => {
 
   return (
     <>
-      <section id="newsletter" className="bg-front-icewhite">
+      <section id="newsletter" className="container bg-front-icewhite">
         <div className="container bg-gradient-to-r from-[#0B1D2B] to-[#4A6D8C] py-16 rounded-[10px]">
           <div className="container grid grid-cols-12 items-end">
             <div className="md:col-span-6 col-span-12">

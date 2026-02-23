@@ -1,123 +1,197 @@
-import React, {useEffect, useState} from "react"
-import { ArticleProps } from "../../types/article.type"
-import Image from "./Image"
-import Button from "./Button"
-import { Link } from "react-router"
-import { useRoute } from "../../context/RouteContext"
-import { useTaxonomies } from "../../context/TaxonomyContext"
-import useArticle from "../../hooks/useArticle"
-import { PreContentProps, ComponentTemplateHomeProps } from "../../types/template.type"
-import { Spacer } from "../../pages/Front/Templates/Home"
+import React, { useEffect, useRef, useState } from "react";
+import { ArticleProps } from "../../types/article.type";
+import Image from "./Image";
+import Button from "./Button";
+import { Link } from "react-router";
+import { useRoute } from "../../context/RouteContext";
+import { useTaxonomies } from "../../context/TaxonomyContext";
+import useArticle from "../../hooks/useArticle";
+import {
+  PreContentProps,
+  ComponentTemplateHomeProps,
+} from "../../types/template.type";
+import { ButtonChevronBorderArang } from "../../icons";
+import TextLink from "./TextLink";
+import NavLogo from "./NavLogo";
+import About from "./About";
 
-const LocalBali: React.FC<ComponentTemplateHomeProps> = ({preContent = []}) => {
-    const {actualRoute, clientChange} = useRoute()
-    const {taxonomies, getCategoryById} = useTaxonomies()
-    // const {locations} = useOutletContext<LocationsContextProps>()
-    // const {availableCategories} = useOutletContext<AvailableCategoriesProps>()
-    const CATEGORY_SLUGS = ['area-highlights', 'ultimate-guide', 'featured']
-    const {generateContent, getPermalink, getFeaturedImageUrl} = useArticle()
+const LocalBali: React.FC<ComponentTemplateHomeProps> = ({
+  preContent = [],
+}) => {
+  const { actualRoute, clientChange } = useRoute();
+  const { taxonomies, getCategoryById } = useTaxonomies();
+  // const {locations} = useOutletContext<LocationsContextProps>()
+  // const {availableCategories} = useOutletContext<AvailableCategoriesProps>()
+  const CATEGORY_SLUGS = ["area-highlights", "ultimate-guide", "featured"];
+  const { generateContent, getPermalink, getFeaturedImageUrl } = useArticle();
+  const imageRef = useRef<any>(null);
+  const [content, setContent] = useState<PreContentProps>(preContent);
 
-    const [content, setContent] = useState<PreContentProps>(preContent)
+  const findCategory = (article: ArticleProps) => {
+    return getCategoryById(article.category_id);
+  };
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const filterCountry = taxonomies?.countries
+          ?.filter((country) => actualRoute?.country?.id != country.id)
+          .map((country) => country.id);
+        const get = await generateContent({
+          content: preContent,
+          query: {
+            id_country: filterCountry,
+            limit: 8,
+            category: taxonomies.categories
+              ?.filter((item) => CATEGORY_SLUGS.includes(item.slug_title))
+              .map((cat) => cat.id),
+          },
+        });
+        if (get) {
+          setContent(get);
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    })();
+  }, [actualRoute, preContent, clientChange]);
 
-    const findCategory = (article: ArticleProps) => {
-        return getCategoryById(article.category_id)
-    }
-    useEffect(() => {
-        (async () => {
-            try {
-                const filterCountry = taxonomies?.countries?.filter(country => (actualRoute?.country?.id != country.id)).map(country => (country.id))
-                const get = await generateContent({
-                    content: preContent,
-                    query: {
-                        id_country: filterCountry,
-                        limit: 8,
-                        category: taxonomies.categories?.filter(item => CATEGORY_SLUGS.includes(item.slug_title)).map(cat => (cat.id))
-                    }
-                })
-                if(get) {
-                    setContent(get)
-                }
-                // if(content.length) return
-                // if(!clientChange) return
-                // const getArticle = await getArticleByFields({
-                //     id_country: filterCountry,
-                //     limit: 8,
-                //     category: taxonomies.categories?.filter(item => CATEGORY_SLUGS.includes(item.slug_title)).map(cat => (cat.id))
-                // })
-                // if(getArticle?.articles) {
-                //     setContent(getArticle.articles)
-                //     return
-                // }
-            } catch (e) {
-                console.log(e)
-            }
-        })()
-    }, [actualRoute, preContent, clientChange])
-
+  const renderSVG = () => {
     return (
+      <span className="text-front-navy group-hover:text-red-500 transition-colors duration-300">
+        <ButtonChevronBorderArang />
+      </span>
+    );
+  };
+
+  const exploreMore = () => {
+    return (
+      <p className="font-sans text-front-charcoal-grey">
+        <span className="inline-flex items-center gap-2 group cursor-pointer">
+          {/* group-hover:-translate-x-1 */}
+          <span className="transition-transform duration-300 translate-x-6 group-hover:-translate-x-1">
+            <TextLink
+              text="Explore More"
+              link={`${actualRoute?.country ? `/${actualRoute.country.slug}` : ""}${actualRoute?.city ? `/${actualRoute.city.slug}` : ""}${actualRoute?.region ? `/${actualRoute.region.slug}` : ""}/area-highlights`}
+              color="black"
+            />
+          </span>
+          <span className="opacity-0 translate-x-4 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-x-0">
+            {renderSVG()}
+          </span>
+        </span>
+      </p>
+    );
+  };
+
+  return (
+    <>
+      {!!content.filter(Boolean).length && (
         <>
-            {
-                !!content.filter(Boolean).length &&
-                    <>
-                        <Spacer />
-                        <section id="area-highlights">
-                            <div className="container">
-                                <div className="title-wrapper text-center mb-8">
-                                    <p className="text-front-section-title font-serif font-semibold"><span className="text-front-red">Bali News</span></p>
-                                </div>
-                                <div className="grid grid-cols-12 md:gap-x-10 gap-y-10 gap-x-6 md:mb-10 mb-12 overflow-x-hidden">
-                                    {
-                                        content?.map((article) => {
-                                            if(article) {
-                                                return (
-                                                    <div key={'area-highlights-' + article.id} className={`md:col-span-6 lg:col-span-3 col-span-12 line-right-5 relative`}>
-                                                        <div className="image-wrapper mb-5">
-                                                            <Image url={getFeaturedImageUrl(article)} ratio="100%" mobileRatio="125%" link={getPermalink(article)} alt={article?.featured_image_alt} />
-                                                        </div>
-                                                        <div className="category-wrapper mb-2">
-                                                            <p className="text-front-grey">{findCategory(article)?.title}</p>
-                                                        </div>
-                                                        <div className="title-wrapper">
-                                                            <Link to={getPermalink(article)}>
-                                                                <p className="text-front-title text-front-grey font-serif">{article.title}</p>
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                )
-                                            }
-                                        })
-                                    }
-                                </div>
-                                <div className="button-wrapper text-center">
-                                    <Button text="VIEW ALL" link={`${actualRoute?.country ? `/${actualRoute.country.slug}` : ''}${actualRoute?.city ? `/${actualRoute.city.slug}` : ''}${actualRoute?.region ? `/${actualRoute.region.slug}` : ''}/area-highlights`} />
-                                </div>
-                            </div>
-                        </section>
-                        <Spacer />
-                    </>
-            }
+          <section id="essential-brief">
+            <div className="w-[100%] pt-12 bg-front-icewhite">
+              <div className="container mx-auto">
+                <div>
+                  <div className="flex justify-between items-end mb-2.5">
+                    <h2 className="text-2xl font-serif text-front-navy capitalize">
+                      {`Essential Feeds`}
+                    </h2>
+                    {/* {exploreMore()} */}
+                  </div>
+                  <div className="line bg-front-dustly-slate h-[0.5px] w-full"></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-front-icewhite ">
+              <div className="container flex flex-row gap-x-8 py-8">
+                <div className="flex flex-col w-3/4 gap-y-9  ">
+                  <div id="articles" className=" flex flex-col gap-y-8 ">
+                    {content?.map((article) =>
+                      article ? (
+                        <LocalBaliItem key={article.id} article={article} />
+                      ) : null,
+                    )}
+                  </div>
+                  <div className="flex flex-row items-center justify-center ">
+                    {exploreMore()}
+                  </div>
+                </div>
+                <div className="w-1/4">
+                  <div id="about-essentialbali" className="logo-wrapper max-w">
+                    <div>
+                      <About />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </>
-    )
-}
+      )}
+    </>
+  );
+};
 
-export const AdminLocalBali: React.FC<ComponentTemplateHomeProps> = ({preContent}) => {
-    const [content, setContent] = useState<PreContentProps>([])
-    const {generateContent} = useArticle()
-    useEffect(() => {
-        (async () => {
-            const get = await generateContent({
-                content: preContent,
-                admin: true
-            })
-            if(get) {
-                setContent(content)
-            }
-        })()
-    }, [preContent])
-    if(content.length) {
-        return <LocalBali preContent={content} admin={true} />
-    }
-}
+const LocalBaliItem: React.FC<{
+  article: ArticleProps;
+}> = ({ article }) => {
+  const { getPermalink, getFeaturedImageUrl } = useArticle();
+  const imageRef = useRef<any>(null);
 
-export default LocalBali
+  return (
+    <div
+      className="flex flex-row gap-x-8 group"
+      onMouseEnter={() => imageRef.current?.zoomIn()}
+      onMouseLeave={() => imageRef.current?.zoomOut()}
+    >
+      <div className="image-wrapper w-1/3">
+        <Image
+          url={getFeaturedImageUrl(article)}
+          ratio="50%"
+          mobileRatio="125%"
+          link={getPermalink(article)}
+          alt={article?.featured_image_alt}
+          ref={imageRef}
+        />
+      </div>
+
+      <div className="flex flex-col w-2/3 gap-y-2.5">
+        <p className="text-[16px] text-front-shadowed-slate font-sans">
+          {article?.category_name}
+        </p>
+
+        <p className="text-[32px] font-serif text-front-navy capitalize transition-all duration-300 group-hover:[text-shadow:0_0_0.3px_currentColor]">
+          {article.title}
+        </p>
+
+        <p className="text-[18px] text-front-charcoal-grey font-sans">
+          {article.sub_title}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export const AdminLocalBali: React.FC<ComponentTemplateHomeProps> = ({
+  preContent,
+}) => {
+  const [content, setContent] = useState<PreContentProps>([]);
+  const { generateContent } = useArticle();
+  useEffect(() => {
+    (async () => {
+      const get = await generateContent({
+        content: preContent,
+        admin: true,
+      });
+      if (get) {
+        setContent(content);
+      }
+    })();
+  }, [preContent]);
+  if (content.length) {
+    return <LocalBali preContent={content} admin={true} />;
+  }
+};
+
+export default LocalBali;
