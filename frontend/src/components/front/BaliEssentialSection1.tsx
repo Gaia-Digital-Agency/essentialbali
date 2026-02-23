@@ -106,7 +106,7 @@ const BaliEssentialSection1: React.FC<ComponentTemplateHomeProps> = ({
               </div>
 
               <div>
-                <div className="flex flex-row gap-x-5">
+                <div className="flex flex-row gap-x-8">
                   <BaliEssentialSection1Main content={content[0]} />
                   <BaliEssentialSection1Secondary content={content.slice(1)} />
                 </div>

@@ -6,7 +6,7 @@ const getCookieOptions = (req) => {
     process.env.NODE_ENV === "production" &&
     (req.secure || req.headers["x-forwarded-proto"] === "https");
 
-  return {
+    return {
     httpOnly: true,
     secure: isSecure,
     sameSite: isSecure ? "none" : "lax",

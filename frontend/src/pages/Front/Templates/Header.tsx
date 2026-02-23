@@ -84,11 +84,12 @@ const Header: React.FC = () => {
   );
   const [areaSearch, setAreaSearch] = useState<string>("");
   const { taxonomies } = useTaxonomies();
-  console.log(taxonomies);
+  console.log("TAXONOMIES HEADER => " , taxonomies);
   const { actualRoute } = useRoute();
   const navigate = useNavigate();
   const forcedMenuCategories = useMemo(() => {
     const categories = taxonomies.categories ?? [];
+    console.log("how do i live => " , categories)
     return DESIRED_HEADER_MENUS.map((item, index) => {
       const found = categories.find((cat) => cat.slug_title === item.slug);
       if (found) return found;

@@ -144,8 +144,6 @@ const Footer: React.FC = () => {
     });
   }, [taxonomies.categories]);
 
-  console.log("sepisan =>", forcedMenuCategories);
-
   return (
     <footer className="footer bg-front-icewhite">
       <div className="container ">

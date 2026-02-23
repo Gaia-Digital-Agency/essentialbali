@@ -73,8 +73,6 @@ const About: React.FC = () => {
     });
   }, [taxonomies.categories]);
 
-  console.log("sepisan =>", forcedMenuCategories);
-
   return (
     <>
       <div className="">

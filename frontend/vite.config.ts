@@ -60,12 +60,12 @@ export default defineConfig((args) => {
         // Make `/api/*` work from the Vite dev origin (5173) without CORS pain.
         "/api": {
           // Use 127.0.0.1 instead of localhost to avoid DNS/hosts issues.
-          target: "http://127.0.0.1:8080",
+          target: "http://127.0.0.1:8082",
           changeOrigin: true,
           secure: false,
         },
         "/uploads": {
-          target: "http://127.0.0.1:8080",
+          target: "http://127.0.0.1:8082",
           changeOrigin: true,
           secure: false,
         },
