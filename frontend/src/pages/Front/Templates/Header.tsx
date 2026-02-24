@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom"; //useNavigate
 import NavLogo from "../../../components/front/NavLogo";
 // import DropDownCountry from "../../../components/front/DropDownCountry";
 import MobileMenu from "../../../components/front/MobileMenu";
-import { HamburgerIcon } from "../../../icons"; //FacebookIconGreyDefault, FacebookIconGreyHover,
+import { FacebookIconWhiteDefault, HamburgerIcon, InstagramIconWhiteDefault, TwitterIconWhiteDefault } from "../../../icons"; //FacebookIconGreyDefault, FacebookIconGreyHover,
 import { useTaxonomies } from "../../../context/TaxonomyContext";
 import { RouteProps, useRoute } from "../../../context/RouteContext";
 import { Category } from "../../../types/category.type";
@@ -115,7 +115,6 @@ const Header: React.FC = () => {
         const getTemplate = await getTemplateByUrl("/header");
         if (getTemplate?.data && getTemplate.status_code == 200) {
           const vaTemplateHeader = getTemplate?.data?.content;
-          console.log("demi cinta => ", vaTemplateHeader);
           const jsonData = JSON.parse(vaTemplateHeader);
           const linkCategoryIds = jsonData.map(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -246,7 +245,7 @@ const Header: React.FC = () => {
 
         <div className="mx-auto py-[15px] hidden md:block bg-front-navy">
           <nav
-            className="container menus-wrapper flex flex-wrap items-center gap-x-4 gap-y-3 justify-center"
+            className="container menus-wrapper flex flex-wrap items-center gap-x-4 gap-y-3 justify-center relative"
             aria-label="Categories"
           >
             {forcedMenuCategories.map((menu: Category, index: number) => (
@@ -257,15 +256,17 @@ const Header: React.FC = () => {
                   key={`header-menu-${menu.slug_title}`}
                 />
                 {index < forcedMenuCategories.length - 1 && (
-                  <span className="mx-2 pb-2 text-front-icewhite/40 text-[1em]">
+                  <span className="mx-2  text-front-icewhite/40 text-[1em]">
                     |
                   </span>
                 )}
               </>
             ))}
-            {/* <div className="right-0">
-              <FacebookIconGreyHover className="w-[20px] h-[20px] cursor-pointer" />
-            </div> */}
+            <div className="flex items-center justify-center absolute right-5 gap-x-4">
+              <FacebookIconWhiteDefault className="w-[20px] h-[20px] cursor-pointer" />
+              <InstagramIconWhiteDefault className="w-[20px] h-[20px] cursor-pointer" />
+              <TwitterIconWhiteDefault className="w-[20px] h-[20px] cursor-pointer" />
+            </div>
           </nav>
         </div>
       </header>
