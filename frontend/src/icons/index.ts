@@ -70,10 +70,13 @@ import { ReactComponent as ButtonChevronBorder } from "./button-chevron-border.s
 import { ReactComponent as ButtonChevronBorderArang } from "./button-chevron-border-arang.svg?react";
 import { ReactComponent as LocationIcon } from "./location.svg?react";
 import { ReactComponent as FacebookIconGreyDefault } from "./facebook-grey-default.svg?react";
+import { ReactComponent as FacebookIconWhiteDefault } from "./facebook-white-default.svg?react";
 import { ReactComponent as FacebookIconGreyHover } from "./facebook-grey-hover.svg?react";
 import { ReactComponent as InstagramIconGreyDefault } from "./instagram-grey-default.svg?react";
+import { ReactComponent as InstagramIconWhiteDefault } from "./instagram-white-default.svg?react";
 import { ReactComponent as InstagramIconGreyHover } from "./instagram-grey-hover.svg?react";
 import { ReactComponent as TwitterIconGreyDefault } from "./twitter-grey-default.svg?react";
+import { ReactComponent as TwitterIconWhiteDefault } from "./twitter-white-default.svg?react";
 import { ReactComponent as TwitterIconGreyHover } from "./twitter-grey-hover.svg?react";
 // import { ReactComponent } from "../svg";
 
@@ -150,9 +153,12 @@ export {
   LocationIcon,
   ButtonChevronBorderArang,
   FacebookIconGreyDefault,
+  FacebookIconWhiteDefault,
   FacebookIconGreyHover,
   InstagramIconGreyDefault,
+  InstagramIconWhiteDefault,
   InstagramIconGreyHover,
   TwitterIconGreyDefault,
+  TwitterIconWhiteDefault,
   TwitterIconGreyHover,
 };
