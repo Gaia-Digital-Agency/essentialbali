@@ -4,7 +4,7 @@ import { useRoute } from "../../../context/RouteContext"
 import { getArticleByFields } from "../../../services/article.service"
 import { useTaxonomies } from "../../../context/TaxonomyContext"
 import { useSearchParams, Link } from "react-router"
-import Advertisement from "../../../components/front/Advertisement"
+// import Advertisement from "../../../components/front/Advertisement"
 import Image from "../../../components/front/Image"
 import { generatePagination } from "../../../lib/utils/pagination"
 import { formatPublished } from "../../../lib/utils/format"
@@ -38,7 +38,7 @@ type ArticleItemProps = {
 
 const RenderPages:React.FC<PaginationProps> = ({page, onClick, currentPage}) => {
     return (
-        <div className={`px-4 py-2 font-medium ${typeof page == 'string' ? '' : 'cursor-pointer'} ${currentPage == page ? 'text-front-red' : ''}`} onClick={() => {
+        <div className={`px-4 py-2 font-medium ${typeof page == 'string' ? '' : 'cursor-pointer'} ${currentPage == page ? 'text-front-navy' : ''}`} onClick={() => {
             if(typeof page == 'string' || typeof page == 'object') return
             onClick(page)
         }}>
@@ -70,7 +70,7 @@ const RenderPagination: React.FC<PaginationProps> = ({page, currentPage, onClick
 }
 
 const ArticleItem: React.FC<ArticleItemProps> = ({article, tag}) => {
-    console.log(article.updatedAt, article.title, formatPublished(article.updatedAt))
+    // console.log(article.updatedAt, article.title, formatPublished(article.updatedAt))
     const {getPermalink, getFeaturedImageUrl} = useArticle()
     return (
         <>
@@ -369,10 +369,10 @@ const Directory: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
                 <title>{isTrending ? 'Trending' : ''}{actualRoute.category?.title ?? ''} - essentialbali</title>
                 <meta name="description" content="essentialbali is the ultimate Bali area guide for travelers, expats, and locals, featuring the best dining, events, schools, wellness, and travel in Bali" />
             </Helmet>
-            <section className="py-12">
+            <section className="py-12 bg-front-icewhite">
                 <div className="container">
                     <div className="ads-wrapper mb-12">
-                        <Advertisement />
+                        {/* <Advertisement /> */}
                     </div>
                     <div className="grid grid-cols-12 mb-12">
                         <div className="md:col-span-10 md:col-start-2 col-span-12">
@@ -393,7 +393,7 @@ const Directory: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
                         <RenderPagination page={generatePagination(currentPage, totalPages)} currentPage={currentPage} onClick={clickPagingHandler}  />
                     </div>
                 </div>
-                <div className="newsletter-wrapper bg-front-section-grey py-8 mt-6">
+                <div className="newsletter-wrapper bg-front-icewhite py-8 mt-6">
                     <Newsletter />
                 </div>
             </section>

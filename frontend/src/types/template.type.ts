@@ -4,6 +4,7 @@ import { ArticleApiResponseProps } from "./article.type"
  
 export type TemplateType = "Home" | "Housing" | "Footer" | "Header" | "Logo" | "About" | "Script"
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type GetTemplateResponse = ApiResponse<BaseTemplateType<any>>
 
 export interface BaseTemplateType<T> {
@@ -38,6 +39,7 @@ export type TemplateLocation = BaseTemplateType<BaseTemplateLocation>
 
 export type ComponentTemplateHomeProps = {
     preContent: PreContentProps,
+    default_category?: string | object;
     admin?: boolean
 }
 

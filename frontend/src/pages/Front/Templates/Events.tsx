@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from "react";
 import { ArticleProps } from "../../../types/article.type";
 import { getArticleByFields } from "../../../services/article.service";
 import { useRoute } from "../../../context/RouteContext";
-import Advertisement from "../../../components/front/Advertisement";
+// import Advertisement from "../../../components/front/Advertisement";
 import { useTaxonomies } from "../../../context/TaxonomyContext";
 import { getCategoryWithFields } from "../../../services/category.service";
 import Image from "../../../components/front/Image";
@@ -386,9 +386,9 @@ const Events: React.FC = () => {
                 <title>Events - essentialbali</title>
                 <meta name="description" content="essentialbali is the ultimate Bali area guide for travelers, expats, and locals, featuring the best dining, events, schools, wellness, and travel in Bali" />
             </Helmet>
-            <section>
+            <section className="events-page bg-front-icewhite">
                 <div className="container py-16">
-                    <Advertisement />
+                    {/* <Advertisement /> */}
 
                     <div className="grid grid-cols-12 py-12" ref={contentWrapperRef}>
                         <div className="lg:col-span-6 col-span-12 lg:col-start-4 text-center">
@@ -511,7 +511,7 @@ const Events: React.FC = () => {
                         <Button text="SUBMIT YOUR EVENT" borderOnly={true} />
                     </div>
                 </div>
-                <div className="newsletter-wrapper bg-front-section-grey py-8 mt-6">
+                <div className="newsletter-wrapper bg-front-icewhite py-8 mt-6">
                     <Newsletter />
                 </div>
             </section>

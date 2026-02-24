@@ -272,6 +272,7 @@ export type ParamsProps = {
     city: CityProps | undefined
     region: RegionProps | undefined
     category: Category | undefined
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     article?: any
 }
 
@@ -306,6 +307,7 @@ const parseParams = (slugs: string[], tax: TaxonomyProps) => {
     return p
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const resolveRoute = async (path: string, tax: TaxonomyProps, _userDetails: UserDetailsProps) => {
     const slugs = path ? path.split("/").filter(Boolean) : []
     if (slugs.length === 0) {

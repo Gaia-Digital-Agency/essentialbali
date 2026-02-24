@@ -161,7 +161,7 @@ const SingleEvent: React.FC = () => {
                     }
                 }
             } catch(e) {
-                console.log(e)
+                console.error(e)
             }
 
             try {
@@ -175,7 +175,7 @@ const SingleEvent: React.FC = () => {
                     setRelatedArticle(getArticle.articles)
                 }
             } catch(e) {
-                console.log(e)
+                console.error(e)
             }
 
             try {
@@ -188,7 +188,7 @@ const SingleEvent: React.FC = () => {
                     setDiscoverArticle(getArticle.articles)
                 }
             } catch(e) {
-                console.log(e)
+                console.error(e)
             }
         })()
     }, [content])
