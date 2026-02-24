@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ArticleProps } from "../../types/article.type";
+import { ArticleApiResponseProps } from "../../types/article.type"; //ArticleProps
 import Image from "./Image";
-import Button from "./Button";
-import { Link } from "react-router";
+// import Button from "./Button";
+// import { Link } from "react-router";
 import { useRoute } from "../../context/RouteContext";
 import { useTaxonomies } from "../../context/TaxonomyContext";
 import useArticle from "../../hooks/useArticle";
@@ -12,24 +12,24 @@ import {
 } from "../../types/template.type";
 import { ButtonChevronBorderArang } from "../../icons";
 import TextLink from "./TextLink";
-import NavLogo from "./NavLogo";
+// import NavLogo from "./NavLogo";
 import About from "./About";
 
 const LocalBali: React.FC<ComponentTemplateHomeProps> = ({
   preContent = [],
 }) => {
   const { actualRoute, clientChange } = useRoute();
-  const { taxonomies, getCategoryById } = useTaxonomies();
+  const { taxonomies } = useTaxonomies(); //getCategoryById
   // const {locations} = useOutletContext<LocationsContextProps>()
   // const {availableCategories} = useOutletContext<AvailableCategoriesProps>()
   const CATEGORY_SLUGS = ["area-highlights", "ultimate-guide", "featured"];
-  const { generateContent, getPermalink, getFeaturedImageUrl } = useArticle();
-  const imageRef = useRef<any>(null);
+  const { generateContent } = useArticle(); //getPermalink, getFeaturedImageUrl
+  // const imageRef = useRef<any>(null);
   const [content, setContent] = useState<PreContentProps>(preContent);
 
-  const findCategory = (article: ArticleProps) => {
-    return getCategoryById(article.category_id);
-  };
+  // const findCategory = (article: ArticleProps) => {
+  //   return getCategoryById(article.category_id);
+  // };
 
   useEffect(() => {
     (async () => {
@@ -134,9 +134,10 @@ const LocalBali: React.FC<ComponentTemplateHomeProps> = ({
 };
 
 const LocalBaliItem: React.FC<{
-  article: ArticleProps;
+  article: ArticleApiResponseProps;
 }> = ({ article }) => {
   const { getPermalink, getFeaturedImageUrl } = useArticle();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const imageRef = useRef<any>(null);
 
   return (

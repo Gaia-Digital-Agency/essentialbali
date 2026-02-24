@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react"; //useEffect, useState
 // import { getTemplateByUrl } from "../../../services/template.service";
 import NavLogo from "../../../components/front/NavLogo";
-import { Link, NavLink, useNavigate } from "react-router";
-import { FacebookIcon, InstagramIcon, LinkedinIcon } from "../../../icons";
+import { NavLink } from "react-router"; //Link, useNavigate
+// import { FacebookIcon, InstagramIcon, LinkedinIcon } from "../../../icons";
 import { useTaxonomies } from "../../../context/TaxonomyContext";
-import { isBaliAreaSlug } from "../../../utils/baliAreas";
-import SelectNav from "../../../components/front/SelectNav";
+// import { isBaliAreaSlug } from "../../../utils/baliAreas";
+// import SelectNav from "../../../components/front/SelectNav";
 import { Category } from "../../../types/category.type";
 import { RouteProps, useRoute } from "../../../context/RouteContext";
 
@@ -71,21 +71,21 @@ const MenuNav: React.FC<{
 
 const Footer: React.FC = () => {
   // const [content, setContent] = useState()
-  const [visitorCount, setVisitorCount] = useState(7127);
-  const [userLocation, setUserLocation] = useState("Bali Area");
-  const [userTime, setUserTime] = useState("");
+  // const [visitorCount, setVisitorCount] = useState(7127);
+  // const [userLocation, setUserLocation] = useState("Bali Area");
+  // const [userTime, setUserTime] = useState("");
 
   const { taxonomies } = useTaxonomies();
-  const navigate = useNavigate();
-  const filteredCountries = { ...taxonomies }.countries?.filter(
-    (coun) => coun.id != 999 && isBaliAreaSlug(coun.slug),
-  );
-  const filteredTax = { ...taxonomies, countries: filteredCountries };
-  const exploreOptions =
-    filteredTax?.countries?.map((country) => ({
-      value: country.slug,
-      label: country.name,
-    })) ?? [];
+  // const navigate = useNavigate();
+  // const filteredCountries = { ...taxonomies }.countries?.filter(
+  //   (coun) => coun.id != 999 && isBaliAreaSlug(coun.slug),
+  // );
+  // const filteredTax = { ...taxonomies, countries: filteredCountries };
+  // const exploreOptions =
+  //   filteredTax?.countries?.map((country) => ({
+  //     value: country.slug,
+  //     label: country.name,
+  //   })) ?? [];
 
   // useEffect(() => {
   //   if (typeof window === "undefined") return;

@@ -1,6 +1,6 @@
 import React from "react";
 import { useTaxonomies } from "../../context/TaxonomyContext";
-import { NavLink, RouteProps, useNavigate } from "react-router";
+import { useNavigate } from "react-router"; // NavLink, RouteProps,
 import { BALI_AREA_OPTIONS, isBaliAreaSlug } from "../../utils/baliAreas";
 
 interface AreaMenuPanelProps {

@@ -1,10 +1,17 @@
 import { ChevronDown } from "lucide-react";
 
+
+type AreaMenuToggleButtonProps = {
+  label?: string;
+  open: boolean;
+  onToggle: () => void;
+};
+
 export default function AreaMenuToggleButton({
   label = "Click Me",
   open,
   onToggle,
-}) {
+}:AreaMenuToggleButtonProps) {
   return (
     <button
       onClick={onToggle}

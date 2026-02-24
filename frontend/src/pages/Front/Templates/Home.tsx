@@ -1,13 +1,13 @@
 import React, {useState, useEffect} from "react"
-import {Trending} from "../../../components/front/Trending"
+// import {Trending} from "../../../components/front/Trending"
 import HeroImage from "../../../components/front/HeroImage"
-import MostPopular from "../../../components/front/MostPopular"
-import UltimateGuide from "../../../components/front/UltimateGuide"
+// import MostPopular from "../../../components/front/MostPopular"
+// import UltimateGuide from "../../../components/front/UltimateGuide"
 import LocalBali from "../../../components/front/LocalBali"
 import Newsletter from "../../../components/front/Newsletter"
-import EventsHome from "../../../components/front/EventsHome"
-import Advertisement from "../../../components/front/Advertisement"
-import About from "../../../components/front/About"
+// import EventsHome from "../../../components/front/EventsHome"
+// import Advertisement from "../../../components/front/Advertisement"
+// import About from "../../../components/front/About"
 import { useContent } from "../../../context/ContentContext"
 import { useRoute } from "../../../context/RouteContext"
 import { getTemplateByUrl } from "../../../services/template.service"
@@ -16,7 +16,7 @@ import pkg from "../../../lib/utils/Helmet"
 import BaliEssentialSection1 from "../../../components/front/BaliEssentialSection1"
 import BaliEssentialSection2 from "../../../components/front/BaliEssentialSection2"
 import BaliEssentialSection3 from "../../../components/front/BaliEssentialSection3"
-import { useTaxonomies } from "../../../context/TaxonomyContext"
+// import { useTaxonomies } from "../../../context/TaxonomyContext"
 const {Helmet} = pkg
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || ''
@@ -26,6 +26,7 @@ export const Spacer: React.FC = () => (<div className="spacer md:py-12 py-6"></d
 
 const HomeTemplate: React.FC = () => {
     const {initialData} = useContent()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [content, setContent] = useState<any>(initialData?.template ?? DefaultHomeTemplate)
     const [isReady, setIsReady] = useState<boolean>(true)
     const {actualRoute, clientChange} = useRoute()
@@ -53,8 +54,8 @@ const HomeTemplate: React.FC = () => {
         })()
     }, [actualRoute, clientChange])
     const heroImage = content.heroImage ? content.heroImage.articles : [0,0,0]
-    const trending = content.trending ? content.trending.articles : [0,0,0,0,0]
-    const mostPopular = content.mostPopular ? content.mostPopular.articles : [0,0,0,0,0,0,0,0]
+    // const trending = content.trending ? content.trending.articles : [0,0,0,0,0]
+    // const mostPopular = content.mostPopular ? content.mostPopular.articles : [0,0,0,0,0,0,0,0]
     const events = content.events ? content.events.articles : [0,0,0,0]
     const ultimateGuide = content.ultimateGuide ? content.ultimateGuide.articles : [0,0,0,0,0,0]
     const overseas = content.overseas ? content.overseas.articles : [0,0,0,0,0,0,0,0]

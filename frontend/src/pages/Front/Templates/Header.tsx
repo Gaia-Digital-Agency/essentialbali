@@ -1,31 +1,32 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react"; // useMemo
+import { NavLink } from "react-router-dom"; //useNavigate
 import NavLogo from "../../../components/front/NavLogo";
 // import DropDownCountry from "../../../components/front/DropDownCountry";
 import MobileMenu from "../../../components/front/MobileMenu";
-import { FacebookIconGreyDefault, FacebookIconGreyHover, HamburgerIcon } from "../../../icons";
+import { HamburgerIcon } from "../../../icons"; //FacebookIconGreyDefault, FacebookIconGreyHover,
 import { useTaxonomies } from "../../../context/TaxonomyContext";
 import { RouteProps, useRoute } from "../../../context/RouteContext";
 import { Category } from "../../../types/category.type";
-import { getTemplateByUrl } from "../../../services/template.service";
-import { useHeaderContent } from "../../../context/HeaderContext";
-import { BALI_AREA_OPTIONS, isBaliAreaSlug } from "../../../utils/baliAreas";
+// import { getTemplateByUrl } from "../../../services/template.service";
+// import { useHeaderContent } from "../../../context/HeaderContext";
+// import { BALI_AREA_OPTIONS, isBaliAreaSlug } from "../../../utils/baliAreas";
 // import DropDownCountry from "../../../components/front/DropDownCountry";
 import { SearchIcon } from "lucide-react";
 import AreaMenuToggleButton from "../../../components/front/AreaMenuToggleButton";
 import AreaMenuPanel from "../../../components/front/AreaMenuPanel";
-import { FacebookIcon } from "react-share";
+import { getTemplateByUrl } from "../../../services/template.service";
+// import { FacebookIcon } from "react-share";
 
-const DESIRED_HEADER_MENUS = [
-  { slug: "deals", label: "News" },
-  { slug: "events", label: "Events" },
-  { slug: "featured", label: "Stays" },
-  { slug: "ultimate-guide", label: "Dine" },
-  { slug: "health-wellness", label: "Health & Wellness" },
-  { slug: "directory", label: "Nightlife" },
-  { slug: "nature-adventure", label: "Activities" },
-  { slug: "nature-adventure", label: "People & Culture" },
-];
+// const DESIRED_HEADER_MENUS = [
+//   { slug: "deals", label: "News" },
+//   { slug: "events", label: "Events" },
+//   { slug: "featured", label: "Stays" },
+//   { slug: "ultimate-guide", label: "Dine" },
+//   { slug: "health-wellness", label: "Health & Wellness" },
+//   { slug: "directory", label: "Nightlife" },
+//   { slug: "nature-adventure", label: "Activities" },
+//   { slug: "nature-adventure", label: "People & Culture" },
+// ];
 
 const MenuNav: React.FC<{
   menu: Category;
@@ -74,20 +75,22 @@ const MenuNav: React.FC<{
 };
 
 const Header: React.FC = () => {
-  const { initialData } = useHeaderContent();
+  // const { initialData } = useHeaderContent();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isAreaOpen, setIsAreaOpen] = useState<boolean>(false);
   const [selectedAreaLabel, setSelectedAreaLabel] =
     useState<string>("All Area");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [headerMenus, setHeaderMenus] = useState<any[]>(
-    initialData?.header ?? [],
-  );
-  const [areaSearch, setAreaSearch] = useState<string>("");
+  // const [headerMenus, setHeaderMenus] = useState<any[]>(
+  //   initialData?.header ?? [],
+  // );
+
+  const [headerMenus, setHeaderMenus] = useState<Category[]>([]);
+  // const [areaSearch, setAreaSearch] = useState<string>("");
   const { taxonomies } = useTaxonomies();
   const { actualRoute } = useRoute();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   // const forcedMenuCategories = taxonomies.categories;
 
   // console.log("forcedMenuCategories => ", forcedMenuCategories);
@@ -109,19 +112,28 @@ const Header: React.FC = () => {
     // if (!headerMenus || headerMenus.length === 0) {
     (async () => {
       try {
-        console.log("mendem kangen => ", headerMenus, headerMenus.length);
-        if (headerMenus.length > 0) {
-          const jsonData = headerMenus;
+        const getTemplate = await getTemplateByUrl("/header");
+        if (getTemplate?.data && getTemplate.status_code == 200) {
+          const vaTemplateHeader = getTemplate?.data?.content;
+          console.log("demi cinta => ", vaTemplateHeader);
+          const jsonData = JSON.parse(vaTemplateHeader);
           const linkCategoryIds = jsonData.map(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (item: any) => item.linkCategory,
           );
 
-          const filteredMenus = taxonomies.categories?.filter((category: any) =>
-            linkCategoryIds.includes(category.id),
-          );
+          // const filteredMenus = taxonomies.categories?.filter((category: any) =>
+          //   linkCategoryIds.includes(category.id),
+          // );
+
+          const filteredMenus =
+            taxonomies.categories?.filter((category) =>
+              linkCategoryIds.includes(category.id),
+            ) ?? [];
+
           setHeaderMenus(filteredMenus);
         } else {
-          const fallbackMenus = taxonomies.categories;
+          const fallbackMenus = taxonomies.categories ?? [];
           setHeaderMenus(fallbackMenus);
         }
       } catch (e) {
@@ -141,49 +153,49 @@ const Header: React.FC = () => {
     return `/${actualRoute?.country ? actualRoute.country.slug : ""}${actualRoute?.city ? `/${actualRoute.city.slug}` : ""}${actualRoute?.region ? `/${actualRoute.region.slug}` : ""}`;
   };
 
-  const baliAreas = useMemo(() => {
-    const taxonomyAreas = (taxonomies.countries ?? []).filter(
-      (country) => country.id !== 999 && isBaliAreaSlug(country.slug),
-    );
-    if (taxonomyAreas.length > 0) return taxonomyAreas;
-    return BALI_AREA_OPTIONS.map((area, index) => ({
-      id: -(index + 1),
-      name: area.name,
-      slug: area.slug,
-    }));
-  }, [taxonomies.countries]);
+  // const baliAreas = useMemo(() => {
+  //   const taxonomyAreas = (taxonomies.countries ?? []).filter(
+  //     (country) => country.id !== 999 && isBaliAreaSlug(country.slug),
+  //   );
+  //   if (taxonomyAreas.length > 0) return taxonomyAreas;
+  //   return BALI_AREA_OPTIONS.map((area, index) => ({
+  //     id: -(index + 1),
+  //     name: area.name,
+  //     slug: area.slug,
+  //   }));
+  // }, [taxonomies.countries]);
 
-  const areaSearchSubmitHandler = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const normalized = areaSearch
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-");
-    const fallbackArea = baliAreas[0];
-    if (!normalized) {
-      if (fallbackArea) navigate(`/${fallbackArea.slug}`);
-      return;
-    }
+  // const areaSearchSubmitHandler = (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   const normalized = areaSearch
+  //     .trim()
+  //     .toLowerCase()
+  //     .replace(/[^a-z0-9]+/g, "-");
+  //   const fallbackArea = baliAreas[0];
+  //   if (!normalized) {
+  //     if (fallbackArea) navigate(`/${fallbackArea.slug}`);
+  //     return;
+  //   }
 
-    const exact = baliAreas.find(
-      (area) =>
-        area.slug.toLowerCase() === normalized ||
-        area.name.toLowerCase() === areaSearch.trim().toLowerCase(),
-    );
-    const startsWith = baliAreas.find(
-      (area) =>
-        area.slug.toLowerCase().startsWith(normalized) ||
-        area.name.toLowerCase().startsWith(areaSearch.trim().toLowerCase()),
-    );
-    const partial = baliAreas.find(
-      (area) =>
-        area.slug.toLowerCase().includes(normalized) ||
-        area.name.toLowerCase().includes(areaSearch.trim().toLowerCase()),
-    );
+  //   const exact = baliAreas.find(
+  //     (area) =>
+  //       area.slug.toLowerCase() === normalized ||
+  //       area.name.toLowerCase() === areaSearch.trim().toLowerCase(),
+  //   );
+  //   const startsWith = baliAreas.find(
+  //     (area) =>
+  //       area.slug.toLowerCase().startsWith(normalized) ||
+  //       area.name.toLowerCase().startsWith(areaSearch.trim().toLowerCase()),
+  //   );
+  //   const partial = baliAreas.find(
+  //     (area) =>
+  //       area.slug.toLowerCase().includes(normalized) ||
+  //       area.name.toLowerCase().includes(areaSearch.trim().toLowerCase()),
+  //   );
 
-    const target = exact ?? startsWith ?? partial ?? fallbackArea;
-    if (target) navigate(`/${target.slug}`);
-  };
+  //   const target = exact ?? startsWith ?? partial ?? fallbackArea;
+  //   if (target) navigate(`/${target.slug}`);
+  // };
 
   return (
     <>

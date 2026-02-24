@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { ArticleApiResponseProps } from "../../types/article.type";
+// import { ArticleApiResponseProps } from "../../types/article.type";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Swiper as SwiperType } from "swiper";
 import { useGSAP } from "@gsap/react";
@@ -56,14 +56,13 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
 }) => {
   const { actualRoute, clientChange } = useRoute();
   // const {locations} = useOutletContext<LocationsContextProps>()
-  const { getCityById, getCountryById, getRegionById, taxonomies } =
-    useTaxonomies();
+  const { taxonomies } = useTaxonomies(); //getCityById, getCountryById, getRegionById, 
   const { generateContent, getPermalink, getFeaturedImageUrl } = useArticle();
   // const [heroTouched, setHeroTouched] = useState<boolean>(false)
   const activeAnim = useRef<gsap.core.Tween | null>(null);
   const imageRef = useRef<SwiperType>(null);
   const textRef = useRef<SwiperType>(null);
-  const navigationRef = useRef(null);
+  // const navigationRef = useRef(null);
   const playControls = useRef<{ play: (index: number) => void }>({
     play: () => {},
   });
@@ -71,15 +70,15 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
 
   const [content, setContent] = useState<PreContentProps>(preContent);
 
-  const getDeepestLocation = (article: ArticleApiResponseProps) => {
-    if (article.id_region) {
-      return getRegionById(article.id_region);
-    }
-    if (article.id_city) {
-      return getCityById(article.id_city);
-    }
-    return getCountryById(article.id_country);
-  };
+  // const getDeepestLocation = (article: ArticleApiResponseProps) => {
+  //   if (article.id_region) {
+  //     return getRegionById(article.id_region);
+  //   }
+  //   if (article.id_city) {
+  //     return getCityById(article.id_city);
+  //   }
+  //   return getCountryById(article.id_country);
+  // };
   useEffect(() => {
     (async () => {
       const get = await generateContent({
@@ -99,7 +98,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
         // console.log("data from generate", get);
         setContent(get);
       } else {
-        console.log("data from nothing")
+        console.log("data from nothing");
         setContent([]);
       }
       // if(content.length) return
@@ -192,12 +191,12 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
   }, [content]); // Dependency array is correct
 
   // The click handler is now much simpler and works correctly
-  const animClickHandler = (index: number) => {
-    // Just call the master play function with the clicked index
-    // if(!admin) {
-    playControls.current.play(index);
-    // }
-  };
+  // const animClickHandler = (index: number) => {
+  //   // Just call the master play function with the clicked index
+  //   // if(!admin) {
+  //   playControls.current.play(index);
+  //   // }
+  // };
 
   // console.log("hero image | content len => ", content.length);
   // console.log("hero image | content => ", content);

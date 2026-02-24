@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRoute } from "../../context/RouteContext";
 import { useTaxonomies } from "../../context/TaxonomyContext";
-import { Spacer } from "../../pages/Front/Templates/Home";
+// import { Spacer } from "../../pages/Front/Templates/Home";
 import {
   ComponentTemplateHomeProps,
   PreContentProps,
@@ -10,7 +10,7 @@ import useArticle from "../../hooks/useArticle";
 import { ButtonChevronBorderArang } from "../../icons";
 import TextLink from "./TextLink";
 import Image from "./Image";
-import { formatPublished } from "../../lib/utils/format";
+// import { formatPublished } from "../../lib/utils/format";
 import { Link } from "react-router";
 import { ArticleApiResponseProps } from "../../types/article.type";
 
