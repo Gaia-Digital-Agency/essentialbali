@@ -87,46 +87,46 @@ const Footer: React.FC = () => {
       label: country.name,
     })) ?? [];
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  // useEffect(() => {
+  //   if (typeof window === "undefined") return;
 
-    const storageKey = "essentialbali_visitor_count";
-    const raw = window.localStorage.getItem(storageKey);
-    const parsed = Number.parseInt(raw || "", 10);
-    const nextCount = Number.isFinite(parsed) ? parsed + 1 : 7127;
-    window.localStorage.setItem(storageKey, String(nextCount));
-    setVisitorCount(nextCount);
+  //   const storageKey = "essentialbali_visitor_count";
+  //   const raw = window.localStorage.getItem(storageKey);
+  //   const parsed = Number.parseInt(raw || "", 10);
+  //   const nextCount = Number.isFinite(parsed) ? parsed + 1 : 7127;
+  //   window.localStorage.setItem(storageKey, String(nextCount));
+  //   setVisitorCount(nextCount);
 
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-    const city = timezone.split("/").pop()?.replace(/_/g, " ") || "Bali Area";
-    let region = "";
-    const language = navigator.language || "en-US";
-    const countryCode = language.split("-")[1];
-    if (countryCode && typeof Intl.DisplayNames !== "undefined") {
-      const regionNames = new Intl.DisplayNames([language], { type: "region" });
-      region = regionNames.of(countryCode) || "";
-    }
-    const locationLabel = [city, region].filter(Boolean).join(", ");
-    setUserLocation(locationLabel || "Bali Area");
+  //   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  //   const city = timezone.split("/").pop()?.replace(/_/g, " ") || "Bali Area";
+  //   let region = "";
+  //   const language = navigator.language || "en-US";
+  //   const countryCode = language.split("-")[1];
+  //   if (countryCode && typeof Intl.DisplayNames !== "undefined") {
+  //     const regionNames = new Intl.DisplayNames([language], { type: "region" });
+  //     region = regionNames.of(countryCode) || "";
+  //   }
+  //   const locationLabel = [city, region].filter(Boolean).join(", ");
+  //   setUserLocation(locationLabel || "Bali Area");
 
-    const tick = () => {
-      const now = new Date();
-      setUserTime(
-        now.toLocaleString(language, {
-          year: "numeric",
-          month: "short",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
-      );
-    };
+  //   const tick = () => {
+  //     const now = new Date();
+  //     setUserTime(
+  //       now.toLocaleString(language, {
+  //         year: "numeric",
+  //         month: "short",
+  //         day: "2-digit",
+  //         hour: "2-digit",
+  //         minute: "2-digit",
+  //         second: "2-digit",
+  //       }),
+  //     );
+  //   };
 
-    tick();
-    const timer = window.setInterval(tick, 1000);
-    return () => window.clearInterval(timer);
-  }, []);
+  //   tick();
+  //   const timer = window.setInterval(tick, 1000);
+  //   return () => window.clearInterval(timer);
+  // }, []);
 
   console.log(taxonomies);
   // const { actualRoute } = useRoute();

@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import NavLogo from "../../../components/front/NavLogo";
 // import DropDownCountry from "../../../components/front/DropDownCountry";
 import MobileMenu from "../../../components/front/MobileMenu";
-import { HamburgerIcon } from "../../../icons";
+import { FacebookIconGreyDefault, FacebookIconGreyHover, HamburgerIcon } from "../../../icons";
 import { useTaxonomies } from "../../../context/TaxonomyContext";
 import { RouteProps, useRoute } from "../../../context/RouteContext";
 import { Category } from "../../../types/category.type";
@@ -14,15 +14,17 @@ import { BALI_AREA_OPTIONS, isBaliAreaSlug } from "../../../utils/baliAreas";
 import { SearchIcon } from "lucide-react";
 import AreaMenuToggleButton from "../../../components/front/AreaMenuToggleButton";
 import AreaMenuPanel from "../../../components/front/AreaMenuPanel";
+import { FacebookIcon } from "react-share";
 
 const DESIRED_HEADER_MENUS = [
+  { slug: "deals", label: "News" },
   { slug: "events", label: "Events" },
-  { slug: "deals", label: "Deals" },
-  { slug: "featured", label: "Featured" },
-  { slug: "ultimate-guide", label: "Ultimate Guide" },
+  { slug: "featured", label: "Stays" },
+  { slug: "ultimate-guide", label: "Dine" },
   { slug: "health-wellness", label: "Health & Wellness" },
-  { slug: "directory", label: "Directory" },
-  { slug: "nature-adventure", label: "Nature Adventure" },
+  { slug: "directory", label: "Nightlife" },
+  { slug: "nature-adventure", label: "Activities" },
+  { slug: "nature-adventure", label: "People & Culture" },
 ];
 
 const MenuNav: React.FC<{
@@ -59,7 +61,7 @@ const MenuNav: React.FC<{
       <NavLink
         key={menu.id}
         relative={"route"}
-        className={`menu-link text-front-extra-small text-nowrap capitalize 
+        className={`menu-link text-[14px] text-nowrap capitalize 
                 align-items-center justify-center
                 ${isActive() ? "is-active" : ""}
                 `}
@@ -84,57 +86,52 @@ const Header: React.FC = () => {
   );
   const [areaSearch, setAreaSearch] = useState<string>("");
   const { taxonomies } = useTaxonomies();
-  console.log("TAXONOMIES HEADER => " , taxonomies);
   const { actualRoute } = useRoute();
   const navigate = useNavigate();
-  const forcedMenuCategories = useMemo(() => {
-    const categories = taxonomies.categories ?? [];
-    console.log("how do i live => " , categories)
-    return DESIRED_HEADER_MENUS.map((item, index) => {
-      const found = categories.find((cat) => cat.slug_title === item.slug);
-      if (found) return found;
-      return {
-        id: -(index + 1),
-        title: item.label,
-        slug_title: item.slug,
-      } as Category;
-    });
-  }, [taxonomies.categories]);
+  // const forcedMenuCategories = taxonomies.categories;
 
+  // console.log("forcedMenuCategories => ", forcedMenuCategories);
+
+  // const forcedMenuCategories = useMemo(() => {
+  //   const categories = taxonomies.categories ?? [];
+  //   console.log("how do i live => " , categories)
+  //   return DESIRED_HEADER_MENUS.map((item, index) => {
+  //     // const found = categories.find((cat) => cat.slug_title === item.slug);
+  //     // if (found) return found;
+  //     return {
+  //       id: -(index + 1),
+  //       title: item.label,
+  //       slug_title: item.slug,
+  //     } as Category;
+  //   });
+  // }, [taxonomies.categories]);
   useEffect(() => {
-    if (!headerMenus || headerMenus.length === 0) {
-      (async () => {
-        try {
-          const getTemplate = await getTemplateByUrl("/header");
-          if (getTemplate?.data && getTemplate.status_code == 200) {
-            const jsonData = JSON.parse(getTemplate.data.content);
-            setHeaderMenus(jsonData);
-          } else {
-            const fallbackMenus =
-              taxonomies.categories
-                ?.filter((cat) => !cat.id_parent)
-                ?.map((cat) => ({
-                  label: cat.title,
-                  url: cat.slug_title,
-                  linkCategory: cat.id,
-                })) ?? [];
-            setHeaderMenus(fallbackMenus);
-          }
-        } catch (e) {
-          console.log("Error fetching header template:", e);
-          const fallbackMenus =
-            taxonomies.categories
-              ?.filter((cat) => !cat.id_parent)
-              ?.map((cat) => ({
-                label: cat.title,
-                url: cat.slug_title,
-                linkCategory: cat.id,
-              })) ?? [];
+    // if (!headerMenus || headerMenus.length === 0) {
+    (async () => {
+      try {
+        console.log("mendem kangen => ", headerMenus, headerMenus.length);
+        if (headerMenus.length > 0) {
+          const jsonData = headerMenus;
+          const linkCategoryIds = jsonData.map(
+            (item: any) => item.linkCategory,
+          );
+
+          const filteredMenus = taxonomies.categories?.filter((category: any) =>
+            linkCategoryIds.includes(category.id),
+          );
+          setHeaderMenus(filteredMenus);
+        } else {
+          const fallbackMenus = taxonomies.categories;
           setHeaderMenus(fallbackMenus);
         }
-      })();
-    }
+      } catch (e) {
+        console.error("Error fetching header template:", e);
+      }
+    })();
+    // }
   }, [taxonomies.categories]);
+
+  const forcedMenuCategories = headerMenus;
 
   useEffect(() => {
     setIsModalOpen(false);
@@ -237,7 +234,7 @@ const Header: React.FC = () => {
 
         <div className="mx-auto py-[15px] hidden md:block bg-front-navy">
           <nav
-            className="container menus-wrapper flex flex-wrap items-center gap-x-6 gap-y-3 justify-center"
+            className="container menus-wrapper flex flex-wrap items-center gap-x-4 gap-y-3 justify-center"
             aria-label="Categories"
           >
             {forcedMenuCategories.map((menu: Category, index: number) => (
@@ -254,6 +251,9 @@ const Header: React.FC = () => {
                 )}
               </>
             ))}
+            {/* <div className="right-0">
+              <FacebookIconGreyHover className="w-[20px] h-[20px] cursor-pointer" />
+            </div> */}
           </nav>
         </div>
       </header>

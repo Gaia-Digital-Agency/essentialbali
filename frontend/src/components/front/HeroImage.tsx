@@ -96,7 +96,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
         },
       });
       if (get) {
-        console.log("data from generate", get);
+        // console.log("data from generate", get);
         setContent(get);
       } else {
         console.log("data from nothing")
@@ -199,8 +199,8 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
     // }
   };
 
-  console.log("hero image | content len => ", content.length);
-  console.log("hero image | content => ", content);
+  // console.log("hero image | content len => ", content.length);
+  // console.log("hero image | content => ", content);
 
   if (content.length) {
     return (

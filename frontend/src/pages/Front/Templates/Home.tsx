@@ -16,6 +16,7 @@ import pkg from "../../../lib/utils/Helmet"
 import BaliEssentialSection1 from "../../../components/front/BaliEssentialSection1"
 import BaliEssentialSection2 from "../../../components/front/BaliEssentialSection2"
 import BaliEssentialSection3 from "../../../components/front/BaliEssentialSection3"
+import { useTaxonomies } from "../../../context/TaxonomyContext"
 const {Helmet} = pkg
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || ''
@@ -28,7 +29,8 @@ const HomeTemplate: React.FC = () => {
     const [content, setContent] = useState<any>(initialData?.template ?? DefaultHomeTemplate)
     const [isReady, setIsReady] = useState<boolean>(true)
     const {actualRoute, clientChange} = useRoute()
-    // const isV2 = searchParams.get('v2')
+    // const { taxonomies } = useTaxonomies();
+    // console.log("initialData home => " , initialData)
     const isLocation = actualRoute?.country || actualRoute?.city || actualRoute?.region
     useEffect(() => {
         setIsReady(false);
@@ -39,19 +41,12 @@ const HomeTemplate: React.FC = () => {
                 const getTemplate = await getTemplateByUrl(urlToGet)
                 if(getTemplate?.data?.content && getTemplate.status_code == 200) {
                     setContent(JSON.parse(getTemplate.data.content))
-                    console.log("Get Data Template By Query from API")
                 } else {
                     setContent(DefaultHomeTemplate)
-                    console.log("Get Data Template By Query from Default")
-                    // if(isV2){
-                    //     // const theContent = await generateContent(DefaultHomeTemplate) 
-                    // } else {
-                    //     setContent(null)
-                    // }
                 }
                 setIsReady(true)
             } catch(e) {
-                console.log(e)
+                console.error(e)
                 setIsReady(true)
                 setContent(DefaultHomeTemplate)
             }
