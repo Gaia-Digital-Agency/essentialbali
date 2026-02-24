@@ -24,6 +24,7 @@ type BaliEssentialSectionSecondaryProps = {
 
 const BaliEssentialSection1: React.FC<ComponentTemplateHomeProps> = ({
   preContent,
+  default_category = "featured",
   admin = false,
 }) => {
   const { actualRoute, clientChange } = useRoute();
@@ -33,7 +34,7 @@ const BaliEssentialSection1: React.FC<ComponentTemplateHomeProps> = ({
   const [content, setContent] = useState<PreContentProps>(preContent);
   const { generateContent } = useArticle();
 
-  const CATEGORY_SLUG = "featured";
+  const CATEGORY_SLUG = default_category;
 
   const theCategory = () => {
     return taxonomies?.categories?.find(
@@ -58,7 +59,7 @@ const BaliEssentialSection1: React.FC<ComponentTemplateHomeProps> = ({
           setContent(get);
         }
       } catch (e) {
-        console.log("ERROR => ", e);
+        console.error("ERROR => ", e);
       }
     })();
   }, [actualRoute, clientChange]);

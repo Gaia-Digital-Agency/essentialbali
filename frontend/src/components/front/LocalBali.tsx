@@ -16,13 +16,14 @@ import TextLink from "./TextLink";
 import About from "./About";
 
 const LocalBali: React.FC<ComponentTemplateHomeProps> = ({
+  default_category = ["featured"],
   preContent = [],
 }) => {
   const { actualRoute, clientChange } = useRoute();
   const { taxonomies } = useTaxonomies(); //getCategoryById
   // const {locations} = useOutletContext<LocationsContextProps>()
   // const {availableCategories} = useOutletContext<AvailableCategoriesProps>()
-  const CATEGORY_SLUGS = ["area-highlights", "ultimate-guide", "featured"];
+  const CATEGORY_SLUGS = default_category as string[];
   const { generateContent } = useArticle(); //getPermalink, getFeaturedImageUrl
   // const imageRef = useRef<any>(null);
   const [content, setContent] = useState<PreContentProps>(preContent);
@@ -34,13 +35,14 @@ const LocalBali: React.FC<ComponentTemplateHomeProps> = ({
   useEffect(() => {
     (async () => {
       try {
-        const filterCountry = taxonomies?.countries
-          ?.filter((country) => actualRoute?.country?.id != country.id)
-          .map((country) => country.id);
+        // const filterCountry = taxonomies?.countries
+        //   ?.filter((country) => actualRoute?.country?.id != country.id)
+        //   .map((country) => country.id);
+
         const get = await generateContent({
           content: preContent,
           query: {
-            id_country: filterCountry,
+            // id_country: filterCountry,
             limit: 8,
             category: taxonomies.categories
               ?.filter((item) => CATEGORY_SLUGS.includes(item.slug_title))
@@ -51,7 +53,7 @@ const LocalBali: React.FC<ComponentTemplateHomeProps> = ({
           setContent(get);
         }
       } catch (e) {
-        console.log(e);
+        console.error(e);
       }
     })();
   }, [actualRoute, preContent, clientChange]);
@@ -98,8 +100,8 @@ const LocalBali: React.FC<ComponentTemplateHomeProps> = ({
                     </h2>
                     {/* {exploreMore()} */}
                   </div>
-                  <div className="line bg-front-dustly-slate h-[0.5px] w-full"></div>
                 </div>
+                <div className="line bg-front-dustly-slate h-[0.5px] w-full"></div>
               </div>
             </div>
 

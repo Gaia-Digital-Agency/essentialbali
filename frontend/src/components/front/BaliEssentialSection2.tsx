@@ -14,8 +14,6 @@ import Image from "./Image";
 import { Link } from "react-router";
 import { ArticleApiResponseProps } from "../../types/article.type";
 
-const CATEGORY_SLUG = "events";
-
 const ArticleItems: React.FC<{
   article: ArticleApiResponseProps;
   admin?: boolean;
@@ -27,7 +25,7 @@ const ArticleItems: React.FC<{
   return (
     <div
       className="md:col-span-6 lg:col-span-3 col-span-12 relative group "
-      key={`bali-essential-${CATEGORY_SLUG}-${article.id}`}
+      key={`bali-essential-${article.id}`}
       onMouseEnter={() => imageRef.current?.zoomIn()}
       onMouseLeave={() => imageRef.current?.zoomOut()}
     >
@@ -72,6 +70,7 @@ const ArticleItems: React.FC<{
 
 const BaliEssentialSection2: React.FC<ComponentTemplateHomeProps> = ({
   preContent,
+  default_category = "featured",
   admin = false,
 }) => {
   const { actualRoute, clientChange } = useRoute();
@@ -80,6 +79,8 @@ const BaliEssentialSection2: React.FC<ComponentTemplateHomeProps> = ({
   // const {locations} = useOutletContext<LocationsContextProps>()
   const [content, setContent] = useState<PreContentProps>(preContent);
   const { generateContent } = useArticle();
+
+  const CATEGORY_SLUG = default_category;
 
   const theCategory = () => {
     return taxonomies?.categories?.find(
@@ -104,7 +105,7 @@ const BaliEssentialSection2: React.FC<ComponentTemplateHomeProps> = ({
           setContent(get);
         }
       } catch (e) {
-        console.log("ERROR => ", e);
+        console.error("ERROR => ", e);
       }
     })();
   }, [actualRoute, clientChange]);
@@ -117,7 +118,7 @@ const BaliEssentialSection2: React.FC<ComponentTemplateHomeProps> = ({
     );
   };
 
-  console.log("content bali section 2", content);
+  // console.log("content bali section 2", content);
 
   return (
     <>

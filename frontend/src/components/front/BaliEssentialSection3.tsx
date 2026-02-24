@@ -14,8 +14,6 @@ import Image from "./Image";
 import { Link } from "react-router";
 import { ArticleApiResponseProps } from "../../types/article.type";
 
-const CATEGORY_SLUG = "health-wellness";
-
 const ArticleItems: React.FC<{
   article: ArticleApiResponseProps;
   admin?: boolean;
@@ -26,7 +24,7 @@ const ArticleItems: React.FC<{
 
   return (
     <div
-      className="group"
+      className="group w-[100%]"
       onMouseEnter={() => imageRef.current?.zoomIn()}
       onMouseLeave={() => imageRef.current?.zoomOut()}
     >
@@ -34,7 +32,7 @@ const ArticleItems: React.FC<{
         <Image
           // url="https://images.unsplash.com/photo-1721879223016-96dbd4952ffd?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
           url={getFeaturedImageUrl(article)}
-          ratio="50%"
+          ratio="60%"
           link={admin ? undefined : getPermalink(article)}
           alt={article?.featured_image_alt}
           ref={imageRef}
@@ -61,6 +59,7 @@ const ArticleItems: React.FC<{
 
 const BaliEssentialSection3: React.FC<ComponentTemplateHomeProps> = ({
   preContent,
+  default_category = "featured",
   admin = false,
 }) => {
   const { actualRoute, clientChange } = useRoute();
@@ -69,6 +68,8 @@ const BaliEssentialSection3: React.FC<ComponentTemplateHomeProps> = ({
   // const {locations} = useOutletContext<LocationsContextProps>()
   const [content, setContent] = useState<PreContentProps>(preContent);
   const { generateContent } = useArticle();
+
+  const CATEGORY_SLUG = default_category;
 
   const theCategory = () => {
     return taxonomies?.categories?.find(
@@ -93,7 +94,7 @@ const BaliEssentialSection3: React.FC<ComponentTemplateHomeProps> = ({
           setContent(get);
         }
       } catch (e) {
-        console.log("ERROR => ", e);
+        console.error("ERROR => ", e);
       }
     })();
   }, [actualRoute, clientChange]);
@@ -142,7 +143,7 @@ const BaliEssentialSection3: React.FC<ComponentTemplateHomeProps> = ({
             </div>
             <div className="container py-8">
               {/* <div className="grid grid-cols-6 md:gap-x-8 gap-y-10 mb-6 md:mb-4 overflow-x-hidden bg-blue-400"> */}
-              <div className="flex flex-row gap-x-5">
+              <div className="flex flex-row gap-x-8">
                 {content.map((item, index) =>
                   item ? (
                     <ArticleItems key={index} article={item} admin={admin} />
