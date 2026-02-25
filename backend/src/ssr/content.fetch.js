@@ -155,6 +155,11 @@ const fetchContentData = async (route, taxonomy, search = undefined) => {
     id_city: route?.listingParams?.city ? route?.listingParams?.city?.id : undefined,
     id_region: route?.listingParams?.region ? route?.listingParams?.region?.id : undefined,
   }
+  // console.log("\n")
+  // console.log("\n")
+  // console.log("CONTENT FETCH =>>>", route.type)
+  // console.log("\n")
+  // console.log("\n")
   const baseQuery = deleteFalsyProperties(_baseQuery)
   if(route.type == 'ARTICLE_PAGE') {
     const discover = await discoverArticle(baseQuery)

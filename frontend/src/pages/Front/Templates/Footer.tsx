@@ -128,7 +128,7 @@ const Footer: React.FC = () => {
   //   return () => window.clearInterval(timer);
   // }, []);
 
-  console.log(taxonomies);
+  // console.log(taxonomies);
   // const { actualRoute } = useRoute();
   //   const navigate = useNavigate();
   const forcedMenuCategories = useMemo(() => {

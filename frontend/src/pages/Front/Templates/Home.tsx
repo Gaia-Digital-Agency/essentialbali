@@ -65,7 +65,7 @@ const HomeTemplate: React.FC = () => {
         }
         setIsReady(true);
       } catch (e) {
-        console.error(e);
+        // console.error(e);
         setIsReady(true);
         setContent(DefaultHomeTemplate);
       }

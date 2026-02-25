@@ -57,7 +57,7 @@ const About: React.FC = () => {
   }, []);
 
   const { taxonomies } = useTaxonomies();
-  console.log(taxonomies);
+  // console.log(taxonomies);
   // const { actualRoute } = useRoute();
 //   const navigate = useNavigate();
   const forcedMenuCategories = useMemo(() => {
