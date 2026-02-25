@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 import multer from "multer";
 import { response } from "./src/helpers/response.js";
 import requestTimer from "./src/middlewares/request_timer.js";
+import { pino } from "pino";
 
 import path from "path";
 import fs from "fs";
@@ -27,6 +28,8 @@ import {
 } from "./src/ssr/articles.fetch.js";
 import redis from "./redisClient.js";
 import penthouse from "penthouse";
+
+const logger = pino(pino.destination('./logs/pino.log'));
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -377,7 +380,9 @@ app.use("*", async (req, res, next) => {
     // const serverEntryPath = path.resolve(frontendPath, 'src', 'entry-server.tsx');
     // const { render } = await vite.ssrLoadModule(serverEntryPath);
     const initialTaxonomies = await fetchTaxonomyData();
+    logger.info(initialTaxonomies);
     const initialRoute = await fetchRouteData(url, initialTaxonomies, req.ip);
+    logger.info(initialRoute);
     // console.log(initialRoute);
     const initialContent = await fetchContentData(
       initialRoute,
