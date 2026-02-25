@@ -25,8 +25,8 @@ module.exports = {
     );
 
     const aboutContent = {
-      title: "About essentialbali",
-      description: "essentialbali is a Bali area guide for travelers, expats, and locals, featuring dining, events, schools, wellness, and local travel insights across the island.",
+      title: "Essential Bali",
+      description: "The Essential guide to Bali’s modern landscape. We bring you curated News and Events, while exploring hidden Destinations and unique Stays. Discover the island's soul through Food & Drink, Wellness, Things to Do, Nightlife, and People & Culture",
       link: "/about",
       image: {
         url: "/logo.png",

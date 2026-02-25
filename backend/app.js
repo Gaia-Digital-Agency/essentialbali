@@ -378,11 +378,13 @@ app.use("*", async (req, res, next) => {
     // const { render } = await vite.ssrLoadModule(serverEntryPath);
     const initialTaxonomies = await fetchTaxonomyData();
     const initialRoute = await fetchRouteData(url, initialTaxonomies, req.ip);
+    // console.log(initialRoute);
     const initialContent = await fetchContentData(
       initialRoute,
       initialTaxonomies,
       search,
     );
+    // const initialContent = []
     const initialTemplateContent = await fetchTemplateContent(initialRoute);
     const initialTime = new Date().toISOString();
     const initialHeroImage = getInitialArticleHeroImage(
@@ -448,6 +450,8 @@ app.use("*", async (req, res, next) => {
     //   redis.set("html:" + _url, html, "EX", 100)
     //   res.set('X-Cache', "MISS")
     // }
+
+
     res.status(200).set({ "Content-Type": "text/html" }).end(html);
   } catch (e) {
     if (vite) vite.ssrFixStacktrace(e);
