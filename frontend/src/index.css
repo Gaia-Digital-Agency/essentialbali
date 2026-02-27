@@ -1069,7 +1069,7 @@ article .content-wrapper img {
 }
 
 .swiper-pagination {
-  --swiper-pagination-color: var(--color-front-red);
+  --swiper-pagination-color: var(--color-front-navy);
   --swiper-pagination-bullet-size: 12px;
   --swiper-pagination-bullet-horizontal-gap: 8px;
   --swiper-pagination-bottom: -8px;
@@ -1254,9 +1254,9 @@ header .menus-wrapper .menu-link::before {
 }
 
 header .menus-wrapper .menu-link.is-active {
-  --hover-width: 100% !important;
+  /* --hover-width: 100% !important;
   color: var(--hover-color);
-  --hover-color: var(--color-front-icewhite);
+  --hover-color: var(--color-front-icewhite); */
 }
 
 .tag-wrapper.tag-selector.active img {

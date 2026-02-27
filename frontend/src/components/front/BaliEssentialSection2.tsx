@@ -49,8 +49,9 @@ const ArticleItems: React.FC<{
             <Link to={admin ? "" : getPermalink(article)}>
               <p
                 className="text-front-title text-front-grey font-serif
-                          transition-[font-weight] duration-200
-                          group-hover:font-semibold"
+                          transition-[font-weight]
+                          transition-all duration-300
+                          group-hover:[text-shadow:0_0_0.3px_currentColor]"
                 // className="
                 //   text-front-title text-front-grey font-serif
                 //   transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
