@@ -8,7 +8,7 @@ import Skeleton from "react-loading-skeleton";
 import Image from "./Image";
 import Button from "./Button";
 import "swiper/swiper-bundle.css";
-import { useTaxonomies } from "../../context/TaxonomyContext";
+// import { useTaxonomies } from "../../context/TaxonomyContext";
 import { useRoute } from "../../context/RouteContext";
 import useArticle from "../../hooks/useArticle";
 import {
@@ -56,7 +56,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
 }) => {
   const { actualRoute, clientChange } = useRoute();
   // const {locations} = useOutletContext<LocationsContextProps>()
-  const { taxonomies } = useTaxonomies(); //getCityById, getCountryById, getRegionById, 
+  // const { taxonomies } = useTaxonomies(); //getCityById, getCountryById, getRegionById, 
   const { generateContent, getPermalink, getFeaturedImageUrl } = useArticle();
   // const [heroTouched, setHeroTouched] = useState<boolean>(false)
   const activeAnim = useRef<gsap.core.Tween | null>(null);
@@ -66,7 +66,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
   const playControls = useRef<{ play: (index: number) => void }>({
     play: () => {},
   });
-  const CATEGORY_SLUG = "featured";
+  // const CATEGORY_SLUG = "featured";
 
   const [content, setContent] = useState<PreContentProps>(preContent);
 
@@ -88,12 +88,13 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
           id_city: actualRoute?.city?.id,
           id_region: actualRoute?.region?.id,
           limit: 3,
-          pinned: 1,
-          category: taxonomies.categories?.find(
-            (cat) => cat.slug_title == CATEGORY_SLUG,
-          )?.id,
+          // pinned: 1,
+          // category: taxonomies.categories?.find(
+          //   (cat) => cat.slug_title == CATEGORY_SLUG,
+          // )?.id,
         },
       });
+      console.log("data from generate", get);
       if (get) {
         // console.log("data from generate", get);
         setContent(get);
@@ -198,8 +199,8 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
   //   // }
   // };
 
-  // console.log("hero image | content len => ", content.length);
-  // console.log("hero image | content => ", content);
+  console.log("hero image | content len => ", content.length);
+  console.log("hero image | content => ", content);
 
   if (content.length) {
     return (
@@ -212,7 +213,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
             <Swiper
               onSwiper={(swiper) => (imageRef.current = swiper)}
               slidesPerView={1}
-              // loop={true}
+              loop={true}
               allowTouchMove={false}
             >
               {content.map((item, i) => {
@@ -241,7 +242,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
               <Swiper
                 onSwiper={(swiper) => (textRef.current = swiper)}
                 slidesPerView={1}
-                // loop={true}
+                loop={true}
                 autoHeight={true}
                 noSwiping={true}
                 allowTouchMove={false}

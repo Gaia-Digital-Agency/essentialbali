@@ -65,7 +65,7 @@ const HomeTemplate: React.FC = () => {
         }
         setIsReady(true);
       } catch (e) {
-        // console.error(e);
+        console.error(e);
         setIsReady(true);
         setContent(DefaultHomeTemplate);
       }
@@ -114,10 +114,6 @@ const HomeTemplate: React.FC = () => {
     <>
       {getHelmet()}
       <HeroImage preContent={heroImage} />
-      {/* <Spacer />
-            <div className="container">
-                <Advertisement />
-            </div> */}
       <BaliEssentialSection1
         default_category={category_section1}
         preContent={ultimateGuide}
@@ -130,18 +126,7 @@ const HomeTemplate: React.FC = () => {
         default_category={category_section3}
         preContent={section3}
       />
-
-      {/* <Trending preContent={trending} /> */}
-      {/* {
-                isLocation &&
-                <>
-                    <MostPopular preContent={mostPopular} />
-                </>
-            } */}
-      {/* <EventsHome preContent={events} /> */}
-      {/* <UltimateGuide preContent={ultimateGuide} /> */}
       <LocalBali default_category={category_rest} preContent={overseas} />
-
       <div className="outer bg-front-icewhite">
         <Spacer />
         <Newsletter />
