@@ -2022,7 +2022,7 @@ export default {
                     ${cWhere}
                     ${cGroupByTrending}
                     ORDER BY a.pinned DESC, ${cOrderByTrending} a.publishedAt DESC;`;
-      console.log(cSQL);
+      // console.log(cSQL);
       const [dbData, metadata] = await sequelize.query(cSQL);
 
       // CHECKING 1 START
