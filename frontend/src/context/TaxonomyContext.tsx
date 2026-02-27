@@ -79,7 +79,7 @@ export const TaxonomyProvider: React.FC<TaxonomyProviderInitialProps> = ({ child
       initialData?.categories?.length
     )
 
-    console.log(initialData, 'initialData')
+    // console.log(initialData, 'initialData')
 
   const [taxonomies, setTaxonomies] = useState<TaxonomyProps>(
     hasInitialTaxonomies

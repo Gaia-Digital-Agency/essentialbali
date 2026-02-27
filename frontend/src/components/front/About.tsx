@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { getTemplateByUrl } from "../../services/template.service";
 import Skeleton from "react-loading-skeleton";
 // import Image from "./Image";
@@ -8,8 +8,13 @@ import Button from "./Button";
 import { useTaxonomies } from "../../context/TaxonomyContext";
 // import { useNavigate } from "react-router-dom";
 import { Category } from "../../types/category.type";
-import { Link } from 'react-router';
-import { FacebookIconGreyDefault, InstagramIconGreyDefault, TwitterIconGreyDefault } from "../../icons";
+import { Link, NavLink } from "react-router";
+import {
+  FacebookIconGreyDefault,
+  InstagramIconGreyDefault,
+  TwitterIconGreyDefault,
+} from "../../icons";
+import { RouteProps, useRoute } from "../../context/RouteContext";
 
 // Brand logo lives in `/public/logo.png`.
 // const BRAND_LOGO_PATH = "/logo.png";
@@ -23,22 +28,62 @@ export type AboutContentProps = {
   };
 };
 
-const DESIRED_HEADER_MENUS = [
-  { slug: "events", label: "Events" },
-  { slug: "deals", label: "Deals" },
-  { slug: "featured", label: "Featured" },
-  { slug: "ultimate-guide", label: "Ultimate Guide" },
-  { slug: "health-wellness", label: "Health & Wellness" },
-  { slug: "directory", label: "Directory" },
-  { slug: "nature-adventure", label: "Nature Adventure" },
-  { slug: "nature-adventure", label: "Nature Adventure" },
-];
+const MenuNav: React.FC<{
+  menu: Category;
+  menus: Category[];
+}> = ({ menu, menus }) => {
+  const { taxonomies } = useTaxonomies();
+  const { actualRoute } = useRoute();
+
+  const generateTo = (url: string, route: RouteProps) => {
+    if (route?.article) {
+      return `/${route.country?.slug}/${url}`;
+    }
+    return `${route.country ? `/${route.country.slug}` : ""}${route.city ? `/${route.city.slug}` : ""}${route.region ? `/${route.region.slug}` : ""}/${url}`;
+  };
+
+  const isActive = () => {
+    if (menu.id == actualRoute.category?.id) return true;
+    if (
+      actualRoute.category?.id_parent &&
+      !menus.find((men) => actualRoute.category?.id == men.id)
+    ) {
+      return (
+        taxonomies.categories?.find(
+          (cat) => actualRoute.category?.id_parent == cat.id,
+        )?.id == menu.id
+      );
+    }
+    return false;
+  };
+
+  return (
+    <>
+      <NavLink
+        key={menu.id}
+        relative={"route"}
+        className={`menu-link text-nowrap capitalize 
+                align-items-center justify-center
+                font-sans text-[16px]/[25px]
+                text-front-shadowed-slate
+                font-light
+                hover:text-front-navy
+                ${isActive() ? "is-active" : ""}
+                `}
+        to={generateTo(menu.slug_title, actualRoute)}
+      >
+        {menu.title}
+      </NavLink>
+    </>
+  );
+};
 
 const About: React.FC = () => {
   const { initialData } = useHeaderContent();
   const [content, setContent] = useState<AboutContentProps | undefined>(
     initialData?.about,
   );
+  const [menuList, setMenuList] = useState<Category[]>([]);
 
   // Fetch about template if not provided by SSR
   useEffect(() => {
@@ -57,20 +102,39 @@ const About: React.FC = () => {
   }, []);
 
   const { taxonomies } = useTaxonomies();
-  console.log(taxonomies);
-  // const { actualRoute } = useRoute();
-//   const navigate = useNavigate();
-  const forcedMenuCategories = useMemo(() => {
-    const categories = taxonomies.categories ?? [];
-    return DESIRED_HEADER_MENUS.map((item, index) => {
-      const found = categories.find((cat) => cat.slug_title === item.slug);
-      if (found) return found;
-      return {
-        id: -(index + 1),
-        title: item.label,
-        slug_title: item.slug,
-      } as Category;
-    });
+
+  useEffect(() => {
+    // if (!headerMenus || headerMenus.length === 0) {
+    (async () => {
+      try {
+        const getTemplate = await getTemplateByUrl("/header");
+        if (getTemplate?.data && getTemplate.status_code == 200) {
+          const vaTemplateHeader = getTemplate?.data?.content;
+          const jsonData = JSON.parse(vaTemplateHeader);
+          const linkCategoryIds = jsonData.map(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (item: any) => item.linkCategory,
+          );
+
+          // const filteredMenus = taxonomies.categories?.filter((category: any) =>
+          //   linkCategoryIds.includes(category.id),
+          // );
+
+          const filteredMenus =
+            taxonomies.categories?.filter((category) =>
+              linkCategoryIds.includes(category.id),
+            ) ?? [];
+
+          setMenuList(filteredMenus);
+        } else {
+          const fallbackMenus = taxonomies.categories ?? [];
+          setMenuList(fallbackMenus);
+        }
+      } catch (e) {
+        console.error("Error fetching header template:", e);
+      }
+    })();
+    // }
   }, [taxonomies.categories]);
 
   return (
@@ -102,8 +166,13 @@ const About: React.FC = () => {
               Essential Categories
             </p>
             <div className="category-wrapper flex flex-col gap-y-3 font-sans text-[16px]/[25px] text-front-shadowed-slate">
-              {forcedMenuCategories.map((menu: Category) => (
-                <p key={menu.id}>{menu.title}</p>
+              {menuList.map((menu: Category) => (
+                // <p key={menu.id}>{menu.title}</p>
+                <MenuNav
+                  menu={menu}
+                  menus={menuList}
+                  key={`header-menu-${menu.slug_title}`}
+                />
               ))}
             </div>
           </div>
@@ -116,13 +185,13 @@ const About: React.FC = () => {
             </p>
             <div className="item flex gap-x-4">
               <Link to={"#"} target="_blank">
-                <FacebookIconGreyDefault height={28} width={28}/>
+                <FacebookIconGreyDefault height={28} width={28} />
               </Link>
               <Link to={"#"} target="_blank">
-                <InstagramIconGreyDefault height={28} width={28}/>
+                <InstagramIconGreyDefault height={28} width={28} />
               </Link>
               <Link to={"#"} target="_blank">
-                <TwitterIconGreyDefault height={28} width={28}/>
+                <TwitterIconGreyDefault height={28} width={28} />
               </Link>
             </div>
           </div>

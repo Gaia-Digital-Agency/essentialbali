@@ -29,7 +29,7 @@ const AreaMenuPanel: React.FC<AreaMenuPanelProps> = ({ open, onSelect }) => {
     .filter((country) => country.id !== 999 && isBaliAreaSlug(country.slug))
     .map((country) => ({ value: country.slug, label: country.name }));
 
-  console.log(taxonomyOptions, "taxonomyOptions");
+  // console.log(taxonomyOptions, "taxonomyOptions");
 
   const options =
     taxonomyOptions.length > 0

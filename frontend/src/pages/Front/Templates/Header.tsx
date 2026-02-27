@@ -3,7 +3,12 @@ import { NavLink } from "react-router-dom"; //useNavigate
 import NavLogo from "../../../components/front/NavLogo";
 // import DropDownCountry from "../../../components/front/DropDownCountry";
 import MobileMenu from "../../../components/front/MobileMenu";
-import { FacebookIconWhiteDefault, HamburgerIcon, InstagramIconWhiteDefault, TwitterIconWhiteDefault } from "../../../icons"; //FacebookIconGreyDefault, FacebookIconGreyHover,
+import {
+  FacebookIconGreyDefault,
+  HamburgerIcon,
+  InstagramIconWhiteDefault,
+  TwitterIconWhiteDefault,
+} from "../../../icons"; //FacebookIconGreyDefault, FacebookIconGreyHover,
 import { useTaxonomies } from "../../../context/TaxonomyContext";
 import { RouteProps, useRoute } from "../../../context/RouteContext";
 import { Category } from "../../../types/category.type";
@@ -263,9 +268,9 @@ const Header: React.FC = () => {
               </>
             ))}
             <div className="flex items-center justify-center absolute right-5 gap-x-4">
-              <FacebookIconWhiteDefault className="w-[20px] h-[20px] cursor-pointer" />
-              <InstagramIconWhiteDefault className="w-[20px] h-[20px] cursor-pointer" />
-              <TwitterIconWhiteDefault className="w-[20px] h-[20px] cursor-pointer" />
+              <FacebookIconGreyDefault className="w-[20px] h-[20px] cursor-pointer text-front-icewhite hover:text-front-dustly-slate duration-200" />
+              <InstagramIconWhiteDefault className="w-[24px] h-[24px] cursor-pointer text-front-icewhite hover:text-front-dustly-slate duration-200" />
+              <TwitterIconWhiteDefault className="w-[20px] h-[20px] cursor-pointer text-front-icewhite hover:text-front-dustly-slate duration-200" />
             </div>
           </nav>
         </div>

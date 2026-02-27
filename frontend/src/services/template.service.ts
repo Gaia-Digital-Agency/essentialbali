@@ -16,6 +16,7 @@ const getTemplateByUrl = async (url: string) => {
         }
     } catch (e) {
         // console.log(e)
+        console.error("Error at getTemplateByUrl => ", e)
     }
 }
 const createTemplate = async (url: string, template: TemplateType, content: string) => {

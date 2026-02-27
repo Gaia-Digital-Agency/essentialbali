@@ -78,6 +78,10 @@ import { ReactComponent as InstagramIconGreyHover } from "./instagram-grey-hover
 import { ReactComponent as TwitterIconGreyDefault } from "./twitter-grey-default.svg?react";
 import { ReactComponent as TwitterIconWhiteDefault } from "./twitter-white-default.svg?react";
 import { ReactComponent as TwitterIconGreyHover } from "./twitter-grey-hover.svg?react";
+import { ReactComponent as LinkedinIconGreyDefault } from "./linkedin-grey-default.svg?react";
+import { ReactComponent as LinkedinIconGreyHover } from "./linkedin-grey-hover.svg?react";
+import { ReactComponent as WhatsappIconGreyDefault } from "./whatsapp-grey-default.svg?react";
+import { ReactComponent as WhatsappIconGreyHover } from "./whatsapp-grey-hover.svg?react";
 // import { ReactComponent } from "../svg";
 
 export {
@@ -161,4 +165,8 @@ export {
   TwitterIconGreyDefault,
   TwitterIconWhiteDefault,
   TwitterIconGreyHover,
+  LinkedinIconGreyDefault,
+  LinkedinIconGreyHover,
+  WhatsappIconGreyDefault,
+  WhatsappIconGreyHover,
 };
