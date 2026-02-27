@@ -1,4 +1,4 @@
-import React, { useMemo } from "react"; //useEffect, useState
+import React, { useEffect, useState } from "react"; //useEffect, useState
 // import { getTemplateByUrl } from "../../../services/template.service";
 import NavLogo from "../../../components/front/NavLogo";
 import { NavLink } from "react-router"; //Link, useNavigate
@@ -8,16 +8,8 @@ import { useTaxonomies } from "../../../context/TaxonomyContext";
 // import SelectNav from "../../../components/front/SelectNav";
 import { Category } from "../../../types/category.type";
 import { RouteProps, useRoute } from "../../../context/RouteContext";
+import { getTemplateByUrl } from "../../../services/template.service";
 
-const DESIRED_HEADER_MENUS = [
-  { slug: "events", label: "Events" },
-  { slug: "deals", label: "Deals" },
-  { slug: "featured", label: "Featured" },
-  { slug: "ultimate-guide", label: "Ultimate Guide" },
-  { slug: "health-wellness", label: "Health & Wellness" },
-  { slug: "directory", label: "Directory" },
-  { slug: "nature-adventure", label: "Nature Adventure" },
-];
 
 const MenuNav: React.FC<{
   menu: Category;
@@ -74,74 +66,40 @@ const Footer: React.FC = () => {
   // const [visitorCount, setVisitorCount] = useState(7127);
   // const [userLocation, setUserLocation] = useState("Bali Area");
   // const [userTime, setUserTime] = useState("");
-
+  const [menuList, setMenuList] = useState<Category[]>([]);
   const { taxonomies } = useTaxonomies();
-  // const navigate = useNavigate();
-  // const filteredCountries = { ...taxonomies }.countries?.filter(
-  //   (coun) => coun.id != 999 && isBaliAreaSlug(coun.slug),
-  // );
-  // const filteredTax = { ...taxonomies, countries: filteredCountries };
-  // const exploreOptions =
-  //   filteredTax?.countries?.map((country) => ({
-  //     value: country.slug,
-  //     label: country.name,
-  //   })) ?? [];
+  useEffect(() => {
+    // if (!headerMenus || headerMenus.length === 0) {
+    (async () => {
+      try {
+        const getTemplate = await getTemplateByUrl("/header");
+        if (getTemplate?.data && getTemplate.status_code == 200) {
+          const vaTemplateHeader = getTemplate?.data?.content;
+          const jsonData = JSON.parse(vaTemplateHeader);
+          const linkCategoryIds = jsonData.map(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (item: any) => item.linkCategory,
+          );
 
-  // useEffect(() => {
-  //   if (typeof window === "undefined") return;
+          // const filteredMenus = taxonomies.categories?.filter((category: any) =>
+          //   linkCategoryIds.includes(category.id),
+          // );
 
-  //   const storageKey = "essentialbali_visitor_count";
-  //   const raw = window.localStorage.getItem(storageKey);
-  //   const parsed = Number.parseInt(raw || "", 10);
-  //   const nextCount = Number.isFinite(parsed) ? parsed + 1 : 7127;
-  //   window.localStorage.setItem(storageKey, String(nextCount));
-  //   setVisitorCount(nextCount);
+          const filteredMenus =
+            taxonomies.categories?.filter((category) =>
+              linkCategoryIds.includes(category.id),
+            ) ?? [];
 
-  //   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-  //   const city = timezone.split("/").pop()?.replace(/_/g, " ") || "Bali Area";
-  //   let region = "";
-  //   const language = navigator.language || "en-US";
-  //   const countryCode = language.split("-")[1];
-  //   if (countryCode && typeof Intl.DisplayNames !== "undefined") {
-  //     const regionNames = new Intl.DisplayNames([language], { type: "region" });
-  //     region = regionNames.of(countryCode) || "";
-  //   }
-  //   const locationLabel = [city, region].filter(Boolean).join(", ");
-  //   setUserLocation(locationLabel || "Bali Area");
-
-  //   const tick = () => {
-  //     const now = new Date();
-  //     setUserTime(
-  //       now.toLocaleString(language, {
-  //         year: "numeric",
-  //         month: "short",
-  //         day: "2-digit",
-  //         hour: "2-digit",
-  //         minute: "2-digit",
-  //         second: "2-digit",
-  //       }),
-  //     );
-  //   };
-
-  //   tick();
-  //   const timer = window.setInterval(tick, 1000);
-  //   return () => window.clearInterval(timer);
-  // }, []);
-
-  // console.log(taxonomies);
-  // const { actualRoute } = useRoute();
-  //   const navigate = useNavigate();
-  const forcedMenuCategories = useMemo(() => {
-    const categories = taxonomies.categories ?? [];
-    return DESIRED_HEADER_MENUS.map((item, index) => {
-      const found = categories.find((cat) => cat.slug_title === item.slug);
-      if (found) return found;
-      return {
-        id: -(index + 1),
-        title: item.label,
-        slug_title: item.slug,
-      } as Category;
-    });
+          setMenuList(filteredMenus);
+        } else {
+          const fallbackMenus = taxonomies.categories ?? [];
+          setMenuList(fallbackMenus);
+        }
+      } catch (e) {
+        console.error("Error fetching header template:", e);
+      }
+    })();
+    // }
   }, [taxonomies.categories]);
 
   return (
@@ -158,11 +116,11 @@ const Footer: React.FC = () => {
             <div className="md:col-span-6 col-span-6 flex justify-end">
               {/* <div className="links-wrapper flex flex-col gap-y-2"> */}
               <div className="links-wrapper grid grid-flow-col grid-rows-3 gap-x-30 gap-y-2">
-                {forcedMenuCategories.map((menu: Category) => (
+                {menuList.map((menu: Category) => (
                   // <p className="font-sans text-[16px]/[25px]" key={menu.id}>{menu.title}</p>
                   <MenuNav
                     menu={menu}
-                    menus={forcedMenuCategories}
+                    menus={menuList}
                     key={`header-menu-${menu.slug_title}`}
                   />
                 ))}
