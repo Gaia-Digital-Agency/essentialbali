@@ -14,6 +14,7 @@ import { ButtonChevronBorderArang } from "../../icons";
 import TextLink from "./TextLink";
 // import NavLogo from "./NavLogo";
 import About from "./About";
+import { Link } from "react-router";
 
 const LocalBali: React.FC<ComponentTemplateHomeProps> = ({
   default_category = ["featured"],
@@ -143,36 +144,38 @@ const LocalBaliItem: React.FC<{
   const imageRef = useRef<any>(null);
 
   return (
-    <div
-      className="flex flex-row gap-x-8 group"
-      onMouseEnter={() => imageRef.current?.zoomIn()}
-      onMouseLeave={() => imageRef.current?.zoomOut()}
-    >
-      <div className="image-wrapper w-1/3">
-        <Image
-          url={getFeaturedImageUrl(article)}
-          ratio="50%"
-          mobileRatio="125%"
-          link={getPermalink(article)}
-          alt={article?.featured_image_alt}
-          ref={imageRef}
-        />
+    <Link to={getPermalink(article)}>
+      <div
+        className="flex flex-row gap-x-8 group"
+        onMouseEnter={() => imageRef.current?.zoomIn()}
+        onMouseLeave={() => imageRef.current?.zoomOut()}
+      >
+        <div className="image-wrapper w-1/3">
+          <Image
+            url={getFeaturedImageUrl(article)}
+            ratio="50%"
+            mobileRatio="125%"
+            link={getPermalink(article)}
+            alt={article?.featured_image_alt}
+            ref={imageRef}
+          />
+        </div>
+
+        <div className="flex flex-col w-2/3 gap-y-2.5">
+          <p className="text-[16px] text-front-shadowed-slate font-sans">
+            {article?.category_name}
+          </p>
+
+          <p className="text-[32px] font-serif text-front-navy capitalize transition-all duration-300 group-hover:[text-shadow:0_0_0.3px_currentColor]">
+            {article.title}
+          </p>
+
+          <p className="text-[18px] text-front-charcoal-grey font-sans">
+            {article.sub_title}
+          </p>
+        </div>
       </div>
-
-      <div className="flex flex-col w-2/3 gap-y-2.5">
-        <p className="text-[16px] text-front-shadowed-slate font-sans">
-          {article?.category_name}
-        </p>
-
-        <p className="text-[32px] font-serif text-front-navy capitalize transition-all duration-300 group-hover:[text-shadow:0_0_0.3px_currentColor]">
-          {article.title}
-        </p>
-
-        <p className="text-[18px] text-front-charcoal-grey font-sans">
-          {article.sub_title}
-        </p>
-      </div>
-    </div>
+    </Link>
   );
 };
 
