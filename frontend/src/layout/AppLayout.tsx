@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { SidebarProvider, useSidebar } from "../context/SidebarContext";
 import { Outlet } from "react-router";
 import AppHeader from "./AppHeader";
@@ -34,7 +34,9 @@ const LayoutContent: React.FC = () => {
       >
         <AppHeader />
         <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
-          <Outlet />
+          <Suspense fallback={<div className="flex items-center justify-center h-full">Loading...</div>}>
+            <Outlet />
+          </Suspense>
         </div>
       </div>
     </div>

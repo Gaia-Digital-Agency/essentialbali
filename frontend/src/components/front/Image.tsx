@@ -134,7 +134,7 @@ const Image = forwardRef<any, ImageProps>(
       return (
         <img
           src={theUrl}
-          fetchPriority={fetchPriority}
+          {...({ fetchpriority: fetchPriority } as any)}
           width={width ?? undefined}
           height={height ?? undefined}
           style={{ objectFit: fit }}

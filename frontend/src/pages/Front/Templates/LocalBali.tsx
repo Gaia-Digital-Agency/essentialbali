@@ -4,7 +4,7 @@ import { useRoute } from "../../../context/RouteContext"
 import { getArticleByFields } from "../../../services/article.service"
 import { useTaxonomies } from "../../../context/TaxonomyContext"
 import { useSearchParams, Link } from "react-router"
-import Advertisement from "../../../components/front/Advertisement"
+// import Advertisement from "../../../components/front/Advertisement"
 import Image from "../../../components/front/Image"
 import { generatePagination } from "../../../lib/utils/pagination"
 import { formatPublished } from "../../../lib/utils/format"
@@ -33,7 +33,7 @@ type ArticleItemProps = {
 
 const RenderPages:React.FC<PaginationProps> = ({page, onClick, currentPage}) => {
     return (
-        <div className={`px-4 py-2 font-medium ${typeof page == 'string' ? '' : 'cursor-pointer'} ${currentPage == page ? 'text-front-red' : ''}`} onClick={() => {
+        <div className={`px-4 py-2 font-medium ${typeof page == 'string' ? '' : 'cursor-pointer'} ${currentPage == page ? 'text-front-navy' : ''}`} onClick={() => {
             if(typeof page == 'string' || typeof page == 'object') return
             onClick(page)
         }}>
@@ -53,7 +53,7 @@ const RenderPagination: React.FC<PaginationProps> = ({page, currentPage, onClick
             </div>
             {
                 typeof page == 'object' &&
-                page.map(pag => (<RenderPages page={pag} currentPage={currentPage} onClick={onClick} />))
+                page.map((pag, i) => (<RenderPages key={i} page={pag} currentPage={currentPage} onClick={onClick} />))
             }
             <div className="next-button cursor-pointer" onClick={() => {onClick(currentPage + 1)}}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="8" height="12" viewBox="0 0 8 12" fill="none">
@@ -66,31 +66,47 @@ const RenderPagination: React.FC<PaginationProps> = ({page, currentPage, onClick
 
 const ArticleItem: React.FC<ArticleItemProps> = ({article, tag}) => {
     const {getPermalink, getFeaturedImageUrl} = useArticle()
+    const imageRef = useRef<any>(null)
+
     return (
-        <>
+        <div 
+            className="relative group h-full"
+            onMouseEnter={() => imageRef.current?.zoomIn()}
+            onMouseLeave={() => imageRef.current?.zoomOut()}
+        >
             <div className="image-wrapper mb-5">
-                <Image url={getFeaturedImageUrl(article)} ratio="100%" link={getPermalink(article)} />
+                <Image 
+                    url={getFeaturedImageUrl(article)} 
+                    ratio="100%" 
+                    link={getPermalink(article)} 
+                    ref={imageRef}
+                />
             </div>
             {article.tags &&
                 <div className="tag-wrapper mb-2 text-front-red">
                     {tag?.name ?? ''}
                 </div>
             }
-            <div className="title-wrapper mb-5">
+            <div className="title-wrapper mb-2">
                 <Link to={getPermalink(article)} viewTransition>
-                    <p className="text-front-subtitle font-serif">{article.title}</p>
+                    <p className="text-front-subtitle font-serif transition-all duration-300 group-hover:[text-shadow:0_0_0.3px_currentColor]">
+                        {article.title}
+                    </p>
                 </Link>
+            </div>
+            <div className="subtitle-wrapper mb-5">
+                <p className="text-front-small leading-normal text-front-soft-gray">{article.sub_title}</p>
             </div>
             <div className="date-wrapper flex gap-x-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14" fill="none">
-                    <path d="M1.125 4.14229C1.125 3.17103 1.91236 2.38367 2.88362 2.38367H12.1164C13.0877 2.38367 13.875 3.17103 13.875 4.14229V11.6164C13.875 12.5877 13.0877 13.375 12.1164 13.375H2.88362C1.91236 13.375 1.125 12.5877 1.125 11.6164V4.14229Z" stroke="#7F7F7F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M3.98267 0.624878V3.70246" stroke="#7F7F7F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M11.0173 0.624878V3.70246" stroke="#7F7F7F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M3.76294 5.90027H11.2371" stroke="#7F7F7F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M1.125 4.14229C1.125 3.17103 1.91236 2.38367 2.88362 2.38367H12.1164C13.0877 2.38367 13.875 3.17103 13.875 4.14229V11.6164C13.875 12.5877 13.0877 13.375 12.1164 13.375H2.88362C1.91236 13.375 1.125 12.5877 1.125 11.6164V4.14229Z" stroke="#7F7F7F" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M3.98267 0.624878V3.70246" stroke="#7F7F7F" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M11.0173 0.624878V3.70246" stroke="#7F7F7F" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M3.76294 5.90027H11.2371" stroke="#7F7F7F" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <p className="text-front-small text-[#A9A9A9]">{formatPublished(article.updatedAt)}</p>
             </div>
-        </>
+        </div>
     )
 }
 
@@ -113,16 +129,6 @@ const LocalBali: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
 
     const containerRef = useRef<HTMLDivElement>(null)
 
-    // const queryEndpoint = {
-    //     id_country: taxonomies.countries?.find(coun => (coun.id != actualRoute.country?.id)),
-    //     // id_city: actualRoute.city?.id,
-    //     // id_region: actualRoute.region?.id,
-    //     category: taxonomies.categories?.filter(item => CATEGORY_SLUGS.includes(item.slug_title)).map(cat => (cat.id)),
-    //     limit: 7,
-    //     page: currentPage,
-    //     // ...isTrendingParams
-    // }
-
     useEffect(() => {
         if(actualRoute.category?.tags?.length) {
             setTags(actualRoute.category.tags)
@@ -133,12 +139,6 @@ const LocalBali: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
 
     useEffect(() => {
         setIsClient(true)
-        // (async () => {
-            // const getTags = await getAllTags()
-            // if(getTags.data && getTags.status_code) {
-            //     setTags(getTags.data.slice(0, 16))
-            // }
-        // })()
         window.scrollTo(0,0);
     }, [])
 
@@ -149,8 +149,6 @@ const LocalBali: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
 
     useEffect(() => {
         if(!isClient) return
-        // if(content.length && `${currentPage}` == searchPage) return
-        // if(!shouldQuery) return;
         
         (async () => {
             const urlParams = new URLSearchParams()
@@ -161,22 +159,20 @@ const LocalBali: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
                 urlParams.append('category[]', `${cat.id}`)
             })
             urlParams.append('page', `${currentPage}`)
-            urlParams.append('limit', '9')
+            urlParams.append('limit', '12')
             const getArticle = await getArticleByFields({}, urlParams)
             if(getArticle?.articles) {
-                // const setArticle = getArticle.articles.map(article => ({...article}))
                 setContent(getArticle.articles)
                 setTotalPages(getArticle.pagination?.totalPages ?? 1)
             } else {
                 setContent([])
             }
         })()
-        // setShouldQuery(false)
         const theTitle = actualRoute.category?.sub_title
         const theDescription = actualRoute.category?.description
         setTitle(theTitle)
         setDescription(theDescription)
-    }, [actualRoute, searchPage, isClient])
+    }, [actualRoute, searchPage, isClient, taxonomies.countries, taxonomies.categories])
 
     const getTagById = (tag: number | undefined) => {
         return tags?.find(_tag => _tag.id == tag)
@@ -196,17 +192,6 @@ const LocalBali: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
         if(content.length) {
             return (
                 content.map((article) => {
-                    // let articleClassName = ''
-                    // if(i == 0 || i == 6) {
-                    //     articleClassName += 'md:col-span-8 '
-                    // } else {
-                    //     articleClassName += 'md:col-span-4 '
-                    // }
-                    // if(i == 3 || i == 0 || i == 6) {
-                    //     articleClassName += 'col-span-12'
-                    // } else {
-                    //     articleClassName += 'col-span-6'
-                    // }
                     let theTag
                     if(article?.tags?.length) {
                         theTag = article.tags[0]
@@ -214,11 +199,9 @@ const LocalBali: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
                         theTag = undefined
                     }
                     return (
-                        <>
-                            <div className={'md:col-span-4 col-span-12'}>
-                                <ArticleItem article={article} tag={getTagById(theTag) ?? undefined} />
-                            </div>
-                        </>
+                        <div key={article.id} className={'lg:col-span-3 md:col-span-4 col-span-12'}>
+                            <ArticleItem article={article} tag={getTagById(theTag) ?? undefined} />
+                        </div>
                     )
                 })
             )
@@ -234,11 +217,8 @@ const LocalBali: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
                 <title>{isTrending ? 'Trending' : ''}{actualRoute.category?.title ?? ''} - essentialbali</title>
                 <meta name="description" content="essentialbali is the ultimate Bali area guide for travelers, expats, and locals, featuring the best dining, events, schools, wellness, and travel in Bali" />
             </Helmet>
-            <section className="py-12">
+            <section className="py-12 bg-front-icewhite">
                 <div className="container">
-                    <div className="ads-wrapper mb-12">
-                        <Advertisement />
-                    </div>
                     <div className="grid grid-cols-12 mb-12">
                         <div className="md:col-span-10 md:col-start-2 col-span-12">
                             <div className="title-wrapper text-center mb-4">

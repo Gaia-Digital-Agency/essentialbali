@@ -12,6 +12,7 @@ type ButtonProps = {
   borderOnly?: boolean;
   uppercase?: boolean;
   type?: string;
+  className?: string;
 };
 
 const Button: React.FC<ButtonProps> = ({
@@ -21,6 +22,7 @@ const Button: React.FC<ButtonProps> = ({
   onClick = () => {},
   uppercase = false,
   type = "primary",
+  className = "",
   // borderOnly = false,
 }) => {
   const buttonRef = useRef<HTMLDivElement | null>(null);
@@ -58,7 +60,7 @@ const Button: React.FC<ButtonProps> = ({
                             hover:bg-front-navy hover:text-front-icewhite hover:border-front-navy
                             transition-all duration-300 ease-in-out
                             ${uppercase ? "uppercase " : ""}
-                            ${bigger ? "py-4" : "py-3"} `}
+                            ${bigger ? "py-4" : "py-3"} ${className}`}
         ref={buttonRef}
         onClick={onClick}
       >
@@ -75,7 +77,7 @@ const Button: React.FC<ButtonProps> = ({
                             hover:bg-front-icewhite hover:text-front-navy hover:border-front-icewhite
                             transition-all duration-300 ease-in-out
                             ${uppercase ? "uppercase " : ""}
-                            ${bigger ? "py-4" : "py-3"} `}
+                            ${bigger ? "py-4" : "py-3"} ${className}`}
         ref={buttonRef}
         onClick={onClick}
       >
@@ -90,7 +92,7 @@ const Button: React.FC<ButtonProps> = ({
         className={`button md:px-8 px-4 inline-flex text-front-body font-light cursor-pointer
                           rounded-[5px] border border-front-white text-front-icewhite
                           ${uppercase ? "uppercase " : ""}
-                          ${bigger ? "py-4" : "py-3"}`}
+                          ${bigger ? "py-4" : "py-3"} ${className}`}
         onMouseEnter={mouseEnterHandler}
         onMouseLeave={mouseLeaveHandler}
         ref={buttonRef}

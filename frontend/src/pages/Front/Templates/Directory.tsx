@@ -72,10 +72,21 @@ const RenderPagination: React.FC<PaginationProps> = ({page, currentPage, onClick
 const ArticleItem: React.FC<ArticleItemProps> = ({article, tag}) => {
     // console.log(article.updatedAt, article.title, formatPublished(article.updatedAt))
     const {getPermalink, getFeaturedImageUrl} = useArticle()
+    const imageRef = useRef<any>(null)
+
     return (
-        <>
+        <div 
+            className="relative group h-full"
+            onMouseEnter={() => imageRef.current?.zoomIn()}
+            onMouseLeave={() => imageRef.current?.zoomOut()}
+        >
             <div className="image-wrapper mb-5">
-                <Image url={getFeaturedImageUrl(article)} ratio="100%" link={getPermalink(article)} />
+                <Image 
+                    url={getFeaturedImageUrl(article)} 
+                    ratio="100%" 
+                    link={getPermalink(article)} 
+                    ref={imageRef}
+                />
             </div>
             {article.tags &&
                 <div className="tag-wrapper mb-2 text-front-red">
@@ -84,7 +95,9 @@ const ArticleItem: React.FC<ArticleItemProps> = ({article, tag}) => {
             }
             <div className="title-wrapper mb-2">
                 <Link to={getPermalink(article)} viewTransition>
-                    <p className="text-front-subtitle font-serif">{article.title}</p>
+                    <p className="text-front-subtitle font-serif transition-all duration-300 group-hover:[text-shadow:0_0_0.3px_currentColor]">
+                        {article.title}
+                    </p>
                 </Link>
             </div>
             <div className="subtitle-wrapper mb-5">
@@ -99,7 +112,7 @@ const ArticleItem: React.FC<ArticleItemProps> = ({article, tag}) => {
                 </svg>
                 <p className="text-front-small text-[#A9A9A9]">{formatPublished(article.updatedAt)}</p>
             </div>
-        </>
+        </div>
     )
 }
 
@@ -136,7 +149,7 @@ const Directory: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
         id_country: actualRoute.country?.id,
         id_city: actualRoute.city?.id,
         id_region: actualRoute.region?.id,
-        limit: 9,
+        limit: 12,
         page: currentPage,
         ...isTrendingParams
     }
@@ -350,7 +363,7 @@ const Directory: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
                     }
                     return (
                         <>
-                            <div className={'md:col-span-4 col-span-12'}>
+                            <div className={'lg:col-span-3 md:col-span-4 col-span-12'}>
                                 <ArticleItem article={article} tag={getTagById(theTag) ?? undefined} />
                             </div>
                         </>
