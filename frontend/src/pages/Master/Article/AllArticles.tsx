@@ -21,7 +21,7 @@ const AllArticles: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const { adminTaxonomies } = useTaxonomies();
+  const { adminTaxonomies, taxonomies } = useTaxonomies();
   const { setNotification } = useNotification();
 
   const fetchArticles = async () => {
@@ -110,7 +110,7 @@ const AllArticles: React.FC = () => {
                 <Select
                 placeholder="All Areas"
                 options={[
-                    ...(adminTaxonomies.countries?.map((c) => ({ label: c.name, value: c.id })) || []),
+                    ...(adminTaxonomies.countries?.map((c: any) => ({ label: c.name, value: c.id })) || []),
                 ]}
                 value={country}
                 onChange={(val) => setCountry(Number(val))}
@@ -121,7 +121,7 @@ const AllArticles: React.FC = () => {
                 <Select
                 placeholder="All Categories"
                 options={[
-                    ...(adminTaxonomies.categories?.map((c) => ({ label: c.title, value: c.id })) || []),
+                    ...(taxonomies.categories?.map((c: any) => ({ label: c.title, value: c.id })) || []),
                 ]}
                 value={category}
                 onChange={(val) => setCategory(Number(val))}
