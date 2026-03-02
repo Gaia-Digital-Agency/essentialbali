@@ -390,7 +390,7 @@ const Events: React.FC = () => {
                 <div className="container py-16">
                     {/* <Advertisement /> */}
 
-                    <div className="grid grid-cols-12 py-12" ref={contentWrapperRef}>
+                    <div className="cattitle-wrapper grid grid-cols-12 py-12" ref={contentWrapperRef}>
                         <div className="lg:col-span-6 col-span-12 lg:col-start-4 text-center">
                             <p className="font-serif text-front-hero mb-4">{title}</p>
                             <p className="text-front-body">{description}</p>
