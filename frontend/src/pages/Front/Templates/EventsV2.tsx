@@ -16,7 +16,6 @@ import {
   DateRangePicker,
   RangeSlider,
   Whisper,
-  Tooltip,
   Radio,
   Popover,
 } from "rsuite";
@@ -118,7 +117,7 @@ const ArticleCardV2: React.FC<{
         </p>
       </div>
       <div className="button-wrapper">
-        <TextLink link={generateUrl(article)} color="red" text="READ MORE" />
+        <TextLink link={generateUrl(article)} color="gray" text="READ MORE" />
       </div>
     </div>
   );
@@ -407,7 +406,6 @@ const EventsV2: React.FC = () => {
                       <Button
                         text="APPLY"
                         onClick={applyFilterDate}
-                        className="w-full text-xs"
                       />
                     </div>
                   </div>
