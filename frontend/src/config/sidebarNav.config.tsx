@@ -32,6 +32,7 @@ export const navItems: NavItem[] = [
       { name: "Categories", path: "mst_categories", pro: false, allowedUserLevel: ["super_admin"] },
       { name: "Tags", path: "mst_tags", pro: false, allowedUserLevel: ["super_admin"] },
       { name: "Articles", path: "mst_article", pro: false },
+      { name: "All Articles", path: "all_articles", pro: false },
     ],
   },
   {

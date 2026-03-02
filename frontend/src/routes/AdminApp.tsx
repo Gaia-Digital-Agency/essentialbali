@@ -19,6 +19,7 @@ const AboutTemplate = lazy(() => import("../pages/Master/Templates/AboutTemplate
 // const LocationTemplate = lazy(() => import("../pages/Master/Templates/LocationTemplate"))
 const LocationTemplateExp = lazy(() => import("../pages/Master/Templates/LocationTemplateExp"))
 const MstArticle = lazy(() => import("../pages/Master/Article/MstArticle"))
+const AllArticles = lazy(() => import("../pages/Master/Article/AllArticles"))
 const FormArticle = lazy(() => import("../pages/Master/Article/FormArticle"))
 const EditArticle = lazy(() => import("../pages/Master/Article/EditArticle"))
 const Users = lazy(() => import("../pages/UserManagement/Users"))
@@ -127,6 +128,14 @@ export const adminRoutes: RouteObject[] = [
                     { path: "edit/:id", element: <EditArticle action="edit" /> },
                     { path: ":country", element: <FormArticle /> },
                 ],
+            },
+            {
+                path: "all_articles",
+                element: (
+                    <ProtectedRoute>
+                        <AllArticles />
+                    </ProtectedRoute>
+                ),
             },
             {
                 path: "users",

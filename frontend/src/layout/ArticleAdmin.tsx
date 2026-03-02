@@ -1,4 +1,4 @@
-import React, {useState} from "react"
+import React, {useState, Suspense} from "react"
 import { Outlet, useNavigate } from "react-router"
 import ComponentCard from "../components/common/ComponentCard"
 import PageAdminTitle from "../components/common/PageAdminTitle"
@@ -25,7 +25,9 @@ const ArticleAdmin: React.FC = () => {
 
             </PageAdminTitle>
             <ComponentCard title="">
-                <Outlet context={{pageAdminButtonText, setPageAdminButtonText, pageAdminButtonOnClick, setPageAdminButtonOnClick}} />
+                <Suspense fallback={<div className="flex items-center justify-center p-10">Loading article...</div>}>
+                    <Outlet context={{pageAdminButtonText, setPageAdminButtonText, pageAdminButtonOnClick, setPageAdminButtonOnClick}} />
+                </Suspense>
             </ComponentCard>
         </>
     )
