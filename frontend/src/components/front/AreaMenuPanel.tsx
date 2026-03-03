@@ -42,13 +42,9 @@ const AreaMenuPanel: React.FC<AreaMenuPanelProps> = ({ open, onSelect }) => {
   return (
     <div
       id="data-area"
-      className={`absolute w-full mx-auto bg-front-icewhite
+      className={`absolute w-full mx-auto bg-front-icewhite z-99
                   transition-all duration-300 ease-in-out
-                  ${
-                    open
-                      ? "opacity-100 translate-y-0 visible"
-                      : "opacity-0 -translate-y-4 invisible"
-                  }`}
+                  ${open ? "opacity-100 -translate-y-1 visible shadow-[inset_0_20px_20px_-15px_rgba(0,0,0,0.3),0_10px_20px_rgba(0,0,0,0.2)]" : "opacity-0 -translate-y-4 invisible"}`}
     >
       <div className="container px-12 py-7">
         <div className="pb-7">

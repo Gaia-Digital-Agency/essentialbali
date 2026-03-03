@@ -528,10 +528,12 @@ const Single: React.FC = () => {
                   link={`/${actualRoute.country?.slug}/${actualRoute.category?.slug_title}`}
                 />
               </div>
-              <div className="py-8">
+              {/* <div className="py-8">
                 <hr style={{ borderColor: "#5F5F5F" }} />
+              </div> */}
+              <div className="py-8">
+                <Newsletter />
               </div>
-              <Newsletter></Newsletter>
             </div>
           </div>
         </div>

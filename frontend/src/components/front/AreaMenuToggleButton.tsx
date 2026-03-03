@@ -22,7 +22,7 @@ export default function AreaMenuToggleButton({
                  transition-colors duration-200
                  focus:outline-none focus:ring-0"
     >
-      <span className="font-sans text-front-body">{label}</span>
+      <span className="font-sans text-front-body capitalize">{label}</span>
 
       <ChevronDown
         className={`w-4 h-4 transition-transform duration-300 ${

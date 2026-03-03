@@ -147,11 +147,23 @@ const Header: React.FC = () => {
     // }
   }, [taxonomies.categories]);
 
+  useEffect(() => {
+    if (actualRoute.country) {
+      setSelectedAreaLabel(actualRoute.country.slug);
+    } else if (actualRoute.region) {
+      setSelectedAreaLabel(actualRoute.region.slug);
+    } else {
+      setSelectedAreaLabel("All Area");
+    }
+  }, [actualRoute]);
+
   const forcedMenuCategories = headerMenus;
 
   useEffect(() => {
     setIsModalOpen(false);
   }, [actualRoute]);
+
+  console.log("apa iki => " , actualRoute);
 
   const toNav = () => {
     return `/${actualRoute?.country ? actualRoute.country.slug : ""}${actualRoute?.city ? `/${actualRoute.city.slug}` : ""}${actualRoute?.region ? `/${actualRoute.region.slug}` : ""}`;
@@ -248,7 +260,8 @@ const Header: React.FC = () => {
           }}
         />
 
-        <div className="mx-auto py-[15px] hidden md:block bg-front-navy">
+        <div className="categories-menu-navbar mx-auto py-[15px] hidden md:block bg-front-navy">
+
           <nav
             className="container menus-wrapper flex flex-wrap items-center gap-x-4 gap-y-3 justify-center relative"
             aria-label="Categories"
