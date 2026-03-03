@@ -160,7 +160,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
                       <Image
                         width="1920"
                         height="1080"
-                        fetchpriority={i ? "low" : "high"}
+                        fetchPriority={i ? "low" : "high"}
                         isLazy={i ? true : false}
                         url={getFeaturedImageUrl(item, "16_9")}
                         ratio={"max( calc(100vh - var(--nav-height)), 750px )"}

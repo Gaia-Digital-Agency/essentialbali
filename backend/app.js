@@ -83,10 +83,10 @@ if (!isProd && frontendPath) {
   });
 }
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: "10mb" }));
+app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(requestTimer);
 

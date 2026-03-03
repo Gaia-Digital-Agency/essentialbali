@@ -196,7 +196,7 @@ const EditButton: React.FC<{
 const SingleEvent: React.FC = () => {
   const { initialData } = useContent();
   const { setNotification } = useNotification();
-  const { actualRoute, clientChange } = useRoute();
+  const { actualRoute } = useRoute();
   const { getFeaturedImageUrl, getDeepestLocation } = useArticle();
   const [content, setContent] = useState<ArticleApiResponseProps | undefined>(
     initialData?.article ?? undefined,

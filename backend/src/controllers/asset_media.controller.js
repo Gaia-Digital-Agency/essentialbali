@@ -3,6 +3,7 @@ import path from "path";
 import AssetMediaServie from "../services/asset_media.service.js";
 import { response, errResponse } from "../helpers/response.js";
 import { verifyToken, decodeTokenFromCookie } from "../helpers/jwtoken.js";
+import { uploadToGCS } from "../helpers/gcs_upload.js";
 import slugify from "slugify";
 
 export default {
@@ -44,6 +45,16 @@ export default {
       }
 
       const media = await AssetMediaServie.saveMedia(fileData, vaData);
+
+      // Upload to GCS
+      try {
+        const gcsUrl = await uploadToGCS(fileData.path, fileData.filename, fileData.mimetype);
+        await AssetMediaServie.editMedia(media.id, { gcs_url: gcsUrl });
+        media.gcs_url = gcsUrl; // Update local object for response
+      } catch (gcsError) {
+        console.error("Failed to upload to GCS, but local upload succeeded:", gcsError);
+      }
+
       response(res, 201, media);
     } catch (error) {
       console.error("Error uploading media:", error);
@@ -81,6 +92,20 @@ export default {
       const savedFiles = [];
       for (const file of req.files) {
         const media = await AssetMediaServie.saveMedia(file, vaData);
+
+        // Upload to GCS
+        try {
+          const gcsUrl = await uploadToGCS(
+            file.path,
+            file.filename,
+            file.mimetype
+          );
+          await AssetMediaServie.editMedia(media.id, { gcs_url: gcsUrl });
+          media.gcs_url = gcsUrl; // Update local object for response
+        } catch (gcsError) {
+          console.error(`Failed to upload ${file.filename} to GCS:`, gcsError);
+        }
+
         savedFiles.push(media);
       }
 
@@ -134,14 +159,28 @@ export default {
         }
 
         await fs.promises.rename(oldPath, newPath);
+        
+        // Upload the renamed file to GCS
+        let gcsUrl = "";
+        try {
+          gcsUrl = await uploadToGCS(newPath, newFilename, asset.mimetype);
+        } catch (gcsError) {
+          console.error("Failed to upload renamed file to GCS:", gcsError);
+        }
+
         await AssetMediaServie.editMedia(id, {
           filename: newFilename,
           path: newPath,
+          ...(gcsUrl && { gcs_url: gcsUrl }),
         });
       }
 
       // Tambahkan nama file baru ke objek hasil
       asset.filename = newFilename;
+      if (asset.gcs_url) {
+        // Since we might have updated it in the DB, let's refresh the object if we want
+        // or just set it manually if we have it
+      }
 
       return response(res, 200, asset);
     } catch (error) {
