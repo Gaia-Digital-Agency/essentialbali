@@ -121,3 +121,5 @@ google-cloud-key.json
 
 # Logs
 *.log
+
+backend/config/gcs-key.json
