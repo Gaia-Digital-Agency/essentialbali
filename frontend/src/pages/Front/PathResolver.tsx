@@ -2,14 +2,16 @@ import React, { useEffect, useState, lazy, Suspense } from "react"
 import { CountryProps, CityProps, RegionProps, TaxonomyProps, useTaxonomies } from "../../context/TaxonomyContext"
 import { Category } from "../../types/category.type"
 const HomeTemplate = lazy(() => import('./Templates/Home'))
-const Single = lazy(() => import('./Templates/Single'))
+// const Single = lazy(() => import('./Templates/Single'))
+const SingleV2 = lazy(() => import('./Templates/SingleV2'))
 const Deals = lazy(() => import('./Templates/Deals'))
 const JobListing = lazy(() => import("./Templates/JobListing"))
 const Directory = lazy(() => import('./Templates/Directory'))
 const Events = lazy(() => import('./Templates/EventsV3'))
 // const Events = lazy(() => import('./Templates/Events'))
 const SingleJob = lazy(() => import('./Templates/SingleJob'))
-const SingleEvent = lazy(() => import('./Templates/SingleEvent'))
+// const SingleEvent = lazy(() => import('./Templates/SingleEvent'))
+const SingleEventV2 = lazy(() => import('./Templates/SingleEventV2'))
 const NotFound = lazy(() => import('../OtherPage/NotFound'))
 const Housing = lazy(() => import('./Templates/Housing'))
 const Search = lazy(() => import('./Templates/Search'))
@@ -124,9 +126,9 @@ const PathResolver: React.FC = () => {
         case "ARTICLE_JOB":
             return <Suspense fallback={<></>}><JobListing key="single-job"><SingleJob /></JobListing></Suspense>
         case "ARTICLE_EVENT":
-            return <Suspense fallback={<></>}><SingleEvent key="single-event" /></Suspense>
+            return <Suspense fallback={<></>}><SingleEventV2 key="single-event" /></Suspense>
         case "ARTICLE_PAGE":
-            return <Suspense fallback={<></>}><Single key="single-article" /></Suspense>
+            return <Suspense fallback={<></>}><SingleV2 key="single-article" /></Suspense>
         case "LISTING_JOBS":
             return <Suspense fallback={<></>}><JobListing key="job-listing" /></Suspense>
         case "LISTING_SEARCH":

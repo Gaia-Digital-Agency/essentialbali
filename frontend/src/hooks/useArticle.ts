@@ -26,7 +26,7 @@ type GenerateContentFuncProps = {
 }
 
 const useArticle = () => {
-    const {getCountryById, getCategoryById, getRegionById, getCityById, taxonomies} = useTaxonomies()
+    const {getCountryById, getCategoryById, taxonomies} = useTaxonomies() //getRegionById, getCityById
     const DUMMY_ADMIN_ARTICLE = {
         title: 'this will fill automatically',
         sub_title: 'you only see this on admin page, user wont see this'
@@ -75,23 +75,9 @@ const useArticle = () => {
         return `${API_URL}/logo.png`
     }
 
-    const getDeepestLocation = (article?: ArticleApiResponseProps | undefined, limit?: 'city' | 'country') => {
+    const getDeepestLocation = (article?: ArticleApiResponseProps | undefined, _limit?: 'city' | 'country') => {
         if(!article) return
-        let temp = []
-        if(limit == 'city') {
-            const articleCity = getCityById(article.id_city)
-            temp.push(articleCity)
-            const articleCountry = getCountryById(article.id_country)
-            temp.push(articleCountry)
-            return temp.filter(Boolean)[0]
-        }
-        const articleRegion = getRegionById(article.id_region)
-        temp.push(articleRegion)
-        const articleCity = getCityById(article.id_city)
-        temp.push(articleCity)
-        const articleCountry = getCountryById(article.id_country)
-        temp.push(articleCountry)
-        return temp.filter(Boolean)[0]
+        return getCountryById(article.id_country)
     }
 
     const generateContent = async ({content, admin = false, query = {}}: GenerateContentFuncProps) => {

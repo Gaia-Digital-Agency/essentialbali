@@ -42,6 +42,7 @@ export interface CreateArticleProps {
   slug: string;
   article_post: string;
   tags?: Array<number>;
+  tags_slugs?: Array<string>;
   featured_image_id?: number;
   featured_image_url?: string;
   featured_image_alt?: string;

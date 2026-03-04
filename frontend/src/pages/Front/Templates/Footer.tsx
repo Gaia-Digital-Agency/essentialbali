@@ -48,9 +48,9 @@ const MenuNav: React.FC<{
         className={`menu-link text-nowrap capitalize 
                 align-items-center justify-center
                 font-sans text-[16px]/[25px]
-                text-front-shadowed-slate
+                text-front-charcoal-grey
                 font-light
-                hover:text-front-navy
+                hover:text-front-shadowed-slate
                 ${isActive() ? "is-active" : ""}
                 `}
         to={generateTo(menu.slug_title, actualRoute)}
@@ -105,102 +105,29 @@ const Footer: React.FC = () => {
   return (
     <footer className="footer bg-front-icewhite">
       <div className="container ">
-        <div className="line bg-front-navy h-[0.5px] w-full"></div>
-        <div className="py-12 ">
-          <div className="grid grid-cols-12 md:gap-x-16 gap-y-10 items-center">
-            <div className="col-span-6 flex items-center">
-              <div className="logo-wrapper max-w items-center justify-center">
-                <NavLogo url="/logo-header" to="/"></NavLogo>
-              </div>
-            </div>
-            <div className="md:col-span-6 col-span-6 flex justify-end">
-              {/* <div className="links-wrapper flex flex-col gap-y-2"> */}
-              <div className="links-wrapper grid grid-flow-col grid-rows-3 gap-x-30 gap-y-2">
-                {menuList.map((menu: Category) => (
-                  // <p className="font-sans text-[16px]/[25px]" key={menu.id}>{menu.title}</p>
-                  <MenuNav
-                    menu={menu}
-                    menus={menuList}
-                    key={`header-menu-${menu.slug_title}`}
-                  />
-                ))}
-                {/* <div className="link">
-                  <Link
-                    to="/privacy-policy"
-                    className="font-sans text-[16px]/[25px]"
-                  >
-                    Privacy Policy
-                  </Link>
-                </div>
-                <div className="link">
-                  <Link to="/privacy-policy" className="text-front-body-small">
-                    Term & Conditions
-                  </Link>
-                </div>
-                <div className="link">
-                  <Link to="/privacy-policy" className="text-front-body-small">
-                    Term & Conditions
-                  </Link>
-                </div>
-                <div className="link">
-                  <Link to="/privacy-policy" className="text-front-body-small">
-                    Term & Conditions
-                  </Link>
-                </div>
-                <div className="link">
-                  <Link to="/privacy-policy" className="text-front-body-small">
-                    Term & Conditions
-                  </Link>
-                </div>
-                <div className="link">
-                  <Link to="/privacy-policy" className="text-front-body-small">
-                    Term & Conditions
-                  </Link>
-                </div>
-                <div className="link">
-                  <Link to="/privacy-policy" className="text-front-body-small">
-                    Term & Conditions
-                  </Link>
-                </div>
-                <div className="link">
-                  <Link to="/privacy-policy" className="text-front-body-small">
-                    Term & Conditions
-                  </Link>
-                </div>
-                <div className="link">
-                  <Link to="/privacy-policy" className="text-front-body-small">
-                    Term & Conditions
-                  </Link>
-                </div> */}
-              </div>
-            </div>
-            {/* <div className="md:col-span-3 col-span-12">
-              <div className="title-wrapper mb-2.5">
-                <p className="font-serif text-front-body-big">Explore</p>
-              </div>
-              <div className="dropdown-country-wrapper max-w-[260px]">
-                <SelectNav
-                  options={exploreOptions}
-                  defaultLabel={"Select Bali Area"}
-                  onChange={(slug) => {
-                    if (!slug) return;
-                    navigate(`/${slug}`);
-                  }}
-                  classNames={{
-                    singleValue:
-                      "dropdown-country-nav dropdown-country-input text-theme-front-red md:w-[260px] w-[190px]",
-                    option:
-                      "dropdown-country-nav dropdown-country-option text-theme-front-red",
-                  }}
+        <div className="w-full bg-front-navy"></div>
+        <div className="flex flex-col items-center py-5 logo-and-menu-wrapper gap-y-10">
+          <div className="logo-wrapper">
+            <NavLogo url="/logo-header" to="/"></NavLogo>
+          </div>
+          <div className="flex flex-wrap items-center justify-center links-wrapper gap-x-4 gap-y-2">
+            {menuList.map((menu: Category, index: number) => (
+              <React.Fragment key={`footer-menu-${menu.slug_title}`}>
+                <MenuNav
+                  menu={menu}
+                  menus={menuList}
                 />
-              </div>
-            </div> */}
+                {index < menuList.length - 1 && (
+                  <span className="text-front-shadowed-slate/40 text-[14px]">|</span>
+                )}
+              </React.Fragment>
+            ))}
           </div>
         </div>
-        <div className="line bg-front-navy h-[0.5px] w-full"></div>
-        <div className="outer py-5">
-          <div className="flex justify-between items-center">
-            <div className="item text-front-small font-light text-front-charcoal-grey">
+        <div className="line bg-front-shadowed-slate/25 h-[1px] w-full"></div>
+        <div className="py-5 copyright-wrapper outer">
+          <div className="flex items-center justify-center text-center">
+            <div className="font-light item text-front-small text-front-shadowed-slate">
               Essential Bali {new Date().getFullYear()} | GAIA Digital Agency
             </div>
           </div>

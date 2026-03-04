@@ -20,6 +20,7 @@ import { SearchIcon } from "lucide-react";
 import AreaMenuToggleButton from "../../../components/front/AreaMenuToggleButton";
 import AreaMenuPanel from "../../../components/front/AreaMenuPanel";
 import { getTemplateByUrl } from "../../../services/template.service";
+import { isBaliAreaSlug } from "../../../utils/baliAreas";
 // import { FacebookIcon } from "react-share";
 
 // const DESIRED_HEADER_MENUS = [
@@ -148,10 +149,8 @@ const Header: React.FC = () => {
   }, [taxonomies.categories]);
 
   useEffect(() => {
-    if (actualRoute.country) {
-      setSelectedAreaLabel(actualRoute.country.slug);
-    } else if (actualRoute.region) {
-      setSelectedAreaLabel(actualRoute.region.slug);
+    if (actualRoute.country && isBaliAreaSlug(actualRoute.country.slug)) {
+      setSelectedAreaLabel(actualRoute.country.name);
     } else {
       setSelectedAreaLabel("All Area");
     }
