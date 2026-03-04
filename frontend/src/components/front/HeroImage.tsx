@@ -20,7 +20,7 @@ import {
 const HeroDescription: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
     <>
-      <p className="text-front-icewhite text-front-subtitle mb-6">
+      <p className="mb-6 text-front-icewhite text-front-subtitle">
         {children || <Skeleton count={3}></Skeleton>}
       </p>
     </>
@@ -30,7 +30,7 @@ const HeroDescription: React.FC<React.PropsWithChildren> = ({ children }) => {
 const HeroTitleWrapper: React.FC<React.PropsWithChildren> = (props) => {
   return (
     <>
-      <div className="absolute bottom-20 ml-[50px] left-0 right-0 z-10">
+      <div className="absolute bottom-20 md:ml-[50px] px-10 left-0 right-0 z-10 overflow-x-hidden">
         <div className="container">{props.children}</div>
       </div>
     </>
@@ -61,7 +61,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
   const imageRef = useRef<SwiperType>(null);
   const textRef = useRef<SwiperType>(null);
   const playControls = useRef<{ play: (index: number) => void }>({
-    play: () => {},
+    play: () => { },
   });
 
   const [content, setContent] = useState<PreContentProps>(preContent);
@@ -87,7 +87,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
 
   useGSAP(() => {
     if (!content.length) return;
-    
+
     const loadingTab = gsap.utils.toArray<HTMLElement>(
       "#hero-article .tab-content",
     );
@@ -105,7 +105,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
 
       imageRef.current?.slideToLoop(currentIndex);
       textRef.current?.slideToLoop(currentIndex);
-      
+
       if (admin) return;
 
       loadingTab.forEach((bar) => {
@@ -131,8 +131,8 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
   }, [content, admin]);
 
   const animClickHandler = (index: number) => {
-    if(!admin) {
-        playControls.current.play(index);
+    if (!admin) {
+      playControls.current.play(index);
     }
   };
 
@@ -142,7 +142,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
         <section className="bg-front-icewhite pt-[20px]">
           <div
             id="hero-article"
-            className="container relative rounded-xl overflow-hidden"
+            className="container relative overflow-hidden rounded-xl"
           >
             <Swiper
               onSwiper={(swiper) => (imageRef.current = swiper)}
@@ -208,22 +208,22 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
                   }
                 })}
               </Swiper>
-              <div className="grid grid-cols-3 gap-x-8 pt-12">
-                    {content.map((item, i) => {
-                        if(item) {
-                            return (
-                                <div onClick={() => {animClickHandler(i)}} data-index={i} className={`tab-content text-white col-span-3 md:col-span-1 cursor-pointer${i === 0 ? ' active': ''}`} key={`tabs-${i}`}>
-                                    <div className="category-wrapper mb-4 text-xs font-bold uppercase tracking-widest opacity-80 group-[.active]:opacity-100 hidden">
-                                        {item ? getDeepestLocation(item)?.name : <Skeleton />}
-                                    </div>
-                                    <div className="title-wrapper hidden">
-                                        {item?.title ? item.title : <Skeleton />}
-                                    </div>
-                                </div>
-                            )
-                        }
-                    })}
-                </div>
+              {/* <div className="grid grid-cols-3 pt-12 gap-x-8 bg-amber-400">
+                {content.map((item, i) => {
+                  if (item) {
+                    return (
+                      <div onClick={() => { animClickHandler(i) }} data-index={i} className={`tab-content text-white col-span-3 md:col-span-1 cursor-pointer${i === 0 ? ' active' : ''}`} key={`tabs-${i}`}>
+                        <div className="category-wrapper mb-4 text-xs font-bold uppercase tracking-widest opacity-80 group-[.active]:opacity-100 hidden">
+                          {item ? getDeepestLocation(item)?.name : <Skeleton />}
+                        </div>
+                        <div className="hidden title-wrapper">
+                          {item?.title ? item.title : <Skeleton />}
+                        </div>
+                      </div>
+                    )
+                  }
+                })}
+              </div> */}
             </HeroTitleWrapper>
           </div>
         </section>
@@ -231,8 +231,8 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
     );
   } else {
     return (
-      <div className="h-screen w-screen relative">
-        <Skeleton className="absolute w-full h-full inset-0" />
+      <div className="relative w-screen h-screen">
+        <Skeleton className="absolute inset-0 w-full h-full" />
         <HeroTitleWrapper>
           <HeroTitle></HeroTitle>
           <HeroDescription></HeroDescription>

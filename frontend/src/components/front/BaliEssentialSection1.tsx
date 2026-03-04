@@ -66,7 +66,7 @@ const BaliEssentialSection1: React.FC<ComponentTemplateHomeProps> = ({
 
   const renderSVG = () => {
     return (
-      <span className="text-front-navy group-hover:text-red-500 transition-colors duration-300">
+      <span className="transition-colors duration-300 text-front-navy group-hover:text-red-500">
         <ButtonChevronBorderArang />
       </span>
     );
@@ -80,11 +80,11 @@ const BaliEssentialSection1: React.FC<ComponentTemplateHomeProps> = ({
             <div className="container mx-auto">
               <div>
                 <div className="flex justify-between items-end mb-2.5">
-                  <h2 className="text-2xl font-serif text-front-navy capitalize">
+                  <h2 className="font-serif text-2xl capitalize text-front-navy">
                     {`Essential ${CATEGORY_SLUG}`}
                   </h2>
                   <p className="font-sans text-front-charcoal-grey">
-                    <span className="inline-flex items-center gap-2 group cursor-pointer">
+                    <span className="inline-flex items-center gap-2 cursor-pointer group">
                       {/* group-hover:-translate-x-1 */}
                       <span className="transition-transform duration-300 translate-x-6 group-hover:-translate-x-1">
                         <TextLink
@@ -97,7 +97,7 @@ const BaliEssentialSection1: React.FC<ComponentTemplateHomeProps> = ({
                           color="black"
                         />
                       </span>
-                      <span className="opacity-0 translate-x-4 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-x-0">
+                      <span className="transition-all duration-300 ease-out translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0">
                         {renderSVG()}
                       </span>
                     </span>
@@ -107,7 +107,7 @@ const BaliEssentialSection1: React.FC<ComponentTemplateHomeProps> = ({
               </div>
 
               <div>
-                <div className="flex flex-row gap-x-8">
+                <div className="flex flex-col md:flex-row section-1-wrapper gap-x-8">
                   <BaliEssentialSection1Main content={content[0]} />
                   <BaliEssentialSection1Secondary content={content.slice(1)} />
                 </div>
@@ -131,7 +131,7 @@ const BaliEssentialSection1Main: React.FC<BaliEssentialSectionMainProps> = ({
     return (
       <>
         <div
-          className="w-[50%] py-8 group"
+          className="w-full md:w-[50%] py-8 group"
           onMouseEnter={() => imageRef.current?.zoomIn()}
           onMouseLeave={() => imageRef.current?.zoomOut()}
         >
@@ -149,13 +149,13 @@ const BaliEssentialSection1Main: React.FC<BaliEssentialSectionMainProps> = ({
               News
             </p>
             <Link to={admin ? "" : getPermalink(content)}>
-              <h3 className="text-[32px] font-serif text-front-navy capitalize transition-all duration-300
+              <h3 className="text-front-title font-serif text-front-navy capitalize transition-all duration-300
                         group-hover:[text-shadow:0_0_0.3px_currentColor]">
                 {content?.title}
               </h3>
-              {/* <p className="text-front-title font-serif">{article.title}</p> */}
+              {/* <p className="font-serif text-front-title">{article.title}</p> */}
             </Link>
-            <p className="text-[18px] text-front-charcoal-grey font-sans">
+            <p className="font-sans text-front-medium text-front-charcoal-grey">
               {content?.sub_title}
             </p>
           </div>
@@ -175,7 +175,7 @@ const SecondaryArticleItem: React.FC<{
 
   return (
     <div
-      className="h-[50%] group"
+      className="md:h-[50%] group"
       onMouseEnter={() => imageRef.current?.zoomIn()}
       onMouseLeave={() => imageRef.current?.zoomOut()}
     >
@@ -195,7 +195,7 @@ const SecondaryArticleItem: React.FC<{
         </p>
 
         <Link to={admin ? "" : getPermalink(article)}>
-        {/* <p className="text-front-title text-front-grey font-serif"></p> */}
+        {/* <p className="font-serif text-front-title text-front-grey"></p> */}
           <p className="text-front-title font-serif text-front-navy capitalize 
                         transition-all duration-300
                         group-hover:[text-shadow:0_0_0.3px_currentColor]">
@@ -214,7 +214,7 @@ const BaliEssentialSection1Secondary: React.FC<
 
   if (content) {
     return (
-      <div className=" w-[50%] flex flex-col py-8 space-y-8">
+      <div className=" w-full md:w-[50%] flex flex-col py-8 space-y-8">
         {/* {content.slice(0, 2).map((item, index) => renderArticle(item, index))} */}
         {content
           .slice(0, 2)

@@ -61,7 +61,7 @@ const LocalBali: React.FC<ComponentTemplateHomeProps> = ({
 
   const renderSVG = () => {
     return (
-      <span className="text-front-navy group-hover:text-red-500 transition-colors duration-300">
+      <span className="transition-colors duration-300 text-front-navy group-hover:text-red-500">
         <ButtonChevronBorderArang />
       </span>
     );
@@ -70,7 +70,7 @@ const LocalBali: React.FC<ComponentTemplateHomeProps> = ({
   const exploreMore = () => {
     return (
       <p className="font-sans text-front-charcoal-grey">
-        <span className="inline-flex items-center gap-2 group cursor-pointer">
+        <span className="inline-flex items-center gap-2 cursor-pointer group">
           {/* group-hover:-translate-x-1 */}
           <span className="transition-transform duration-300 translate-x-6 group-hover:-translate-x-1">
             <TextLink
@@ -79,7 +79,7 @@ const LocalBali: React.FC<ComponentTemplateHomeProps> = ({
               color="black"
             />
           </span>
-          <span className="opacity-0 translate-x-4 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-x-0">
+          <span className="transition-all duration-300 ease-out translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0">
             {renderSVG()}
           </span>
         </span>
@@ -96,7 +96,7 @@ const LocalBali: React.FC<ComponentTemplateHomeProps> = ({
               <div className="container mx-auto">
                 <div>
                   <div className="flex justify-between items-end mb-2.5">
-                    <h2 className="text-2xl font-serif text-front-navy capitalize">
+                    <h2 className="font-serif text-2xl capitalize text-front-navy">
                       {`Essential Feeds`}
                     </h2>
                     {/* {exploreMore()} */}
@@ -107,9 +107,9 @@ const LocalBali: React.FC<ComponentTemplateHomeProps> = ({
             </div>
 
             <div className="bg-front-icewhite ">
-              <div className="container flex flex-row gap-x-8 py-8">
-                <div className="flex flex-col w-3/4 gap-y-9  ">
-                  <div id="articles" className=" flex flex-col gap-y-8 ">
+              <div className="container flex flex-col py-8 md:flex-row gap-x-8">
+                <div className="flex flex-col w-full md:w-3/4 gap-y-9 ">
+                  <div id="articles" className="flex flex-col gap-y-8">
                     {content?.map((article) =>
                       article ? (
                         <LocalBaliItem key={article.id} article={article} />
@@ -120,7 +120,7 @@ const LocalBali: React.FC<ComponentTemplateHomeProps> = ({
                     {exploreMore()}
                   </div>
                 </div>
-                <div className="w-1/4">
+                <div className="hidden about-wrapper md:block md:w-1/4">
                   <div id="about-essentialbali" className="logo-wrapper max-w">
                     <div>
                       <About />
@@ -150,7 +150,7 @@ const LocalBaliItem: React.FC<{
         onMouseEnter={() => imageRef.current?.zoomIn()}
         onMouseLeave={() => imageRef.current?.zoomOut()}
       >
-        <div className="image-wrapper w-1/3">
+        <div className="w-1/3 image-wrapper">
           <Image
             url={getFeaturedImageUrl(article)}
             ratio="50%"
@@ -162,15 +162,15 @@ const LocalBaliItem: React.FC<{
         </div>
 
         <div className="flex flex-col w-2/3 gap-y-2.5">
-          <p className="text-[16px] text-front-shadowed-slate font-sans">
+          <p className="font-sans font-light text-front-small text-front-shadowed-slate">
             {article?.category_name}
           </p>
 
-          <p className="text-[32px] font-serif text-front-navy capitalize transition-all duration-300 group-hover:[text-shadow:0_0_0.3px_currentColor]">
+          <p className="text-front-title font-serif text-front-navy capitalize transition-all duration-300 group-hover:[text-shadow:0_0_0.3px_currentColor]">
             {article.title}
           </p>
 
-          <p className="text-[18px] text-front-charcoal-grey font-sans">
+          <p className="font-sans text-front-medium text-front-charcoal-grey">
             {article.sub_title}
           </p>
         </div>
