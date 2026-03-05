@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"; // useMemo
-import { NavLink } from "react-router-dom"; //useNavigate
+import { NavLink, useNavigate } from "react-router-dom"; //useNavigate
 import NavLogo from "../../../components/front/NavLogo";
 import MobileMenu from "../../../components/front/MobileMenu";
 import {
@@ -11,7 +11,7 @@ import {
 import { useTaxonomies } from "../../../context/TaxonomyContext";
 import { RouteProps, useRoute } from "../../../context/RouteContext";
 import { Category } from "../../../types/category.type";
-import { SearchIcon } from "lucide-react";
+import { SearchIcon, X } from "lucide-react";
 import AreaMenuToggleButton from "../../../components/front/AreaMenuToggleButton";
 import AreaMenuPanel from "../../../components/front/AreaMenuPanel";
 import { getTemplateByUrl } from "../../../services/template.service";
@@ -68,6 +68,8 @@ const Header: React.FC = () => {
   // const { initialData } = useHeaderContent();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isAreaOpen, setIsAreaOpen] = useState<boolean>(false);
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedAreaLabel, setSelectedAreaLabel] =
     useState<string>("All Area");
 
@@ -75,6 +77,7 @@ const Header: React.FC = () => {
   // const [areaSearch, setAreaSearch] = useState<string>("");
   const { taxonomies } = useTaxonomies();
   const { actualRoute } = useRoute();
+  const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
@@ -116,14 +119,70 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     setIsModalOpen(false);
+    setIsSearchOpen(false);
   }, [actualRoute]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsSearchOpen(false);
+      }
+    };
+
+    if (isSearchOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isSearchOpen]);
 
   const toNav = () => {
     return `/${actualRoute?.country ? actualRoute.country.slug : ""}${actualRoute?.city ? `/${actualRoute.city.slug}` : ""}${actualRoute?.region ? `/${actualRoute.region.slug}` : ""}`;
   };
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setIsSearchOpen(false);
+      setSearchQuery("");
+    }
+  };
+
   return (
     <>
+      {/* SEARCH OVERLAY */}
+      <div className={`fixed inset-0 z-[200] bg-front-icewhite/98 backdrop-blur-sm transition-all duration-500 ease-in-out ${isSearchOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
+        <button 
+          className="absolute top-8 right-8 md:top-12 md:right-12 p-2 hover:rotate-90 transition-transform duration-300"
+          onClick={() => setIsSearchOpen(false)}
+        >
+          <X className="w-8 h-8 md:w-10 md:h-10 text-front-navy" />
+        </button>
+        
+        <div className="flex flex-col items-center justify-center h-full max-w-5xl mx-auto px-6">
+          <p className="text-front-shadowed-slate uppercase tracking-[0.2em] mb-10 text-xs md:text-sm font-sans font-bold">
+            What are you looking for?
+          </p>
+          <form onSubmit={handleSearchSubmit} className="w-full relative group">
+            <input
+              type="text"
+              className="w-full bg-transparent border-b-2 border-front-navy/20 focus:border-front-navy py-6 text-3xl md:text-7xl text-front-navy placeholder:text-front-dustly-slate focus:outline-none font-serif text-center transition-colors duration-300"
+              placeholder="Search Bali..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoFocus={isSearchOpen}
+            />
+            <button type="submit" className="mt-12 mx-auto flex items-center gap-3 text-front-navy hover:text-front-red transition-all duration-300 font-sans uppercase tracking-widest font-bold border-2 border-front-navy px-8 py-3 rounded-full hover:border-front-red group">
+              <span>Find Results</span>
+              <SearchIcon className="w-5 h-5 group-hover:translate-x-1 duration-300" />
+            </button>
+          </form>
+        </div>
+      </div>
+
       <header
         className="relative top-0 left-0 right-0 z-[100] bg-front-icewhite"
         role="banner"
@@ -152,7 +211,10 @@ const Header: React.FC = () => {
               <HamburgerIcon className="w-[32px] h-[32px]" />
             </div>
             <div className="hidden md:block">
-              <SearchIcon className="w-[20px] h-[20px] cursor-pointer" />
+              <SearchIcon 
+                className={`w-[20px] h-[20px] cursor-pointer transition-colors ${isSearchOpen ? 'text-front-red' : 'text-black'}`}
+                onClick={() => setIsSearchOpen(true)}
+              />
             </div>
           </div>
         </div>
