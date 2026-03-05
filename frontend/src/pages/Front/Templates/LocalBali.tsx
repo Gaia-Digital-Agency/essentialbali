@@ -207,7 +207,8 @@ const LocalBali: React.FC<{ isTrending?: boolean }> = ({ isTrending = false }) =
       )
     }
     return (
-      <div className="col-span-12">No article for this category</div>
+      <div className="flex items-center justify-center col-span-12 font-serif">No article for this category</div>
+      // <div className="col-span-12">No article for this category</div>
     )
   }
 

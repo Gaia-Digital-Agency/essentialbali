@@ -46,17 +46,17 @@ const AreaMenuPanel: React.FC<AreaMenuPanelProps> = ({ open, onSelect }) => {
                   transition-all duration-300 ease-in-out
                   ${open ? "opacity-100 -translate-y-1 visible shadow-[inset_0_20px_20px_-15px_rgba(0,0,0,0.3),0_10px_20px_rgba(0,0,0,0.2)]" : "opacity-0 -translate-y-4 invisible"}`}
     >
-      <div className="container px-12 py-7">
+      <div className="container px-12 py-7 max-h-[80vh] overflow-y-auto">
         <div className="pb-7">
-          <h2 className="text-front-title font-serif text-front-charcoal-grey">
+          <h2 className="font-serif text-front-title text-front-charcoal-grey">
             Explore The Essentials by Area
           </h2>
         </div>
 
-        <div className="grid grid-rows-5 grid-flow-col auto-cols-max w-fit gap-y-5 gap-x-[100px]">
+        <div className="flex flex-col gap-y-5 md:grid md:grid-rows-5 md:grid-flow-col md:auto-cols-max md:gap-x-[100px] w-fit area-wrapper">
           <p
             key="all"
-            className="text-front-body font-sans text-front-shadowed-slate cursor-pointer hover:text-front-navy transition-colors"
+            className="font-sans transition-colors cursor-pointer text-front-body text-front-shadowed-slate hover:text-front-navy"
             onClick={() => {
               changeHandler("");
               onSelect("All Area");
@@ -67,7 +67,7 @@ const AreaMenuPanel: React.FC<AreaMenuPanelProps> = ({ open, onSelect }) => {
           {options.map((option) => (
             <p
               key={option.value}
-              className="text-front-body font-sans text-front-shadowed-slate cursor-pointer hover:text-front-navy transition-colors"
+              className="font-sans transition-colors cursor-pointer text-front-body text-front-shadowed-slate hover:text-front-navy"
               onClick={() => {
                 changeHandler(option.value);
                 onSelect(option.label);

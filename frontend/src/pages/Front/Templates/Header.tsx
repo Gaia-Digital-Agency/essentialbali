@@ -11,7 +11,7 @@ import {
 import { useTaxonomies } from "../../../context/TaxonomyContext";
 import { RouteProps, useRoute } from "../../../context/RouteContext";
 import { Category } from "../../../types/category.type";
-import { SearchIcon, X } from "lucide-react";
+import { SearchIcon, X, MapPin, ChevronDown } from "lucide-react";
 import AreaMenuToggleButton from "../../../components/front/AreaMenuToggleButton";
 import AreaMenuPanel from "../../../components/front/AreaMenuPanel";
 import { getTemplateByUrl } from "../../../services/template.service";
@@ -52,7 +52,7 @@ const MenuNav: React.FC<{
       <NavLink
         key={menu.id}
         relative={"route"}
-        className={`menu-link text-[14px] text-nowrap capitalize 
+        className={`menu-link text-front-small text-nowrap capitalize 
                 align-items-center justify-center
                 ${isActive() ? "is-active" : ""}
                 `}
@@ -155,46 +155,46 @@ const Header: React.FC = () => {
     <>
       {/* SEARCH OVERLAY */}
       <div className={`fixed inset-0 z-[200] bg-front-icewhite/98 backdrop-blur-sm transition-all duration-500 ease-in-out ${isSearchOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
-        <button 
-          className="absolute top-8 right-8 md:top-12 md:right-12 p-2 hover:rotate-90 transition-transform duration-300"
+        <button
+          className="absolute p-2 transition-transform duration-300 top-8 right-8 md:top-12 md:right-12 hover:rotate-90"
           onClick={() => setIsSearchOpen(false)}
         >
           <X className="w-8 h-8 md:w-10 md:h-10 text-front-navy" />
         </button>
-        
-        <div className="flex flex-col items-center justify-center h-full max-w-5xl mx-auto px-6">
+
+        <div className="flex flex-col items-center justify-center h-full max-w-5xl px-6 mx-auto">
           <p className="text-front-shadowed-slate uppercase tracking-[0.2em] mb-10 text-xs md:text-sm font-sans font-bold">
             What are you looking for?
           </p>
-          <form onSubmit={handleSearchSubmit} className="w-full relative group">
+          <form onSubmit={handleSearchSubmit} className="relative w-full group">
             <input
               type="text"
-              className="w-full bg-transparent border-b-2 border-front-navy/20 focus:border-front-navy py-6 text-3xl md:text-7xl text-front-navy placeholder:text-front-dustly-slate focus:outline-none font-serif text-center transition-colors duration-300"
+              className="w-full py-6 font-serif text-3xl text-center transition-colors duration-300 bg-transparent border-b-2 border-front-navy/20 focus:border-front-navy md:text-7xl text-front-navy placeholder:text-front-dustly-slate focus:outline-none"
               placeholder="Search Bali..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus={isSearchOpen}
             />
-            <button type="submit" className="mt-12 mx-auto flex items-center gap-3 text-front-navy hover:text-front-red transition-all duration-300 font-sans uppercase tracking-widest font-bold border-2 border-front-navy px-8 py-3 rounded-full hover:border-front-red group">
+            <button type="submit" className="flex items-center gap-3 px-8 py-3 mx-auto mt-12 font-sans font-bold tracking-widest uppercase transition-all duration-300 border-2 rounded-full text-front-navy hover:text-front-red border-front-navy hover:border-front-red group">
               <span>Find Results</span>
-              <SearchIcon className="w-5 h-5 group-hover:translate-x-1 duration-300" />
+              <SearchIcon className="w-5 h-5 duration-300 group-hover:translate-x-1" />
             </button>
           </form>
         </div>
       </div>
 
       <header
-        className="relative top-0 left-0 right-0 z-[100] bg-front-icewhite"
+        className="sticky top-0 left-0 right-0 z-[100] bg-front-icewhite shadow-sm"
         role="banner"
       >
-        <div className="container mx-auto py-5 relative flex items-center justify-between bg-front-icewhite h-[100px] md:h-[160px]">
+        <div className="container relative flex items-center justify-between h-[110px] py-5 mx-auto bg-front-icewhite md:h-44">
           {/* LOGO (Left on Mobile, Center Absolute on Desktop) */}
-          <div className="flex-1 md:flex-none md:absolute md:left-1/2 md:-translate-x-1/2 z-[101]">
+          <div className="flex-1 md:flex-none md:absolute md:left-1/2 md:-translate-x-1/2 z-101">
             <NavLogo url="/logo-header" to={toNav()} />
           </div>
 
           {/* AREA TOGGLE (Center on Mobile, Left on Desktop) */}
-          <div className="flex justify-center flex-1 md:flex-none md:order-first">
+          <div className="justify-center flex-1 hidden md:flex md:flex-none md:order-first">
             <AreaMenuToggleButton
               label={selectedAreaLabel}
               open={isAreaOpen}
@@ -211,7 +211,7 @@ const Header: React.FC = () => {
               <HamburgerIcon className="w-[32px] h-[32px]" />
             </div>
             <div className="hidden md:block">
-              <SearchIcon 
+              <SearchIcon
                 className={`w-[20px] h-[20px] cursor-pointer transition-colors ${isSearchOpen ? 'text-front-red' : 'text-black'}`}
                 onClick={() => setIsSearchOpen(true)}
               />
@@ -219,7 +219,20 @@ const Header: React.FC = () => {
           </div>
         </div>
 
-        <div className="line bg-black h-[1px] w-full"></div>
+        <div className="line bg-front-navy/30 h-[1px] w-full"></div>
+
+        <div 
+          className="flex items-center justify-between w-full px-6 py-4 cursor-pointer navbar-area md:hidden bg-front-navy"
+          onClick={() => setIsAreaOpen(!isAreaOpen)}
+        >
+          <div className="flex items-center">
+            <MapPin className="w-5 h-5 mr-3 text-front-icewhite" />
+            <span className="font-sans font-light tracking-wider capitalize text-front-medium text-front-icewhite">
+              {selectedAreaLabel}
+            </span>
+          </div>
+          <ChevronDown className={`w-5 h-5 text-front-icewhite transition-transform duration-300 ${isAreaOpen ? 'rotate-180' : ''}`} />
+        </div>
 
         <AreaMenuPanel
           open={isAreaOpen}
@@ -232,7 +245,7 @@ const Header: React.FC = () => {
         <div className="categories-menu-navbar mx-auto py-[15px] hidden md:block bg-front-navy">
 
           <nav
-            className="container relative flex flex-wrap items-center justify-center menus-wrapper gap-x-4 gap-y-3"
+            className="container relative flex flex-wrap items-center justify-center menus-wrapper md:gap-x-1 gap-x-4 gap-y-3"
             aria-label="Categories"
           >
             {forcedMenuCategories.map((menu: Category, index: number) => (
@@ -243,16 +256,16 @@ const Header: React.FC = () => {
                   key={`header-menu-${menu.slug_title}`}
                 />
                 {index < forcedMenuCategories.length - 1 && (
-                  <span className="mx-2  text-front-icewhite/40 text-[1em]">
+                  <span className="mx-2 text-front-icewhite/40 text-[1em]">
                     |
                   </span>
                 )}
               </>
             ))}
-            <div className="absolute flex items-center justify-center right-5 gap-x-4">
-              <FacebookIconGreyDefault className="w-[20px] h-[20px] cursor-pointer text-front-icewhite hover:text-front-dustly-slate duration-200" />
-              <InstagramIconWhiteDefault className="w-[24px] h-[24px] cursor-pointer text-front-icewhite hover:text-front-dustly-slate duration-200" />
-              <TwitterIconWhiteDefault className="w-[20px] h-[20px] cursor-pointer text-front-icewhite hover:text-front-dustly-slate duration-200" />
+            <div className="absolute items-center justify-center hidden lg:flex right-5 gap-x-4">
+              <FacebookIconGreyDefault className="w-5 h-5 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
+              <InstagramIconWhiteDefault className="w-6 h-6 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
+              <TwitterIconWhiteDefault className="w-5 h-5 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
             </div>
           </nav>
         </div>

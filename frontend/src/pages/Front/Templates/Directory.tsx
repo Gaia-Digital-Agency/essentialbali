@@ -51,7 +51,7 @@ const RenderPagination: React.FC<PaginationProps> = ({page, currentPage, onClick
     // if(content)
     return (
         <>
-            <div className="prev-button cursor-pointer" onClick={() => {onClick(currentPage - 1)}}>
+            <div className="cursor-pointer prev-button" onClick={() => {onClick(currentPage - 1)}}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="8" height="12" viewBox="0 0 8 12" fill="none" style={{rotate: '180deg'}}>
                     <path d="M0.589844 10.59L5.16984 6L0.589844 1.41L1.99984 0L7.99984 6L1.99984 12L0.589844 10.59Z" fill="black"/>
                 </svg>
@@ -60,7 +60,7 @@ const RenderPagination: React.FC<PaginationProps> = ({page, currentPage, onClick
                 typeof page == 'object' &&
                 page.map(pag => (<RenderPages page={pag} currentPage={currentPage} onClick={onClick} />))
             }
-            <div className="next-button cursor-pointer" onClick={() => {onClick(currentPage + 1)}}>
+            <div className="cursor-pointer next-button" onClick={() => {onClick(currentPage + 1)}}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="8" height="12" viewBox="0 0 8 12" fill="none">
                     <path d="M0.589844 10.59L5.16984 6L0.589844 1.41L1.99984 0L7.99984 6L1.99984 12L0.589844 10.59Z" fill="black"/>
                 </svg>
@@ -76,11 +76,11 @@ const ArticleItem: React.FC<ArticleItemProps> = ({article, tag}) => {
 
     return (
         <div 
-            className="relative group h-full"
+            className="relative h-full group"
             onMouseEnter={() => imageRef.current?.zoomIn()}
             onMouseLeave={() => imageRef.current?.zoomOut()}
         >
-            <div className="image-wrapper mb-5">
+            <div className="mb-5 image-wrapper">
                 <Image 
                     url={getFeaturedImageUrl(article)} 
                     ratio="100%" 
@@ -89,21 +89,21 @@ const ArticleItem: React.FC<ArticleItemProps> = ({article, tag}) => {
                 />
             </div>
             {article.tags &&
-                <div className="tag-wrapper mb-2 text-front-red">
+                <div className="mb-2 tag-wrapper text-front-red">
                     {tag?.name ?? ''}
                 </div>
             }
-            <div className="title-wrapper mb-2">
+            <div className="mb-2 title-wrapper">
                 <Link to={getPermalink(article)} viewTransition>
                     <p className="text-front-subtitle font-serif transition-all duration-300 group-hover:[text-shadow:0_0_0.3px_currentColor]">
                         {article.title}
                     </p>
                 </Link>
             </div>
-            <div className="subtitle-wrapper mb-5">
-                <p className="text-front-small leading-normal text-front-soft-gray">{article.sub_title}</p>
+            <div className="mb-5 subtitle-wrapper">
+                <p className="leading-normal text-front-small text-front-soft-gray">{article.sub_title}</p>
             </div>
-            <div className="date-wrapper flex gap-x-2">
+            <div className="flex date-wrapper gap-x-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14" fill="none">
                     <path d="M1.125 4.14229C1.125 3.17103 1.91236 2.38367 2.88362 2.38367H12.1164C13.0877 2.38367 13.875 3.17103 13.875 4.14229V11.6164C13.875 12.5877 13.0877 13.375 12.1164 13.375H2.88362C1.91236 13.375 1.125 12.5877 1.125 11.6164V4.14229Z" stroke="#7F7F7F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M3.98267 0.624878V3.70246" stroke="#7F7F7F" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
@@ -315,18 +315,18 @@ const Directory: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
         if(isTrending) return
         return (
             <>
-            <div className="outer overflow-x-auto mb-10">
-                <div className="grid grid-cols-8 gap-x-8 gap-y-10 justify-center pb-10 w-max md:w-full">
+            <div className="mb-10 overflow-x-auto outer">
+                <div className="grid justify-center grid-cols-8 pb-10 gap-x-8 gap-y-10 w-max md:w-full">
                     {
                         tags?.map((tag) => {
                             // if(i % 2 == 0) return
                             return (
                                 <>
                                     <div className={`item tag-wrapper tag-selector cursor-pointer ${tag.id == currentTag ? 'active' : ''}`} onClick={(() => {tagClickHandler(tag.id)})}>
-                                        <div className="image-wrapper mb-5 text-center">
+                                        <div className="mb-5 text-center image-wrapper">
                                             <img src={`${API_URL}/${tag.icon}`} className="w-[70px] h-[70px] mx-auto rounded-full bg-[#D9D9D9]" alt="" />
                                         </div>
-                                        <div className="text-wrapper text-center">
+                                        <div className="text-center text-wrapper">
                                             <p className="text-front-small">{tag.name}</p>
                                         </div>
                                     </div>
@@ -372,7 +372,7 @@ const Directory: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
             )
         }
         return (
-            <div className="col-span-12">No article for this category</div>
+            <div className="flex items-center justify-center col-span-12 font-serif">No article for this category</div>
         )
     }
 
@@ -384,15 +384,15 @@ const Directory: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
             </Helmet>
             <section className="py-12 bg-front-icewhite">
                 <div className="container">
-                    <div className="ads-wrapper mb-12">
+                    <div className="mb-12 ads-wrapper">
                         {/* <Advertisement /> */}
                     </div>
                     <div className="grid grid-cols-12 mb-12">
-                        <div className="md:col-span-10 md:col-start-2 col-span-12">
-                            <div className="title-wrapper text-center mb-4">
+                        <div className="col-span-12 md:col-span-10 md:col-start-2">
+                            <div className="mb-4 text-center title-wrapper">
                                 <p className="font-serif text-front-hero">{title}</p>
                             </div>
-                            <div className="description-wrapper text-center">
+                            <div className="text-center description-wrapper">
                                 <p className="">{description}</p>
                             </div>
                         </div>
@@ -402,11 +402,11 @@ const Directory: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
                     <div className="grid grid-cols-12 gap-5" ref={containerRef}>
                         {renderArticle()}
                     </div>
-                    <div className="pagination-wrapper flex justify-center gap-x-4 py-8 items-center">
+                    <div className="flex items-center justify-center py-8 pagination-wrapper gap-x-4">
                         <RenderPagination page={generatePagination(currentPage, totalPages)} currentPage={currentPage} onClick={clickPagingHandler}  />
                     </div>
                 </div>
-                <div className="newsletter-wrapper bg-front-icewhite py-8 mt-6">
+                <div className="py-8 mt-6 newsletter-wrapper bg-front-icewhite">
                     <Newsletter />
                 </div>
             </section>
