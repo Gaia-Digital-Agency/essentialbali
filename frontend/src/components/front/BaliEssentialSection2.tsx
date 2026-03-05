@@ -24,12 +24,12 @@ const ArticleItems: React.FC<{
 
   return (
     <div
-      className="md:col-span-6 lg:col-span-3 col-span-12 relative group "
+      className="relative col-span-12 md:col-span-6 lg:col-span-3 group"
       key={`bali-essential-${article.id}`}
       onMouseEnter={() => imageRef.current?.zoomIn()}
       onMouseLeave={() => imageRef.current?.zoomOut()}
     >
-      <div className="inner grid grid-cols-12 gap-x-6 md:gap-x-0">
+      <div className="grid grid-cols-12 inner gap-x-6 md:gap-x-0">
         <div className="col-span-6 md:col-span-12">
           <div className="image-wrapper md:mb-2.5">
             <Image
@@ -41,23 +41,17 @@ const ArticleItems: React.FC<{
             />
           </div>
         </div>
-        <div className="flex flex-col gap-y-1 col-span-6 md:col-span-12">
-          <div className="text-[16px] text-front-shadowed-slate font-sans">
+        <div className="flex flex-col col-span-6 gap-y-1 md:col-span-12">
+          <div className="font-sans text-front-small text-front-shadowed-slate">
             <p>{article?.category_name}</p>
           </div>
-          <div className="title-wrapper mb-4">
+          <div className="mb-4 title-wrapper">
             <Link to={admin ? "" : getPermalink(article)}>
               <p
                 className="text-front-title text-front-grey font-serif
                           transition-[font-weight]
                           transition-all duration-300
                           group-hover:[text-shadow:0_0_0.3px_currentColor]"
-                // className="
-                //   text-front-title text-front-grey font-serif
-                //   transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-                //   group-hover:text-front-navy
-                //   group-hover:scale-[1.02]
-                // "
               >
                 {article?.title}
               </p>
@@ -113,13 +107,11 @@ const BaliEssentialSection2: React.FC<ComponentTemplateHomeProps> = ({
 
   const renderSVG = () => {
     return (
-      <span className="text-front-navy group-hover:text-red-500 transition-colors duration-300">
+      <span className="transition-colors duration-300 text-front-navy group-hover:text-red-500">
         <ButtonChevronBorderArang />
       </span>
     );
   };
-
-  // console.log("content bali section 2", content);
 
   return (
     <>
@@ -129,11 +121,11 @@ const BaliEssentialSection2: React.FC<ComponentTemplateHomeProps> = ({
             <div className="container mx-auto">
               <div>
                 <div className="flex justify-between items-end mb-2.5">
-                  <h2 className="text-2xl font-serif text-front-navy capitalize">
+                  <h2 className="font-serif text-2xl capitalize text-front-navy">
                     {`Essential ${CATEGORY_SLUG}`}
                   </h2>
                   <p className="font-sans text-front-charcoal-grey">
-                    <span className="inline-flex items-center gap-2 group cursor-pointer">
+                    <span className="inline-flex items-center gap-2 cursor-pointer group">
                       {/* group-hover:-translate-x-1 */}
                       <span className="transition-transform duration-300 translate-x-6 group-hover:-translate-x-1">
                         <TextLink
@@ -146,7 +138,7 @@ const BaliEssentialSection2: React.FC<ComponentTemplateHomeProps> = ({
                           color="black"
                         />
                       </span>
-                      <span className="opacity-0 translate-x-4 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-x-0">
+                      <span className="transition-all duration-300 ease-out translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0">
                         {renderSVG()}
                       </span>
                     </span>
@@ -156,7 +148,7 @@ const BaliEssentialSection2: React.FC<ComponentTemplateHomeProps> = ({
               </div>
             </div>
             <div className="container py-8">
-              <div className="grid grid-cols-12 md:gap-x-8 gap-y-10 mb-6 md:mb-4 overflow-x-hidden">
+              <div className="grid grid-cols-12 overflow-x-hidden md:gap-x-8 gap-y-8">
                 {content.map((item, index) =>
                   item ? (
                     <ArticleItems key={index} article={item} admin={admin} />

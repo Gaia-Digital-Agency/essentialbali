@@ -42,14 +42,14 @@ const ArticleItems: React.FC<{
         <p className="text-[16px] text-front-shadowed-slate font-sans">{article?.category_name}</p>
         <Link to={admin ? "" : getPermalink(article)}>
           <h3
-            className="text-[32px] font-serif text-front-navy capitalize transition-all duration-300
+            className="text-front-title font-serif text-front-navy capitalize transition-all duration-300
                         group-hover:[text-shadow:0_0_0.3px_currentColor]"
           >
             {article?.title}
           </h3>
           {/* <p className="font-serif text-front-title">{article.title}</p> */}
         </Link>
-        <p className="text-[18px] text-front-charcoal-grey font-sans">
+        <p className="font-sans text-front-medium text-front-charcoal-grey">
           {article?.sub_title}
         </p>
       </div>

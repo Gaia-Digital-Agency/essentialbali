@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react"; // useMemo
 import { NavLink } from "react-router-dom"; //useNavigate
 import NavLogo from "../../../components/front/NavLogo";
-// import DropDownCountry from "../../../components/front/DropDownCountry";
 import MobileMenu from "../../../components/front/MobileMenu";
 import {
   FacebookIconGreyDefault,
@@ -12,27 +11,12 @@ import {
 import { useTaxonomies } from "../../../context/TaxonomyContext";
 import { RouteProps, useRoute } from "../../../context/RouteContext";
 import { Category } from "../../../types/category.type";
-// import { getTemplateByUrl } from "../../../services/template.service";
-// import { useHeaderContent } from "../../../context/HeaderContext";
-// import { BALI_AREA_OPTIONS, isBaliAreaSlug } from "../../../utils/baliAreas";
-// import DropDownCountry from "../../../components/front/DropDownCountry";
 import { SearchIcon } from "lucide-react";
 import AreaMenuToggleButton from "../../../components/front/AreaMenuToggleButton";
 import AreaMenuPanel from "../../../components/front/AreaMenuPanel";
 import { getTemplateByUrl } from "../../../services/template.service";
 import { isBaliAreaSlug } from "../../../utils/baliAreas";
-// import { FacebookIcon } from "react-share";
 
-// const DESIRED_HEADER_MENUS = [
-//   { slug: "deals", label: "News" },
-//   { slug: "events", label: "Events" },
-//   { slug: "featured", label: "Stays" },
-//   { slug: "ultimate-guide", label: "Dine" },
-//   { slug: "health-wellness", label: "Health & Wellness" },
-//   { slug: "directory", label: "Nightlife" },
-//   { slug: "nature-adventure", label: "Activities" },
-//   { slug: "nature-adventure", label: "People & Culture" },
-// ];
 
 const MenuNav: React.FC<{
   menu: Category;
@@ -87,35 +71,12 @@ const Header: React.FC = () => {
   const [selectedAreaLabel, setSelectedAreaLabel] =
     useState<string>("All Area");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  // const [headerMenus, setHeaderMenus] = useState<any[]>(
-  //   initialData?.header ?? [],
-  // );
-
   const [headerMenus, setHeaderMenus] = useState<Category[]>([]);
   // const [areaSearch, setAreaSearch] = useState<string>("");
   const { taxonomies } = useTaxonomies();
   const { actualRoute } = useRoute();
-  // const navigate = useNavigate();
-  // const forcedMenuCategories = taxonomies.categories;
 
-  // console.log("forcedMenuCategories => ", forcedMenuCategories);
-
-  // const forcedMenuCategories = useMemo(() => {
-  //   const categories = taxonomies.categories ?? [];
-  //   console.log("how do i live => " , categories)
-  //   return DESIRED_HEADER_MENUS.map((item, index) => {
-  //     // const found = categories.find((cat) => cat.slug_title === item.slug);
-  //     // if (found) return found;
-  //     return {
-  //       id: -(index + 1),
-  //       title: item.label,
-  //       slug_title: item.slug,
-  //     } as Category;
-  //   });
-  // }, [taxonomies.categories]);
   useEffect(() => {
-    // if (!headerMenus || headerMenus.length === 0) {
     (async () => {
       try {
         const getTemplate = await getTemplateByUrl("/header");
@@ -126,10 +87,6 @@ const Header: React.FC = () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (item: any) => item.linkCategory,
           );
-
-          // const filteredMenus = taxonomies.categories?.filter((category: any) =>
-          //   linkCategoryIds.includes(category.id),
-          // );
 
           const filteredMenus =
             taxonomies.categories?.filter((category) =>
@@ -145,7 +102,6 @@ const Header: React.FC = () => {
         console.error("Error fetching header template:", e);
       }
     })();
-    // }
   }, [taxonomies.categories]);
 
   useEffect(() => {
@@ -162,55 +118,9 @@ const Header: React.FC = () => {
     setIsModalOpen(false);
   }, [actualRoute]);
 
-  console.log("apa iki => " , actualRoute);
-
   const toNav = () => {
     return `/${actualRoute?.country ? actualRoute.country.slug : ""}${actualRoute?.city ? `/${actualRoute.city.slug}` : ""}${actualRoute?.region ? `/${actualRoute.region.slug}` : ""}`;
   };
-
-  // const baliAreas = useMemo(() => {
-  //   const taxonomyAreas = (taxonomies.countries ?? []).filter(
-  //     (country) => country.id !== 999 && isBaliAreaSlug(country.slug),
-  //   );
-  //   if (taxonomyAreas.length > 0) return taxonomyAreas;
-  //   return BALI_AREA_OPTIONS.map((area, index) => ({
-  //     id: -(index + 1),
-  //     name: area.name,
-  //     slug: area.slug,
-  //   }));
-  // }, [taxonomies.countries]);
-
-  // const areaSearchSubmitHandler = (e: React.FormEvent<HTMLFormElement>) => {
-  //   e.preventDefault();
-  //   const normalized = areaSearch
-  //     .trim()
-  //     .toLowerCase()
-  //     .replace(/[^a-z0-9]+/g, "-");
-  //   const fallbackArea = baliAreas[0];
-  //   if (!normalized) {
-  //     if (fallbackArea) navigate(`/${fallbackArea.slug}`);
-  //     return;
-  //   }
-
-  //   const exact = baliAreas.find(
-  //     (area) =>
-  //       area.slug.toLowerCase() === normalized ||
-  //       area.name.toLowerCase() === areaSearch.trim().toLowerCase(),
-  //   );
-  //   const startsWith = baliAreas.find(
-  //     (area) =>
-  //       area.slug.toLowerCase().startsWith(normalized) ||
-  //       area.name.toLowerCase().startsWith(areaSearch.trim().toLowerCase()),
-  //   );
-  //   const partial = baliAreas.find(
-  //     (area) =>
-  //       area.slug.toLowerCase().includes(normalized) ||
-  //       area.name.toLowerCase().includes(areaSearch.trim().toLowerCase()),
-  //   );
-
-  //   const target = exact ?? startsWith ?? partial ?? fallbackArea;
-  //   if (target) navigate(`/${target.slug}`);
-  // };
 
   return (
     <>
@@ -218,11 +128,14 @@ const Header: React.FC = () => {
         className="relative top-0 left-0 right-0 z-[100] bg-front-icewhite"
         role="banner"
       >
-        <div className="container mx-auto py-5 relative flex items-center justify-between gap-4 bg-front-icewhite h-[160px]">
-          <div className="w-max">
-            {/* <p>Left Content</p> */}
-            {/* <DropDownCountry /> */}
-            {/* <AreaMenuToggleButton label="All Area" /> */}
+        <div className="container mx-auto py-5 relative flex items-center justify-between bg-front-icewhite h-[100px] md:h-[160px]">
+          {/* LOGO (Left on Mobile, Center Absolute on Desktop) */}
+          <div className="flex-1 md:flex-none md:absolute md:left-1/2 md:-translate-x-1/2 z-[101]">
+            <NavLogo url="/logo-header" to={toNav()} />
+          </div>
+
+          {/* AREA TOGGLE (Center on Mobile, Left on Desktop) */}
+          <div className="flex justify-center flex-1 md:flex-none md:order-first">
             <AreaMenuToggleButton
               label={selectedAreaLabel}
               open={isAreaOpen}
@@ -230,27 +143,22 @@ const Header: React.FC = () => {
             />
           </div>
 
-          {/* LOGO CENTER */}
-          <div className="absolute left-1/2 -translate-x-1/2">
-            <NavLogo url="/logo-header" to={toNav()} />
-          </div>
-
-          <div className="w-max">
-            {/* Icon Kaca pembesar / search */}
-            <SearchIcon className="w-[20px] h-[20px] cursor-pointer" />
-          </div>
-
-          <div
-            className="hamburger md:hidden block"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <HamburgerIcon className="w-[32px] h-[32px]" />
+          {/* RIGHT SIDE (Hamburger on Mobile, Search on Desktop) */}
+          <div className="flex justify-end flex-1 md:flex-none">
+            <div
+              className="md:hidden"
+              onClick={() => setIsModalOpen(true)}
+            >
+              <HamburgerIcon className="w-[32px] h-[32px]" />
+            </div>
+            <div className="hidden md:block">
+              <SearchIcon className="w-[20px] h-[20px] cursor-pointer" />
+            </div>
           </div>
         </div>
 
         <div className="line bg-black h-[1px] w-full"></div>
 
-        {/* <AreaMenuPanel open={isAreaOpen} /> */}
         <AreaMenuPanel
           open={isAreaOpen}
           onSelect={(label: string) => {
@@ -262,7 +170,7 @@ const Header: React.FC = () => {
         <div className="categories-menu-navbar mx-auto py-[15px] hidden md:block bg-front-navy">
 
           <nav
-            className="container menus-wrapper flex flex-wrap items-center gap-x-4 gap-y-3 justify-center relative"
+            className="container relative flex flex-wrap items-center justify-center menus-wrapper gap-x-4 gap-y-3"
             aria-label="Categories"
           >
             {forcedMenuCategories.map((menu: Category, index: number) => (
@@ -279,7 +187,7 @@ const Header: React.FC = () => {
                 )}
               </>
             ))}
-            <div className="flex items-center justify-center absolute right-5 gap-x-4">
+            <div className="absolute flex items-center justify-center right-5 gap-x-4">
               <FacebookIconGreyDefault className="w-[20px] h-[20px] cursor-pointer text-front-icewhite hover:text-front-dustly-slate duration-200" />
               <InstagramIconWhiteDefault className="w-[24px] h-[24px] cursor-pointer text-front-icewhite hover:text-front-dustly-slate duration-200" />
               <TwitterIconWhiteDefault className="w-[20px] h-[20px] cursor-pointer text-front-icewhite hover:text-front-dustly-slate duration-200" />

@@ -145,7 +145,7 @@ const BaliEssentialSection1Main: React.FC<BaliEssentialSectionMainProps> = ({
             />
           </div>
           <div className="flex flex-col gap-y-2.5">
-            <p className="text-[16px] text-front-shadowed-slate font-sans">
+            <p className="font-sans text-front-small text-front-shadowed-slate">
               News
             </p>
             <Link to={admin ? "" : getPermalink(content)}>
@@ -190,7 +190,7 @@ const SecondaryArticleItem: React.FC<{
       </div>
 
       <div className="flex flex-col gap-y-2.5">
-        <p className="text-[16px] text-front-shadowed-slate font-sans">
+        <p className="font-sans text-front-small text-front-shadowed-slate">
           {article.category_name}
         </p>
 
@@ -214,7 +214,7 @@ const BaliEssentialSection1Secondary: React.FC<
 
   if (content) {
     return (
-      <div className=" w-full md:w-[50%] flex flex-col py-8 space-y-8">
+      <div className=" w-full md:w-[50%] flex flex-col md:py-8 space-y-8">
         {/* {content.slice(0, 2).map((item, index) => renderArticle(item, index))} */}
         {content
           .slice(0, 2)

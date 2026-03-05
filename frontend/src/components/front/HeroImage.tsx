@@ -56,7 +56,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
   admin = false,
 }) => {
   const { actualRoute, clientChange } = useRoute();
-  const { generateContent, getPermalink, getFeaturedImageUrl, getDeepestLocation } = useArticle();
+  const { generateContent, getPermalink, getFeaturedImageUrl } = useArticle();
   const activeAnim = useRef<gsap.core.Tween | null>(null);
   const imageRef = useRef<SwiperType>(null);
   const textRef = useRef<SwiperType>(null);
@@ -130,11 +130,6 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
     };
   }, [content, admin]);
 
-  const animClickHandler = (index: number) => {
-    if (!admin) {
-      playControls.current.play(index);
-    }
-  };
 
   if (content.length) {
     return (
