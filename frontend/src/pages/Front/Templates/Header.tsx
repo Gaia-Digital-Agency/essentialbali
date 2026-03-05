@@ -144,7 +144,7 @@ const Header: React.FC = () => {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
+    if (searchQuery.trim().length >= 3) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setIsSearchOpen(false);
       setSearchQuery("");
@@ -175,7 +175,16 @@ const Header: React.FC = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus={isSearchOpen}
             />
-            <button type="submit" className="flex items-center gap-3 px-8 py-3 mx-auto mt-12 font-sans font-bold tracking-widest uppercase transition-all duration-300 border-2 rounded-full text-front-navy hover:text-front-red border-front-navy hover:border-front-red group">
+            {searchQuery.trim().length > 0 && searchQuery.trim().length < 3 && (
+              <p className="text-front-red text-center mt-4 font-sans text-sm animate-pulse">
+                Please enter at least 3 characters
+              </p>
+            )}
+            <button 
+              type="submit" 
+              disabled={searchQuery.trim().length < 3}
+              className={`flex items-center gap-3 px-8 py-3 mx-auto mt-12 font-sans font-bold tracking-widest uppercase transition-all duration-300 border-2 rounded-full ${searchQuery.trim().length < 3 ? 'opacity-50 cursor-not-allowed border-front-dustly-slate text-front-dustly-slate' : 'text-front-navy hover:text-front-red border-front-navy hover:border-front-red' } group`}
+            >
               <span>Find Results</span>
               <SearchIcon className="w-5 h-5 duration-300 group-hover:translate-x-1" />
             </button>

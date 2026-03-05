@@ -51,8 +51,8 @@ const RelatedItem: React.FC<{ article: ArticleApiResponseProps }> = ({
       onMouseEnter={() => imageRef.current?.zoomIn()}
       onMouseLeave={() => imageRef.current?.zoomOut()}
     >
-      <div className="grid grid-cols-12 inner gap-x-6 md:gap-x-0">
-        <div className="col-span-6 md:col-span-12">
+      <div className="grid grid-cols-12 inner gap-y-4 md:gap-x-0">
+        <div className="col-span-12 md:col-span-12">
           <div className="image-wrapper md:mb-2.5">
             <Image
               url={getFeaturedImageUrl(article)}
@@ -63,8 +63,8 @@ const RelatedItem: React.FC<{ article: ArticleApiResponseProps }> = ({
             />
           </div>
         </div>
-        <div className="flex flex-col col-span-6 gap-y-1 md:col-span-12">
-          <div className="text-[16px] text-front-shadowed-slate font-sans">
+        <div className="flex flex-col justify-center col-span-12 text-center md:text-left gap-y-1 md:col-span-12">
+          <div className="font-sans text-front-small text-front-shadowed-slate">
             <p>{article?.category_name}</p>
           </div>
           <div className="mb-4 title-wrapper">
@@ -96,7 +96,7 @@ const RelatedArticle: React.FC<{
   }
   return (
     <>
-      <div id="related-articles" className="relative pb-12 ">
+      <div id="related-articles" className="relative ">
         <div className="swiper-pagination"></div>
         <Swiper
           slidesPerView={1}
@@ -270,46 +270,78 @@ const SingleV2: React.FC = () => {
       <article>
         <div className="bg-front-icewhite">
           <div className="container mb-[40px]">
-            <div className="grid grid-cols-12 pt-12 md:gap-x-10 gap-y-10">
+            <div className="py-8 md:hidden breadcrumb-wrapper">
+              <p className="uppercase text-front-small text-front-shadowed-slate md:text-front-icewhite/80">
+                <Link to={"/"} className="transition-colors hover:text-front-navy md:hover:text-front-icewhite">Home</Link> /{" "}
+                <Link to={`/${deepestLocation?.slug}`} className="transition-colors hover:text-front-navy md:hover:text-front-icewhite">
+                  {deepestLocation?.name}
+                </Link>{" "}
+                /{" "}
+                <Link
+                  to={`/${actualRoute?.country?.slug}/${actualRoute?.category?.slug_title}`}
+                  className="transition-colors hover:text-front-navy md:hover:text-front-icewhite"
+                >
+                  {actualRoute?.category?.title}
+                </Link>
+              </p>
+            </div>
+            <div className="grid grid-cols-12 md:gap-x-10 gap-y-10">
               <div className="col-span-12 md:col-span-12">
-                <div className="relative py-4 mb-4 featured-image-wrapper">
-                  <Image
-                    url={getFeaturedImageUrl(content, "16_9")}
-                    ratio="40%"
-                    isLazy={false}
-                    fetchPriority="high"
-                    overlay={true}
-                  />
-                  <div className="absolute z-10 top-10 right-10">
-                    {renderEditButton()}
-                  </div>
-                  <div className="absolute z-10 breadcrumb-wrapper top-10 left-10">
-                    <p className="uppercase text-front-small text-front-icewhite/80">
-                      <Link to={"/"} className="transition-colors hover:text-front-icewhite">Home</Link> /{" "}
-                      <Link to={`/${deepestLocation?.slug}`} className="transition-colors hover:text-front-icewhite">
+                {/* MOBILE ONLY: Title and Subtitle before image */}
+                <div className="mb-6 text-center md:hidden title-wrapper-mobile">
+                  <h1 className="mb-4 font-serif text-3xl text-front-navy">
+                    {content?.title}
+                  </h1>
+                  <h3 className="font-sans text-lg text-front-shadowed-slate">
+                    {content?.sub_title}
+                  </h3>
+                </div>
+
+                <div className="relative py-4 featured-image-wrapper">
+                  {/* BREADCRUMB: Above image on mobile (relative), absolute on desktop image */}
+                  <div className="hidden mb-4 md:block md:absolute md:top-10 md:left-10 md:z-20 md:mb-0 breadcrumb-wrapper">
+                    <p className="uppercase text-front-small text-front-shadowed-slate md:text-front-icewhite/80">
+                      <Link to={"/"} className="transition-colors hover:text-front-navy md:hover:text-front-icewhite">Home</Link> /{" "}
+                      <Link to={`/${deepestLocation?.slug}`} className="transition-colors hover:text-front-navy md:hover:text-front-icewhite">
                         {deepestLocation?.name}
                       </Link>{" "}
                       /{" "}
                       <Link
                         to={`/${actualRoute?.country?.slug}/${actualRoute?.category?.slug_title}`}
-                        className="transition-colors hover:text-front-icewhite"
+                        className="transition-colors hover:text-front-navy md:hover:text-front-icewhite"
                       >
                         {actualRoute?.category?.title}
                       </Link>
                     </p>
                   </div>
-                  <div className="absolute z-10 w-full px-10 text-center -translate-x-1/2 -translate-y-1/2 title-wrapper top-1/2 left-1/2">
-                    <h1 className="mb-5 font-serif text-front-hero text-front-icewhite">
-                      {content?.title}
-                    </h1>
 
-                    <h3 className="font-sans text-front-icewhite/80 text-front-subtitle">
-                      {content?.sub_title}
-                    </h3>
+                  <div className="relative group">
+                    <Image
+                      url={getFeaturedImageUrl(content, "16_9")}
+                      ratio="40%"
+                      mobileRatio="60%"
+                      isLazy={false}
+                      fetchPriority="high"
+                      overlay={true}
+                    />
+
+                    {/* DESKTOP ONLY: Title Overlay */}
+                    <div className="hidden text-center md:flex md:flex-col md:items-center md:justify-center md:absolute md:inset-0 md:z-10 md:px-10 title-wrapper-desktop">
+                      <h1 className="mb-5 font-serif text-front-hero text-front-icewhite">
+                        {content?.title}
+                      </h1>
+                      <h3 className="font-sans text-front-icewhite/80 text-front-subtitle">
+                        {content?.sub_title}
+                      </h3>
+                    </div>
+
+                    <div className="absolute z-10 top-4 right-4 md:top-10 md:right-10">
+                      {renderEditButton()}
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex flex-col justify-center px-5 py-5 mx-auto overflow-x-hidden wrap-break-word md:px-40 content-wrapper article-wrapper gap-y-[50px]">
+                <div className="flex flex-col justify-center px-5 py-5 mx-auto overflow-x-hidden break-words md:px-40 content-wrapper article-wrapper gap-y-[40px] md:gap-y-[50px]">
                   <div className="flex justify-center text-center author-wrapper gap-x-5">
                     <p className="text-front-shadowed-slate text-front-small">
                       {content?.author_name}
@@ -357,7 +389,6 @@ const SingleV2: React.FC = () => {
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
           </div>
@@ -375,7 +406,7 @@ const SingleV2: React.FC = () => {
                   theArticle={content ?? null}
                 />
               )}
-              <div className="pt-16 pb-8 text-center button-wrapper">
+              <div className="pt-8 pb-8 text-center button-wrapper">
                 <p className="font-sans text-front-charcoal-grey">
                   <span className="inline-flex items-center gap-2 cursor-pointer group">
                     <span className="transition-transform duration-300 translate-x-6 group-hover:-translate-x-1">
