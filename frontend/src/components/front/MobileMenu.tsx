@@ -129,7 +129,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isModalOpen = false, closeModal
             </div>
           </div>
         </div>
-        <div className="line bg-black h-[1px] w-full"></div>
+        <div className="line bg-front-navy/20 h-[1px] w-full"></div>
 
         <div className="flex flex-col flex-1 overflow-hidden nav-category-wrapper">
           <div className="container flex flex-col flex-1 py-4 mx-auto overflow-hidden inner">

@@ -52,10 +52,12 @@ const RenderArticle: React.FC<{ content?: ArticleProps[], q?: string | null }> =
     )
   }
   if (q && q.length < 3) {
-    return <>Keyword search need to have at least 3 characters</>
+    // return <>Keyword search need to have at least 3 characters</>
+    return <><div className="flex items-center justify-center col-span-12 font-serif">Keyword search need to have at least 3 characters</div></>
   }
   if (q) {
-    return <>Article not found</>
+    // return <>Article not found</>
+    return <><div className="flex items-center justify-center col-span-12 font-serif">Article not found</div></>
   }
   // return <SearchBar search="" />
 }
