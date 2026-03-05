@@ -42,14 +42,14 @@ const ArticleItems: React.FC<{
         <p className="text-[16px] text-front-shadowed-slate font-sans">{article?.category_name}</p>
         <Link to={admin ? "" : getPermalink(article)}>
           <h3
-            className="text-[32px] font-serif text-front-navy capitalize transition-all duration-300
+            className="text-front-title font-serif text-front-navy capitalize transition-all duration-300
                         group-hover:[text-shadow:0_0_0.3px_currentColor]"
           >
             {article?.title}
           </h3>
-          {/* <p className="text-front-title font-serif">{article.title}</p> */}
+          {/* <p className="font-serif text-front-title">{article.title}</p> */}
         </Link>
-        <p className="text-[18px] text-front-charcoal-grey font-sans">
+        <p className="font-sans text-front-medium text-front-charcoal-grey">
           {article?.sub_title}
         </p>
       </div>
@@ -101,7 +101,7 @@ const BaliEssentialSection3: React.FC<ComponentTemplateHomeProps> = ({
 
   const renderSVG = () => {
     return (
-      <span className="text-front-navy group-hover:text-red-500 transition-colors duration-300">
+      <span className="transition-colors duration-300 text-front-navy group-hover:text-red-500">
         <ButtonChevronBorderArang />
       </span>
     );
@@ -115,11 +115,11 @@ const BaliEssentialSection3: React.FC<ComponentTemplateHomeProps> = ({
             <div className="container mx-auto">
               <div>
                 <div className="flex justify-between items-end mb-2.5">
-                  <h2 className="text-2xl font-serif text-front-navy capitalize">
+                  <h2 className="font-serif text-2xl capitalize text-front-navy">
                     {`Essential ${CATEGORY_SLUG}`}
                   </h2>
                   <p className="font-sans text-front-charcoal-grey">
-                    <span className="inline-flex items-center gap-2 group cursor-pointer">
+                    <span className="inline-flex items-center gap-2 cursor-pointer group">
                       {/* group-hover:-translate-x-1 */}
                       <span className="transition-transform duration-300 translate-x-6 group-hover:-translate-x-1">
                         <TextLink
@@ -132,7 +132,7 @@ const BaliEssentialSection3: React.FC<ComponentTemplateHomeProps> = ({
                           color="black"
                         />
                       </span>
-                      <span className="opacity-0 translate-x-4 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-x-0">
+                      <span className="transition-all duration-300 ease-out translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0">
                         {renderSVG()}
                       </span>
                     </span>
@@ -142,8 +142,8 @@ const BaliEssentialSection3: React.FC<ComponentTemplateHomeProps> = ({
               </div>
             </div>
             <div className="container py-8">
-              {/* <div className="grid grid-cols-6 md:gap-x-8 gap-y-10 mb-6 md:mb-4 overflow-x-hidden bg-blue-400"> */}
-              <div className="flex flex-row gap-x-8">
+              {/* <div className="grid grid-cols-6 mb-6 overflow-x-hidden bg-blue-400 md:gap-x-8 gap-y-10 md:mb-4"> */}
+              <div className="flex flex-col md:flex-row gap-x-8 gap-y-5">
                 {content.map((item, index) =>
                   item ? (
                     <ArticleItems key={index} article={item} admin={admin} />

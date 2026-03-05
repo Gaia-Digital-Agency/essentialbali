@@ -1264,8 +1264,8 @@ header .menus-wrapper .menu-link.is-active {
 }
 
 .container {
-  padding-left: 1.25rem;
-  padding-right: 1.25rem;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 @media (min-width: 768px) {
