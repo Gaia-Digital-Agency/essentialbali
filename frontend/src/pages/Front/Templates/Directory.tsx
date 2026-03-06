@@ -69,6 +69,19 @@ const RenderPagination: React.FC<PaginationProps> = ({ pages, currentPage, onCli
   )
 }
 
+interface DirectoryArticleProps extends ArticleProps {
+    // url: string,
+    // featured_image_full_url: string,
+    // // tags_data: Tag[] | Tag | undefined,
+    updatedAt?: string
+    tag?: Tag | undefined
+}
+
+type ArticleItemProps = {
+    article: DirectoryArticleProps,
+    tag?: Tag
+}
+
 const ArticleItem: React.FC<ArticleItemProps> = ({article, tag}) => {
     // console.log(article.updatedAt, article.title, formatPublished(article.updatedAt))
     const {getPermalink, getFeaturedImageUrl} = useArticle()
