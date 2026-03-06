@@ -38,7 +38,7 @@ const RenderPages: React.FC<PageItemProps> = ({ page, onClick, currentPage }) =>
   
   return (
     <div 
-      className={`px-4 py-2 font-medium ${isDots ? '' : 'cursor-pointer'} ${isCurrent ? 'text-front-red' : ''}`} 
+      className={`px-4 py-2 font-medium ${isDots ? '' : 'cursor-pointer'} ${isCurrent ? 'text-front-shadowed-slate' : ''}`} 
       onClick={() => {
         if (isDots) return
         onClick(Number(page))
