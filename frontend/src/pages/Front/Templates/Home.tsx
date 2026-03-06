@@ -27,12 +27,13 @@ export const Spacer: React.FC = () => (
 );
 
 const HomeTemplate: React.FC = () => {
-  const { initialData } = useContent();
+  // const { initialData } = useContent();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [content, setContent] = useState<any>(
-    initialData?.template ?? DefaultHomeTemplate,
-  );
-  const [isReady, setIsReady] = useState<boolean>(true);
+  // const [content, setContent] = useState<any>(
+  //   initialData?.template ?? DefaultHomeTemplate,
+  // );
+  const content = DefaultHomeTemplate;
+  // const [isReady, setIsReady] = useState<boolean>(true);
   const { actualRoute, clientChange } = useRoute();
   const { taxonomies } = useTaxonomies();
 
@@ -43,30 +44,29 @@ const HomeTemplate: React.FC = () => {
 
   const category_rest = vaCategories.slice(3).map((item) => item.slug_title);
 
-  const isLocation =
-    actualRoute?.country || actualRoute?.city || actualRoute?.region;
-  useEffect(() => {
-    setIsReady(false);
-    (async () => {
-      try {
-        const _urlToGet = isLocation
-          ? `${actualRoute?.country ? `/${actualRoute.country.slug}` : ""}${actualRoute?.city ? `/${actualRoute.city.slug}` : ""}${actualRoute?.region ? `/${actualRoute.region.slug}` : ""}`
-          : "/";
-        const urlToGet = `/v2${_urlToGet}`;
-        const getTemplate = await getTemplateByUrl(urlToGet);
-        if (getTemplate?.data?.content && getTemplate.status_code == 200) {
-          setContent(JSON.parse(getTemplate.data.content));
-        } else {
-          setContent(DefaultHomeTemplate);
-        }
-        setIsReady(true);
-      } catch (e) {
-        console.error(e);
-        setIsReady(true);
-        setContent(DefaultHomeTemplate);
-      }
-    })();
-  }, [actualRoute, clientChange]);
+  // const isLocation = actualRoute?.country || actualRoute?.city || actualRoute?.region;
+  // useEffect(() => {
+  //   setIsReady(false);
+  //   (async () => {
+  //     try {
+  //       const _urlToGet = isLocation
+  //         ? `${actualRoute?.country ? `/${actualRoute.country.slug}` : ""}${actualRoute?.city ? `/${actualRoute.city.slug}` : ""}${actualRoute?.region ? `/${actualRoute.region.slug}` : ""}`
+  //         : "/";
+  //       const urlToGet = `/v2${_urlToGet}`;
+  //       const getTemplate = await getTemplateByUrl(urlToGet);
+  //       if (getTemplate?.data?.content && getTemplate.status_code == 200) {
+  //         setContent(JSON.parse(getTemplate.data.content));
+  //       } else {
+  //         setContent(DefaultHomeTemplate);
+  //       }
+  //       setIsReady(true);
+  //     } catch (e) {
+  //       console.error(e);
+  //       setIsReady(true);
+  //       setContent(DefaultHomeTemplate);
+  //     }
+  //   })();
+  // }, [actualRoute, clientChange]);
   const heroImage = content.heroImage ? content.heroImage.articles : [0, 0, 0];
   // const trending = content.trending ? content.trending.articles : [0,0,0,0,0]
   // const mostPopular = content.mostPopular ? content.mostPopular.articles : [0,0,0,0,0,0,0,0]
@@ -107,34 +107,43 @@ const HomeTemplate: React.FC = () => {
     );
   };
 
-  if (!isReady) return <>{getHelmet()}</>;
+  // if (!isReady) return <>{getHelmet()}</>;
   return (
     <div className="min-h-screen overflow-x-hidden bg-front-icewhite">
       {getHelmet()}
       
       {/* Hero Section */}
       <section className="relative">
-        <HeroImage preContent={heroImage} />
+        <HeroImage 
+        // preContent={heroImage} 
+        preContent={[0,0,0]} 
+        />
       </section>
 
       {/* Main Content Sections */}
       <main className="flex flex-col">
         <BaliEssentialSection1
           default_category={category_section1}
-          preContent={ultimateGuide}
+          // preContent={ultimateGuide}
+          preContent={[0,0,0]}
         />
         
         <BaliEssentialSection2
           default_category={category_section2}
-          preContent={events}
+          // preContent={events}
+          preContent={[0,0,0,0]}
         />
         
         <BaliEssentialSection3
           default_category={category_section3}
-          preContent={section3}
+          // preContent={section3}
+          preContent={[0,0]}
         />
         
-        <LocalBali default_category={category_rest} preContent={overseas} />
+        <LocalBali default_category={category_rest} 
+          // preContent={overseas} 
+          preContent={[0, 0, 0, 0, 0, 0, 0, 0]} 
+          />
       </main>
 
       {/* Footer Newsletter Section */}
