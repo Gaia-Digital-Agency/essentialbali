@@ -7,12 +7,12 @@ export const fetchTemplateRoute = async (url) => {
     if(tryRedis) {
         return JSON.parse(tryRedis)
     }
-    // const get = await templateService.getTemplateByQuery({query: {url: url}})
-    // if(get?.dataValues?.content) {
-    //     // console.log(get.dataValues.content)
-    //     redis.set(url, get.dataValues.content, "EX", 3600)
-    //     return JSON.parse(get.dataValues.content)
-    // }
+    const get = await templateService.getTemplateByQuery({query: {url: url}})
+    if(get?.dataValues?.content) {
+        // console.log(get.dataValues.content)
+        redis.set(url, get.dataValues.content, "EX", 3600)
+        return JSON.parse(get.dataValues.content)
+    }
     return null
 }
 
