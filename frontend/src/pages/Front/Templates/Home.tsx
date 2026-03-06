@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react"; //{ useState, useEffect }
 // import {Trending} from "../../../components/front/Trending"
 import HeroImage from "../../../components/front/HeroImage";
 // import MostPopular from "../../../components/front/MostPopular"
@@ -8,10 +8,10 @@ import Newsletter from "../../../components/front/Newsletter";
 // import EventsHome from "../../../components/front/EventsHome"
 // import Advertisement from "../../../components/front/Advertisement"
 // import About from "../../../components/front/About"
-import { useContent } from "../../../context/ContentContext";
+// import { useContent } from "../../../context/ContentContext";
 import { useRoute } from "../../../context/RouteContext";
-import { getTemplateByUrl } from "../../../services/template.service";
-import { HomeTemplate as DefaultHomeTemplate } from "../../../lib/map/TemplatesMap";
+// import { getTemplateByUrl } from "../../../services/template.service";
+// import { HomeTemplate as DefaultHomeTemplate } from "../../../lib/map/TemplatesMap";
 import pkg from "../../../lib/utils/Helmet";
 import BaliEssentialSection1 from "../../../components/front/BaliEssentialSection1";
 import BaliEssentialSection2 from "../../../components/front/BaliEssentialSection2";
@@ -32,9 +32,9 @@ const HomeTemplate: React.FC = () => {
   // const [content, setContent] = useState<any>(
   //   initialData?.template ?? DefaultHomeTemplate,
   // );
-  const content = DefaultHomeTemplate;
+  // const content = DefaultHomeTemplate;
   // const [isReady, setIsReady] = useState<boolean>(true);
-  const { actualRoute, clientChange } = useRoute();
+  const { actualRoute } = useRoute(); //clientChange
   const { taxonomies } = useTaxonomies();
 
   const vaCategories = taxonomies?.categories ?? [];
@@ -67,17 +67,19 @@ const HomeTemplate: React.FC = () => {
   //     }
   //   })();
   // }, [actualRoute, clientChange]);
-  const heroImage = content.heroImage ? content.heroImage.articles : [0, 0, 0];
-  // const trending = content.trending ? content.trending.articles : [0,0,0,0,0]
-  // const mostPopular = content.mostPopular ? content.mostPopular.articles : [0,0,0,0,0,0,0,0]
-  const events = content.events ? content.events.articles : [0, 0, 0, 0];
-  const ultimateGuide = content.ultimateGuide
-    ? content.ultimateGuide.articles
-    : [0, 0, 0, 0, 0, 0];
-  const overseas = content.overseas
-    ? content.overseas.articles
-    : [0, 0, 0, 0, 0, 0, 0, 0];
-  const section3 = content.section3 ? content.section3.articles : [0, 0];
+  
+  
+  // const heroImage = content.heroImage ? content.heroImage.articles : [0, 0, 0];
+  // // const trending = content.trending ? content.trending.articles : [0,0,0,0,0]
+  // // const mostPopular = content.mostPopular ? content.mostPopular.articles : [0,0,0,0,0,0,0,0]
+  // const events = content.events ? content.events.articles : [0, 0, 0, 0];
+  // const ultimateGuide = content.ultimateGuide
+  //   ? content.ultimateGuide.articles
+  //   : [0, 0, 0, 0, 0, 0];
+  // const overseas = content.overseas
+  //   ? content.overseas.articles
+  //   : [0, 0, 0, 0, 0, 0, 0, 0];
+  // const section3 = content.section3 ? content.section3.articles : [0, 0];
 
   const getDeepestLocation = () => {
     if (actualRoute.country) return actualRoute.country.name;
