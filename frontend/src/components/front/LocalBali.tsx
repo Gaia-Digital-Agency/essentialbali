@@ -102,7 +102,7 @@ const LocalBali: React.FC<ComponentTemplateHomeProps> = ({
                     {/* {exploreMore()} */}
                   </div>
                 </div>
-                <div className="line bg-front-dustly-slate h-[0.5px] w-full"></div>
+                <div className="border-b border-front-dustly-slate bg-front-dustly-slate h-[0.5px] w-full"></div>
               </div>
             </div>
 

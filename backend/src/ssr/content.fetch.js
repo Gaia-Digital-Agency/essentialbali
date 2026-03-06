@@ -359,12 +359,16 @@ const fetchContentData = async (route, taxonomy, search = undefined) => {
         if (key == "page") page = value;
       });
     }
-    const getArticle = {
+    const query = {
       id_country: taxonomy.countries
-        .filter((country) => route.listingParams.country.id != country.id)
+        .filter((country) => 
+          route.listingParams.country ? route.listingParams.country.id != country.id : true
+        )
         .map((country) => country.id),
       limit: 9,
+      page: page,
     };
+    const getArticle = await fetchArticlesData(query);
     return getArticle;
   }
 

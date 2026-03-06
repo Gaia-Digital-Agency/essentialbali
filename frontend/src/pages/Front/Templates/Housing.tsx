@@ -12,39 +12,53 @@ const {Helmet} = pkg
 const API_URL = import.meta.env.VITE_WHATSNEW_BACKEND_URL
 const IMAGE_URL = import.meta.env.VITE_IMAGE_URL || API_URL
 
-type PaginationProps = {page: Array<string | number> | number | string, currentPage: number, onClick: (pag: number) => void}
-
-const RenderPages:React.FC<PaginationProps> = ({page, onClick, currentPage}) => {
-    return (
-        <div className={`px-4 py-2 font-medium ${typeof page == 'string' ? '' : 'cursor-pointer'} ${currentPage == page ? 'text-front-red' : ''}`} onClick={() => {
-            if(typeof page == 'string' || typeof page == 'object') return
-            onClick(page)
-        }}>
-            {page}
-        </div>
-    )
+type PageItemProps = { 
+  page: string | number, 
+  currentPage: number, 
+  onClick: (page: number) => void 
 }
 
-const RenderPagination: React.FC<PaginationProps> = ({page, currentPage, onClick}) => {
-    // if(content)
-    return (
-        <>
-            <div className="prev-button cursor-pointer" onClick={() => {onClick(currentPage - 1)}}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="8" height="12" viewBox="0 0 8 12" fill="none" style={{rotate: '180deg'}}>
-                    <path d="M0.589844 10.59L5.16984 6L0.589844 1.41L1.99984 0L7.99984 6L1.99984 12L0.589844 10.59Z" fill="black"/>
-                </svg>
-            </div>
-            {
-                typeof page == 'object' &&
-                page.map(pag => (<RenderPages page={pag} currentPage={currentPage} onClick={onClick} />))
-            }
-            <div className="next-button cursor-pointer" onClick={() => {onClick(currentPage + 1)}}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="8" height="12" viewBox="0 0 8 12" fill="none">
-                    <path d="M0.589844 10.59L5.16984 6L0.589844 1.41L1.99984 0L7.99984 6L1.99984 12L0.589844 10.59Z" fill="black"/>
-                </svg>
-            </div>
-        </>
-    )
+type PaginationProps = { 
+  pages: Array<string | number>, 
+  currentPage: number, 
+  onClick: (page: number) => void 
+}
+
+const RenderPages: React.FC<PageItemProps> = ({ page, onClick, currentPage }) => {
+  const isCurrent = Number(currentPage) === Number(page)
+  const isDots = typeof page === 'string' && page === '...'
+  
+  return (
+    <div 
+      className={`px-4 py-2 font-medium ${isDots ? '' : 'cursor-pointer'} ${isCurrent ? 'text-front-red' : ''}`} 
+      onClick={() => {
+        if (isDots) return
+        onClick(Number(page))
+      }}
+    >
+      {page}
+    </div>
+  )
+}
+
+const RenderPagination: React.FC<PaginationProps> = ({ pages, currentPage, onClick }) => {
+  return (
+    <>
+      <div className="prev-button cursor-pointer" onClick={() => onClick(currentPage - 1)}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="8" height="12" viewBox="0 0 8 12" fill="none" style={{ rotate: '180deg' }}>
+          <path d="M0.589844 10.59L5.16984 6L0.589844 1.41L1.99984 0L7.99984 6L1.99984 12L0.589844 10.59Z" fill="black" />
+        </svg>
+      </div>
+      {pages.map((pag, i) => (
+        <RenderPages key={`page-${i}-${pag}`} page={pag} currentPage={currentPage} onClick={onClick} />
+      ))}
+      <div className="next-button cursor-pointer" onClick={() => onClick(currentPage + 1)}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="8" height="12" viewBox="0 0 8 12" fill="none">
+          <path d="M0.589844 10.59L5.16984 6L0.589844 1.41L1.99984 0L7.99984 6L1.99984 12L0.589844 10.59Z" fill="black" />
+        </svg>
+      </div>
+    </>
+  )
 }
 
 const Housing: React.FC = () => {
@@ -261,7 +275,7 @@ const Housing: React.FC = () => {
                     </div>
 
                     <div className="pagination-wrapper flex justify-center gap-x-4 py-8 items-center">
-                        <RenderPagination page={generatePagination(currentPage, totalPages)} currentPage={currentPage} onClick={clickPagingHandler}  />
+                        <RenderPagination pages={generatePagination(currentPage, totalPages)} currentPage={currentPage} onClick={clickPagingHandler}  />
                     </div>
                 </div>
             </section>

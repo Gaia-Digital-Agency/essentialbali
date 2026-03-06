@@ -15,47 +15,47 @@ import { Tag } from "../../../types/tags.type"
 import { Helmet } from "react-helmet-async"
 import useArticle from "../../../hooks/useArticle"
 
-// type PagesProps = {page: number, currentPage: number, onClick: (pag: number) => void}
-type PaginationProps = { page: Array<string | number> | number | string, currentPage: number, onClick: (pag: number) => void }
-
-interface DirectoryArticleProps extends ArticleProps {
-  // url: string,
-  // featured_image_full_url: string,
-  // // tags_data: Tag[] | Tag | undefined,
-  updatedAt?: string
-  tag?: Tag | undefined
+type PageItemProps = { 
+  page: string | number, 
+  currentPage: number, 
+  onClick: (page: number) => void 
 }
 
-type ArticleItemProps = {
-  article: DirectoryArticleProps,
-  tag?: Tag
+type PaginationProps = { 
+  pages: Array<string | number>, 
+  currentPage: number, 
+  onClick: (page: number) => void 
 }
 
-const RenderPages: React.FC<PaginationProps> = ({ page, onClick, currentPage }) => {
+const RenderPages: React.FC<PageItemProps> = ({ page, onClick, currentPage }) => {
+  const isCurrent = Number(currentPage) === Number(page)
+  const isDots = typeof page === 'string' && page === '...'
+  
   return (
-    <div className={`px-4 py-2 font-medium ${typeof page == 'string' ? '' : 'cursor-pointer'} ${currentPage == page ? 'text-front-navy' : ''}`} onClick={() => {
-      if (typeof page == 'string' || typeof page == 'object') return
-      onClick(page)
-    }}>
+    <div 
+      className={`px-4 py-2 font-medium text-front-navy ${isDots ? '' : 'cursor-pointer'} ${isCurrent ? 'text-front-shadowed-slate' : ''}`} 
+      onClick={() => {
+        if (isDots) return
+        onClick(Number(page))
+      }}
+    >
       {page}
     </div>
   )
 }
 
-const RenderPagination: React.FC<PaginationProps> = ({ page, currentPage, onClick }) => {
-  // if(content)
+const RenderPagination: React.FC<PaginationProps> = ({ pages, currentPage, onClick }) => {
   return (
     <>
-      <div className="cursor-pointer prev-button" onClick={() => { onClick(currentPage - 1) }}>
+      <div className="cursor-pointer prev-button" onClick={() => onClick(currentPage - 1)}>
         <svg xmlns="http://www.w3.org/2000/svg" width="8" height="12" viewBox="0 0 8 12" fill="none" style={{ rotate: '180deg' }}>
           <path d="M0.589844 10.59L5.16984 6L0.589844 1.41L1.99984 0L7.99984 6L1.99984 12L0.589844 10.59Z" fill="black" />
         </svg>
       </div>
-      {
-        typeof page == 'object' &&
-        page.map((pag, i) => (<RenderPages key={i} page={pag} currentPage={currentPage} onClick={onClick} />))
-      }
-      <div className="cursor-pointer next-button" onClick={() => { onClick(currentPage + 1) }}>
+      {pages.map((pag, i) => (
+        <RenderPages key={`page-${i}-${pag}`} page={pag} currentPage={currentPage} onClick={onClick} />
+      ))}
+      <div className="cursor-pointer next-button" onClick={() => onClick(currentPage + 1)}>
         <svg xmlns="http://www.w3.org/2000/svg" width="8" height="12" viewBox="0 0 8 12" fill="none">
           <path d="M0.589844 10.59L5.16984 6L0.589844 1.41L1.99984 0L7.99984 6L1.99984 12L0.589844 10.59Z" fill="black" />
         </svg>
@@ -234,7 +234,7 @@ const LocalBali: React.FC<{ isTrending?: boolean }> = ({ isTrending = false }) =
             {renderArticle()}
           </div>
           <div className="flex items-center justify-center py-8 pagination-wrapper gap-x-4">
-            <RenderPagination page={generatePagination(currentPage, totalPages)} currentPage={currentPage} onClick={clickPagingHandler} />
+            <RenderPagination pages={generatePagination(currentPage, totalPages)} currentPage={currentPage} onClick={clickPagingHandler} />
           </div>
         </div>
         <div className="py-8 mt-6 newsletter-wrapper bg-front-section-grey">

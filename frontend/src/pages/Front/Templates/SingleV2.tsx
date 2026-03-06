@@ -215,9 +215,13 @@ const SingleV2: React.FC = () => {
   };
 
   const shareClickHandler = async () => {
-    if (currentUrl) {
-      await navigator.clipboard.writeText(currentUrl);
-      setNotification({ message: "Copied URL to clipboard", type: "neutral" });
+    if (currentUrl && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(currentUrl);
+        setNotification({ message: "Copied URL to clipboard", type: "neutral" });
+      } catch (err) {
+        console.error("Failed to copy: ", err);
+      }
     }
   };
 
