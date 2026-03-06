@@ -92,7 +92,7 @@ const Newsletter: React.FC = () => {
                 </div>
                 <div className="button">
                   <Button
-                    text="SUBSCRIBE"
+                    text="SUBSCRIBE NOW"
                     onClick={clickHandler}
                     bigger={true}
                     type="primary-white"
