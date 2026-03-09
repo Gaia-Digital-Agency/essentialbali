@@ -19,7 +19,6 @@ import { GetDataTimezoneResponse } from "../../../types/timezone.type";
 import { getTimezones } from "../../../services/timezone.service";
 import ModalTimezoneTable from "../../../components/modal/ModalTimezoneTable";
 import { useTaxonomies } from "../../../context/TaxonomyContext";
-import { AssetMedia } from "../../../types/media.type";
 import { useNavigationPrompt } from "../../../hooks/useNavigationPrompt";
 import { AdminFeaturedImage } from "../../../components/ui/featured-image/FeaturedImage";
 
@@ -71,7 +70,6 @@ export default function FormLocations({
     url: string | undefined;
   }>();
 
-  const { closeModal, openModal } = useModal(false);
   const { setBlock } = useNavigationPrompt();
   const { adminTaxonomies } = useTaxonomies();
 
@@ -96,10 +94,10 @@ export default function FormLocations({
       try {
         const vaData = await getTimezones();
         const vaTimezones = vaData.data;
-        const begin = { key: 0, value: 0, label: "Select Timezone" };
+        const begin = { key: 0, value: "", label: "Select Timezone" };
         const optDataTimezone =
           vaTimezones?.map((tz) => ({
-            key: timezone.id,
+            key: tz.id,
             value: tz.timezone_name,
             label: `${tz.timezone_name} - [${tz.utc_offset}]`,
           })) ?? [];
@@ -228,7 +226,6 @@ export default function FormLocations({
                     placeholder="Select Parent"
                     value={parentLocation}
                     onChange={(v) => setParentLocation(Number(v))}
-                    disabled={!typeLocation || typeLocation === 'country'}
                   />
                 </div>
               </div>
@@ -259,7 +256,7 @@ export default function FormLocations({
                 <div>
                   <Label className="flex items-center gap-2">
                     Time Zone
-                    <Badge color="info" className="cursor-pointer" onClick={openModalTimezone}>
+                    <Badge color="info" onClick={openModalTimezone}>
                       <InfoIcon className="size-3" />
                     </Badge>
                   </Label>
@@ -297,13 +294,14 @@ export default function FormLocations({
             </p>
             <div className="flex gap-3">
               {isEdit && (
-                <Button type="secondary" onClick={initForm}>
+                <Button type="button" variant="outline" onClick={initForm}>
                   Cancel
                 </Button>
               )}
               <Button
                 startIcon={<DownloadIcon className="size-5" />}
                 className="px-10"
+                type="submit"
               >
                 {isEdit ? "Update Area" : "Save Area"}
               </Button>

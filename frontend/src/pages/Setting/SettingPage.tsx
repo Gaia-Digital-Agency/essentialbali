@@ -6,12 +6,12 @@ import {
 } from "../../services/template.service";
 import ComponentCard from "../../components/common/ComponentCard";
 import { AdminFeaturedImage } from "../../components/ui/featured-image/FeaturedImage";
-import { AssetMedia } from "../../types/media.type";
 import { useNavigationPrompt } from "../../hooks/useNavigationPrompt";
 import Button from "../../components/ui/button/Button";
 import { useNotification } from "../../context/NotificationContext";
 import TextArea from "../../components/form/input/TextArea";
 import Label from "../../components/form/Label";
+import { TemplateType } from "../../types/template.type";
 
 const API_URL = import.meta.env.VITE_WHATSNEW_BACKEND_URL;
 
@@ -65,8 +65,8 @@ const SettingPage: React.FC = () => {
     try {
       const payload = JSON.stringify(content);
       const action = isAvailable 
-        ? editTemplateByUrl(url, type, payload) 
-        : createTemplate(url, type, payload);
+        ? editTemplateByUrl(url, type as TemplateType, payload) 
+        : createTemplate(url, type as TemplateType, payload);
       
       return await action;
     } catch (e) {
@@ -126,7 +126,7 @@ const SettingPage: React.FC = () => {
                   }}
                 />
               </div>
-              <Button onClick={saveLogoHandler} className="w-full">Update Logo</Button>
+              <Button type="button" onClick={saveLogoHandler} className="w-full">Update Logo</Button>
             </div>
           </ComponentCard>
         </div>
@@ -169,7 +169,7 @@ const SettingPage: React.FC = () => {
               </div>
 
               <div className="pt-4 border-t border-gray-100">
-                <Button onClick={saveScriptsHandler} type="primary" className="px-10">Save All Scripts</Button>
+                <Button onClick={saveScriptsHandler} type="button" variant="primary" className="px-10">Save All Scripts</Button>
               </div>
             </div>
           </ComponentCard>
