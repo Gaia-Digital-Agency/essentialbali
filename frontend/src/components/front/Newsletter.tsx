@@ -62,40 +62,42 @@ const Newsletter: React.FC = () => {
   return (
     <>
       <section id="newsletter" className="container bg-front-icewhite">
-        <div className="md:container bg-gradient-to-r from-[#0B1D2B] to-[#4A6D8C] py-16 rounded-[10px]">
-          <div className="container grid items-end grid-cols-12">
+        <div className="md:container bg-gradient-to-b md:bg-gradient-to-r from-[#0B1D2B] to-[#4A6D8C] py-8 md:py-16 rounded-[10px]">
+          <div className="container grid grid-cols-12 items-center md:items-end">
             
-            <div className="col-span-12 mb-5 md:col-span-6">
-              <div className="mb-3 title-wrapper">
-                <p className="font-serif text-front-section-title text-front-dustly-slate">
+            <div className="col-span-12 mb-8 text-center wrapper-kiri md:mb-0 md:col-span-6 md:text-left">
+              <div className="mb-5 title-wrapper">
+                <p className="font-serif text-3xl leading-8 md:text-front-section-title text-front-dustly-slate">
                   Get The Essential
                 </p>
               </div>
               <div className="description-wrapper">
-                <p className="font-sans font-light text-front-icewhite text-front-section-medium">
-                  Subscribe to capture the essence of the island’s most refined updates, delivered to your inbox every day
+                {/* font size 16px line height 26px */}
+                <p className="font-sans font-light text-base leading-[26px] text-front-icewhite md:text-front-body">
+                  The Essential guide to Bali’s modern landscape. We bring you curated News and Events, while exploring hidden Destinations and unique Stays.
                 </p>
               </div>
             </div>
 
-            <div className="col-span-12 md:col-span-6">
-              <div className="flex flex-row items-center inner md:pl-10 gap-x-4">
-                <div className="flex-1 input-wrapper">
+            <div className="col-span-12 wrapper-kanan md:col-span-6">
+              <div className="flex flex-col gap-y-6 items-center inner md:flex-row md:pl-10 md:gap-y-0 md:gap-x-4 md:items-end">
+                <div className="w-full input-wrapper">
                   <input
                     placeholder="Enter your email"
-                    className="w-full border-b border-[#A3B1C2] h-full py-4 pl-4 text-front-icewhite"
+                    className="w-full border-b border-[#A3B1C2] h-full pt-4 pb-2 text-center md:text-left text-front-icewhite bg-transparent outline-none"
                     onChange={changeHandler}
                     type="email"
                     value={email}
                     suppressHydrationWarning={true}
                   />
                 </div>
-                <div className="button">
+                <div className="w-full button md:w-auto">
                   <Button
                     text="Subscribe Now"
                     onClick={clickHandler}
                     bigger={true}
                     type="primary-white"
+                    className="justify-center w-full whitespace-nowrap md:w-auto md:inline-flex py-3! md:py-4!"
                   />
                 </div>
               </div>
