@@ -11,13 +11,11 @@ import Button from "../../../components/front/Button";
 import Newsletter from "../../../components/front/Newsletter";
 import {
   DateRangePicker,
-  RangeSlider,
   Radio,
   RadioGroup,
   Tag,
   TagGroup,
 } from "rsuite";
-import "rsuite/RangeSlider/styles/index.css";
 import "rsuite/DateRangePicker/styles/index.css";
 import "rsuite/Checkbox/styles/index.css";
 import "rsuite/CheckboxGroup/styles/index.css";
@@ -90,16 +88,14 @@ const EventsV3: React.FC = () => {
   const [totalPage, setTotalPage] = useState<number>(1);
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [minPrice, setMinPrice] = useState<number>(0);
-  const [maxPrice, setMaxPrice] = useState<number>(5000);
   const [filterDays, setFilterDays] = useState<string[]>([]);
   const [time, setTime] = useState<string | undefined>(undefined);
   const [dateRange, setDateRange] = useState<[Date, Date] | null>(null);
   
-  const { actualRoute, getLocationRouteUrl } = useRoute();
+  const { actualRoute } = useRoute();
   const { taxonomies } = useTaxonomies();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [availableSubCat, setAvailableSubCat] = useState<Category[]>();
+  const [, setAvailableSubCat] = useState<Category[]>();
   
   const CATEGORY_SLUG = "events";
   const parentCat = taxonomies.categories?.find(cat => cat.slug_title === CATEGORY_SLUG);
@@ -112,14 +108,12 @@ const EventsV3: React.FC = () => {
   }, [actualRoute, taxonomies.categories, parentCat]);
 
   useEffect(() => {
-    const minP = searchParams.get('minprice');
-    if (minP) setMinPrice(Number(minP));
-    const maxP = searchParams.get('maxprice');
-    if (maxP) setMaxPrice(Number(maxP));
     const t = searchParams.get('time');
-    if (t) setTime(t);
+    setTime(t || undefined);
+
     const d = searchParams.getAll('day[]');
-    if (d) setFilterDays(d);
+    setFilterDays(d || []);
+
     const datesS = searchParams.get('dates');
     if (datesS) {
         const parts = datesS.split(',');
@@ -134,21 +128,32 @@ const EventsV3: React.FC = () => {
   useEffect(() => {
     (async () => {
       const params = new URLSearchParams();
-      if (searchParams.get('minprice')) params.append('metaData_price[]', searchParams.get('minprice')!);
-      if (searchParams.get('maxprice')) params.append('metaData_price[]', searchParams.get('maxprice')!);
-      if (searchParams.get('dates')) params.append('metaData_date', searchParams.get('dates')!);
+
+      // Date Range Handling
+      const datesS = searchParams.get('dates');
+      if (datesS) {
+        const [start, end] = datesS.split(',');
+        if (start && end) {
+          params.append('metaData_start_date', start);
+          params.append('metaData_end_date', end);
+        }
+      }
       
       const subParams = searchParams.get('subcat');
       if (subParams) params.append('category', subParams);
       else if (theCategory) params.append('category', `${theCategory.id}`);
 
-      if (time) {
-        if (time === 'morning') { params.append('metaData_start_time', '06:00'); params.append('metaData_end_time', '12:00'); }
-        else if (time === 'afternoon') { params.append('metaData_start_time', '12:00'); params.append('metaData_end_time', '18:00'); }
-        else if (time === 'night') { params.append('metaData_start_time', '18:00'); params.append('metaData_end_time', '24:00'); }
+      // Time Handling (Matching Events.tsx logic)
+      const tParam = searchParams.get('time');
+      if (tParam) {
+        if (tParam === 'morning') { params.append('metaData_start_time', '06:00'); params.append('metaData_end_time', '12:00'); }
+        else if (tParam === 'afternoon') { params.append('metaData_start_time', '12:00'); params.append('metaData_end_time', '18:00'); }
+        else if (tParam === 'night') { params.append('metaData_start_time', '18:00'); params.append('metaData_end_time', '24:00'); }
       }
 
-      filterDays.forEach(day => params.append('metaData_multi_day[]', day));
+      // Days Handling
+      const dayParams = searchParams.getAll('day[]');
+      dayParams.forEach(day => params.append('metaData_multi_day[]', day));
 
       const res = await getArticleByFields({
         id_country: actualRoute.country?.id,
@@ -198,8 +203,6 @@ const EventsV3: React.FC = () => {
 
   const clearFilters = () => {
     setSearchParams({});
-    setMinPrice(0);
-    setMaxPrice(5000);
     setTime(undefined);
     setFilterDays([]);
     setDateRange(null);
@@ -224,31 +227,7 @@ const EventsV3: React.FC = () => {
             
             {/* STICKY SIDEBAR */}
             <aside className="lg:w-1/4">
-              <div className="sticky top-24 space-y-8">
-                
-                {/* Category Selection */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Categories</h4>
-                  <div className="space-y-2">
-                    {parentCat && (
-                      <Link 
-                        to={`${getLocationRouteUrl()}/${parentCat.slug_title}`}
-                        className={`block py-2 px-4 rounded-lg transition-all ${actualRoute.category?.id === parentCat.id ? 'bg-front-navy text-white font-bold shadow-md shadow-front-navy/20' : 'text-gray-600 hover:bg-gray-50'}`}
-                      >
-                        All Events
-                      </Link>
-                    )}
-                    {availableSubCat?.map(cat => (
-                      <Link 
-                        key={cat.id}
-                        to={`${getLocationRouteUrl()}/${cat.slug_title}`}
-                        className={`block py-2 px-4 rounded-lg transition-all ${actualRoute.category?.id === cat.id ? 'bg-front-navy text-white font-bold shadow-md shadow-front-navy/20' : 'text-gray-600 hover:bg-gray-50'}`}
-                      >
-                        {cat.title}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
+              <div className="sticky top-70 space-y-8">
 
                 {/* Date Picker */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -270,22 +249,6 @@ const EventsV3: React.FC = () => {
                         }
                     }}
                   />
-                </div>
-
-                {/* Price Range */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Price Range</h4>
-                  <RangeSlider 
-                    min={0} 
-                    max={5000} 
-                    value={[minPrice, maxPrice]} 
-                    onChange={val => { setMinPrice(val[0]); setMaxPrice(val[1]); }}
-                    onChangeCommitted={() => { updateParam('minprice', minPrice.toString()); updateParam('maxprice', maxPrice.toString()); }}
-                  />
-                  <div className="flex justify-between mt-4 text-sm font-bold text-front-navy">
-                    <span>${minPrice}</span>
-                    <span>${maxPrice}</span>
-                  </div>
                 </div>
 
                 {/* Time of Day */}
@@ -311,7 +274,7 @@ const EventsV3: React.FC = () => {
             <main className="lg:w-3/4">
               
               {/* Active Chips */}
-              {(time || filterDays.length > 0 || dateRange || minPrice > 0) && (
+              {(time || filterDays.length > 0 || dateRange) && (
                 <div className="mb-8 flex items-center gap-4 flex-wrap">
                     <span className="text-sm font-bold text-gray-400">FILTERED BY:</span>
                     <TagGroup>
@@ -320,8 +283,7 @@ const EventsV3: React.FC = () => {
                                 Dates: {dateRange[0].toLocaleDateString()} - {dateRange[1].toLocaleDateString()}
                             </Tag>
                         )}
-                        {time && <Tag closable onClose={() => {setTime(undefined); updateParam('time', null)}} className="capitalize">Time: {time}</Tag>}
-                        {minPrice > 0 && <Tag closable onClose={() => {setMinPrice(0); updateParam('minprice', null)}}>Min: ${minPrice}</Tag>}
+                    {time && <Tag closable onClose={() => { setTime(undefined); updateParam('time', null) }} className="capitalize">Time: {time}</Tag>}
                     </TagGroup>
                 </div>
               )}
