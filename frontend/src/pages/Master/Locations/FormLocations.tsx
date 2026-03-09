@@ -1,10 +1,10 @@
-import React, { ReactElement, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ComponentCard from "../../../components/common/ComponentCard";
 import Input from "../../../components/form/input/InputField";
 import Label from "../../../components/form/Label";
 import Button from "../../../components/ui/button/Button";
 import Alert from "../../../components/ui/alert/Alert";
-import { DownloadIcon } from "../../../icons";
+import { DownloadIcon, InfoIcon } from "../../../icons";
 import { CreateLocationDto, Location } from "../../../types/location.type";
 import useTimedMessage from "../../../hooks/useTimedMessage";
 import Select from "../../../components/form/Select";
@@ -12,7 +12,6 @@ import {
   createLocation,
   editLocation,
 } from "../../../services/location.service";
-// import toSlug from "../../../services/global.service";
 import toSlug from "../../../lib/utils/slugify";
 import { useModal } from "../../../hooks/useModal";
 import Badge from "../../../components/ui/badge/Badge";
@@ -23,6 +22,7 @@ import { useTaxonomies } from "../../../context/TaxonomyContext";
 import { AssetMedia } from "../../../types/media.type";
 import { useNavigationPrompt } from "../../../hooks/useNavigationPrompt";
 import { AdminFeaturedImage } from "../../../components/ui/featured-image/FeaturedImage";
+
 const API_URL = import.meta.env.VITE_WHATSNEW_BACKEND_URL;
 
 interface LocationsFormProps {
@@ -31,7 +31,7 @@ interface LocationsFormProps {
 }
 
 const parentMap: Record<string, string | null> = {
-  country: null, // country nggak punya parent
+  country: null,
   city: "country",
   region: "city",
 };
@@ -63,27 +63,18 @@ export default function FormLocations({
   const [parentLocation, setParentLocation] = useState<number | undefined>();
 
   const [timezone, setTimezone] = useState<string>("");
-  const [vaDataTimezone, setDataTimezone] = useState<GetDataTimezoneResponse[]>(
-    []
-  );
-  const [vaDataOptTimezone, setDataOptTimezone] = useState<
-    optionDataInterface[]
-  >([]);
+  const [vaDataTimezone, setDataTimezone] = useState<GetDataTimezoneResponse[]>([]);
+  const [vaDataOptTimezone, setDataOptTimezone] = useState<optionDataInterface[]>([]);
 
   const [featuredImage, setFeaturedImage] = useState<{
     id: number | undefined;
     url: string | undefined;
   }>();
 
-  const [flagIcon, setFlagIcon] = useState<{
-    id: number | undefined;
-    url: string | undefined;
-  }>();
-
   const { closeModal, openModal } = useModal(false);
   const { setBlock } = useNavigationPrompt();
-
   const { adminTaxonomies } = useTaxonomies();
+
   const PLURAL_TAXONOMY_NAME = {
     country: "countries",
     city: "cities",
@@ -98,24 +89,7 @@ export default function FormLocations({
 
   const optTypeLocation = [
     { key: "country", value: "country", label: "Area" },
-    { key: "city", value: "city", label: "Sub Area (City)" },
-    { key: "region", value: "region", label: "Sub Area (Region)" },
   ];
-  const handleTypeLocation = (value: string | number) => {
-    setTypeLocation(`${value}`);
-  };
-
-  const handleParentLocation = (value: string | number) => {
-    setParentLocation(Number(value));
-  };
-
-  const handleOptTimezone = (value: string | number) => {
-    setTimezone(String(value));
-  };
-
-  const showModalTimezone = () => {
-    openModalTimezone();
-  };
 
   useEffect(() => {
     const fetchDataTimezone = async () => {
@@ -124,10 +98,10 @@ export default function FormLocations({
         const vaTimezones = vaData.data;
         const begin = { key: 0, value: 0, label: "Select Timezone" };
         const optDataTimezone =
-          vaTimezones?.map((timezone) => ({
+          vaTimezones?.map((tz) => ({
             key: timezone.id,
-            value: timezone.timezone_name,
-            label: timezone.timezone_name + " - [" + timezone.utc_offset + "]",
+            value: tz.timezone_name,
+            label: `${tz.timezone_name} - [${tz.utc_offset}]`,
           })) ?? [];
         setDataOptTimezone([begin, ...optDataTimezone]);
         setDataTimezone(vaTimezones);
@@ -135,32 +109,17 @@ export default function FormLocations({
         console.error(error);
       }
     };
-
     fetchDataTimezone();
   }, []);
 
   useEffect(() => {
     const fetchParentOptions = async () => {
-      // if (!typeLocation) return;
-
-      // const parentType = parentMap[typeLocation];
-      // if (!parentType) {
-      //   setOptParentLocation([]); // kalau nggak ada parent
-      //   return;
-      // }
-
       try {
-        // const res = await getAllLocationByType(parentType);
-        // if (res.data) {
-        //   const vaData = res.data.map((loc) => ({
-        //     key: loc.id,
-        //     value: loc.id,
-        //     label: loc.name,
-        //   }));
-        //   setOptParentLocation(vaData);
-        // }
-        // console.log(typeLocation, 'typeLocation')
         const parentType = parentMap[typeLocation] as TaxonomyLocations;
+        if (!parentType) {
+          setOptParentLocation([]);
+          return;
+        }
         const data = adminTaxonomies?.[
           PLURAL_TAXONOMY_NAME[parentType] as TaxonomiesLocations
         ]?.map((coun: any) => ({
@@ -168,16 +127,14 @@ export default function FormLocations({
           value: coun.id,
           label: coun.name,
         }));
-        // console.log(adminTaxonomies)
         setOptParentLocation(data ?? []);
       } catch (err) {
         console.error("Failed to fetch parent locations:", err);
         setOptParentLocation([]);
       }
     };
-
     fetchParentOptions();
-  }, [typeLocation]);
+  }, [typeLocation, adminTaxonomies]);
 
   useEffect(() => {
     if (selectedLocations) {
@@ -187,9 +144,7 @@ export default function FormLocations({
       setLocationName(vaData.name ?? "");
       setTypeLocation(vaData.typeLoc ?? "");
       setSlug(vaData.slug ?? "");
-      setFeaturedImage({ id: vaData.site_logo_id, url: `${API_URL}/${vaData.site_logo}` });
-      setFlagIcon({ id: vaData.flag_icon_id, url: `${API_URL}/${vaData.flag_icon}` });
-      // setFeaturedImage({ url: `${API_URL}/${vaData.icon}`, id: vaData.id });
+      setFeaturedImage({ id: vaData.site_logo_id, url: vaData.site_logo ? `${API_URL}/${vaData.site_logo}` : undefined });
       setTimezone(vaData.timezone ?? "");
       setIsEdit(true);
     }
@@ -202,8 +157,10 @@ export default function FormLocations({
     setLocationName("");
     setSlug("");
     setTimezone("");
-    setFeaturedImage({ url: "", id: undefined });
-    setFlagIcon({ url: "", id: undefined });
+    setFeaturedImage(undefined);
+    setTypeLocation("");
+    setParentLocation(undefined);
+    setIsEdit(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -214,7 +171,6 @@ export default function FormLocations({
       slug: toSlug(slug),
       timezone: timezone,
       site_logo: featuredImage?.id,
-      flag_icon: flagIcon?.id
     };
 
     try {
@@ -224,157 +180,134 @@ export default function FormLocations({
           return;
         }
         await createLocation(typeLocation, vaData);
-        setSuccess(locationName + " is Created Successfully");
+        setSuccess(`${locationName} Created Successfully`);
       } else {
         await editLocation(idToEdit, typeLocation, vaData);
-        setSuccess(locationName + " is Edited Successfully");
+        setSuccess(`${locationName} Updated Successfully`);
       }
       initForm();
       onRefresh();
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      }
-
-      if (typeof err === "object" && err !== null && "response" in err) {
-        const errorObj = err as { response?: { data?: { message?: string } } };
-        setError(errorObj.response?.data?.message ?? "Something went wrong");
-      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || "Something went wrong");
     }
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const cName = e.target.value;
-    const cSlug = isEdit ? slug : toSlug(cName);
-    setLocationName(e.target.value);
-    setSlug(cSlug);
-  };
-
-  const InputWrapper = ({
-    label,
-    children,
-  }: {
-    label: string;
-    children: ReactElement;
-  }) => {
-    return (
-      <div className="input-wrapper">
-        <Label>{label}</Label>
-        {children}
-      </div>
-    );
-  };
-
-  const featuredImageHandler = (file: AssetMedia) => {
-    setFeaturedImage({ url: `${API_URL}/${file.path}`, id: file.id });
-    closeModal();
-    setBlock(true);
-  };
-
-  const flagIconHandler = (file: AssetMedia) => {
-    setFlagIcon({ url: `${API_URL}/${file.path}`, id: file.id });
-    closeModal();
-    setBlock(true);
+    setLocationName(cName);
+    if (!isEdit) setSlug(toSlug(cName));
   };
 
   return (
     <>
-      <ComponentCard title="Area Form">
-        <div className="mb-5">
+      <ComponentCard title={isEdit ? "Edit Area" : "Add New Area"}>
+        <div className="space-y-4">
           {error && <Alert variant="error" title="Error" message={error} />}
+          {success && <Alert variant="success" title="Success" message={success} />}
         </div>
-        <div className="mb-5">
-          {success && (
-            <Alert variant="success" title="Success" message={success} />
-          )}
-        </div>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-3 space-x-6 grid grid-cols-2">
-            <div>
-              <Label>Area Type</Label>
-              <Select
-                options={optTypeLocation}
-                value={typeLocation}
-                placeholder="Select area type"
-                onChange={handleTypeLocation}
-                className="dark:bg-dark-900"
-              />
-            </div>
-            <div>
-              <Label>Parent</Label>
-              <Select
-                options={optParentLocation ?? []}
-                placeholder="Select Parent"
-                value={parentLocation}
-                onChange={handleParentLocation}
-                className="dark:bg-dark-900"
-              />
-            </div>
-          </div>
-          <div className="mb-3">
-            <Label htmlFor="cName">Name</Label>
-            <Input
-              type="text"
-              id="cName"
-              onChange={handleNameChange}
-              value={locationName}
-              placeholder="Seminyak"
-            />
-          </div>
-          {typeLocation === "country" && (
-            <div className="mb-3">
-              <Label>
-                <span className="mr-2">Time Zone</span>
-                <Badge color="info" onClick={showModalTimezone}>
-                  ?
-                </Badge>
-              </Label>
-              <Select
-                options={vaDataOptTimezone}
-                value={timezone}
-                placeholder="Select Timezone..."
-                onChange={handleOptTimezone}
-                className="dark:bg-dark-900"
-              />
-            </div>
-          )}
-          <div className="mb-3">
-            <Label htmlFor="cSlug">Slug</Label>
-            <Input
-              type="text"
-              id="cSlug"
-              onChange={(e) => setSlug(e.target.value)}
-              value={slug}
-              placeholder="seminyak"
-            />
-          </div>
-          <div className="w-50 h-50">
-            <InputWrapper label="Site Logo">
-              <AdminFeaturedImage
-                url={featuredImage?.url ? `${featuredImage?.url}` : "#"}
-                onClick={openModal}
-                onSave={featuredImageHandler}
-              ></AdminFeaturedImage>
-            </InputWrapper>
-          </div>
-          
-          {typeLocation === "country" && (<div className="w-50 h-50">
-            <InputWrapper label="Flag Icon">
-              <AdminFeaturedImage
-                url={flagIcon?.url ? `${flagIcon?.url}` : "#"}
-                onClick={openModal}
-                onSave={flagIconHandler}
-              ></AdminFeaturedImage>
-            </InputWrapper>
-          </div>)}
 
-          <div className="space-y-6 space-x-6 flex justify-end">
-            <Button
-              startIcon={<DownloadIcon className="size-5" />}
-              className="w-1/4"
-            >
-              Save
-            </Button>
+        <form onSubmit={handleSubmit} className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+            
+            {/* Left Column: Basic Info */}
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Area Type</Label>
+                  <Select
+                    options={optTypeLocation}
+                    value={typeLocation}
+                    placeholder="Select type"
+                    onChange={(v) => setTypeLocation(`${v}`)}
+                  />
+                </div>
+                <div>
+                  <Label>Parent</Label>
+                  <Select
+                    options={optParentLocation ?? []}
+                    placeholder="Select Parent"
+                    value={parentLocation}
+                    onChange={(v) => setParentLocation(Number(v))}
+                    disabled={!typeLocation || typeLocation === 'country'}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="cName">Area Name</Label>
+                <Input
+                  type="text"
+                  id="cName"
+                  onChange={handleNameChange}
+                  value={locationName}
+                  placeholder="e.g. Seminyak"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="cSlug">URL Slug</Label>
+                <Input
+                  type="text"
+                  id="cSlug"
+                  onChange={(e) => setSlug(e.target.value)}
+                  value={slug}
+                  placeholder="e.g. seminyak"
+                />
+              </div>
+
+              {typeLocation === "country" && (
+                <div>
+                  <Label className="flex items-center gap-2">
+                    Time Zone
+                    <Badge color="info" className="cursor-pointer" onClick={openModalTimezone}>
+                      <InfoIcon className="size-3" />
+                    </Badge>
+                  </Label>
+                  <Select
+                    options={vaDataOptTimezone}
+                    value={timezone}
+                    placeholder="Select Timezone..."
+                    onChange={(v) => setTimezone(String(v))}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Right Column: Visual Assets */}
+            <div className="space-y-5">
+              <div>
+                <Label>Site Logo</Label>
+                <p className="text-xs text-gray-500 mb-2">This logo will be displayed on the area's specific landing page.</p>
+                <div className="border-2 border-dashed border-gray-200 rounded-2xl p-4 bg-gray-50/50">
+                  <AdminFeaturedImage
+                    url={featuredImage?.url || ""}
+                    onSave={(file) => {
+                      setFeaturedImage({ url: `${API_URL}/${file.path}`, id: file.id });
+                      setBlock(true);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-10 pt-6 border-t border-gray-100 flex justify-between items-center">
+            <p className="text-sm text-gray-400 italic">
+              {isEdit ? "* Editing existing area" : "* Creating new area"}
+            </p>
+            <div className="flex gap-3">
+              {isEdit && (
+                <Button type="secondary" onClick={initForm}>
+                  Cancel
+                </Button>
+              )}
+              <Button
+                startIcon={<DownloadIcon className="size-5" />}
+                className="px-10"
+              >
+                {isEdit ? "Update Area" : "Save Area"}
+              </Button>
+            </div>
           </div>
         </form>
       </ComponentCard>
