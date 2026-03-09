@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"; // useMemo
+import React, { useEffect, useState, useRef } from "react"; // useMemo
 import { NavLink, useNavigate, Link } from "react-router-dom"; //useNavigate
 import NavLogo from "../../../components/front/NavLogo";
 import MobileMenu from "../../../components/front/MobileMenu";
@@ -78,6 +78,7 @@ const Header: React.FC = () => {
   const { taxonomies } = useTaxonomies();
   const { actualRoute } = useRoute();
   const navigate = useNavigate();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     (async () => {
@@ -131,6 +132,10 @@ const Header: React.FC = () => {
 
     if (isSearchOpen) {
       window.addEventListener("keydown", handleKeyDown);
+      // Auto focus after a short delay to wait for transition
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
     }
 
     return () => {
@@ -168,12 +173,12 @@ const Header: React.FC = () => {
           </p>
           <form onSubmit={handleSearchSubmit} className="relative w-full group">
             <input
+              ref={searchInputRef}
               type="text"
               className="w-full py-6 font-serif text-3xl text-center transition-colors duration-300 bg-transparent border-b-2 border-front-navy/20 focus:border-front-navy md:text-7xl text-front-navy placeholder:text-front-dustly-slate focus:outline-none"
               placeholder="Search Bali..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              autoFocus={isSearchOpen}
             />
             {searchQuery.trim().length > 0 && searchQuery.trim().length < 3 && (
               <p className="mt-4 font-sans text-sm text-center text-front-red animate-pulse">
@@ -258,18 +263,17 @@ const Header: React.FC = () => {
             aria-label="Categories"
           >
             {forcedMenuCategories.map((menu: Category, index: number) => (
-              <>
+              <React.Fragment key={`header-menu-container-${menu.slug_title}`}>
                 <MenuNav
                   menu={menu}
                   menus={forcedMenuCategories}
-                  key={`header-menu-${menu.slug_title}`}
                 />
                 {index < forcedMenuCategories.length - 1 && (
                   <span className="mx-2 text-front-icewhite/40 text-[1em]">
                     |
                   </span>
                 )}
-              </>
+              </React.Fragment>
             ))}
             <div className="absolute items-center justify-center hidden lg:flex right-5 gap-x-4">
               <Link to={"https://www.facebook.com/essentialbali"} target="_blank">
