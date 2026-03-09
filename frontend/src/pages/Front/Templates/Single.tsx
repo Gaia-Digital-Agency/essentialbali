@@ -325,7 +325,7 @@ const Single: React.FC = () => {
         <meta property="og:type" content="article" />
         <meta
           property="og:title"
-          content={`${actualRoute.article?.title ?? ""} - essentialbali`}
+          content={`${actualRoute.article?.title ?? ""} - Essential Bali`}
         />
         <meta
           property="og:description"
@@ -343,7 +343,7 @@ const Single: React.FC = () => {
         <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="twitter:title"
-          content={`${actualRoute.article?.title ?? ""} - essentialbali`}
+          content={`${actualRoute.article?.title ?? ""} - Essential Bali`}
         />
         <meta
           name="twitter:description"

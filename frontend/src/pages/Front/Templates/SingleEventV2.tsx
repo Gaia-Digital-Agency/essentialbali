@@ -70,7 +70,7 @@ const RelatedItem: React.FC<{ article: ArticleApiResponseProps }> = ({
       onMouseEnter={() => imageRef.current?.zoomIn()}
       onMouseLeave={() => imageRef.current?.zoomOut()}
     >
-      <div className="grid grid-cols-12 inner gap-x-6 md:gap-x-0">
+      <div className="grid grid-cols-12 gap-x-6 inner md:gap-x-0">
         <div className="col-span-6 md:col-span-12">
           <div className="image-wrapper md:mb-2.5">
             <Image
@@ -115,7 +115,7 @@ const RelatedArticle: React.FC<{
   }
   return (
     <>
-      <div id="related-articles" className="relative pb-12 ">
+      <div id="related-articles" className="relative pb-12">
         <div className="swiper-pagination"></div>
         <Swiper
           slidesPerView={1}
@@ -234,14 +234,46 @@ const SingleV2: React.FC = () => {
   };
 
   const shareClickHandler = async () => {
-    if (currentUrl && navigator.clipboard) {
+    if (!currentUrl) return;
+
+    if (navigator.clipboard && window.isSecureContext) {
       try {
         await navigator.clipboard.writeText(currentUrl);
         setNotification({ message: "Copied URL to clipboard", type: "neutral" });
       } catch (err) {
-        console.error("Failed to copy: ", err);
+        console.error("Failed to copy using clipboard API: ", err);
+        fallbackCopyTextToClipboard(currentUrl);
       }
+    } else {
+      fallbackCopyTextToClipboard(currentUrl);
     }
+  };
+
+  const fallbackCopyTextToClipboard = (text: string) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+
+    // Pastikan textarea tidak terlihat dan tidak mengganggu layout
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    textArea.style.top = "0";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        setNotification({ message: "Copied URL to clipboard", type: "neutral" });
+      } else {
+        setNotification({ message: "Failed to copy", type: "fail" });
+      }
+    } catch (err) {
+      console.error('Fallback copy failed', err);
+      setNotification({ message: "Failed to copy", type: "fail" });
+    }
+
+    document.body.removeChild(textArea);
   };
 
   return (
@@ -261,7 +293,7 @@ const SingleV2: React.FC = () => {
         <meta property="og:type" content="article" />
         <meta
           property="og:title"
-          content={`${actualRoute.article?.title ?? ""} - essentialbali`}
+          content={`${actualRoute.article?.title ?? ""} - Essential Bali`}
         />
         <meta
           property="og:description"
@@ -279,7 +311,7 @@ const SingleV2: React.FC = () => {
         <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="twitter:title"
-          content={`${actualRoute.article?.title ?? ""} - essentialbali`}
+          content={`${actualRoute.article?.title ?? ""} - Essential Bali`}
         />
         <meta
           name="twitter:description"
@@ -293,7 +325,7 @@ const SingleV2: React.FC = () => {
       <article>
         <div className="bg-front-icewhite">
           <div className="container mb-[40px]">
-            <div className="grid grid-cols-12 pt-12 md:gap-x-10 gap-y-10">
+            <div className="grid grid-cols-12 gap-y-10 pt-12 md:gap-x-10">
               <div className="col-span-12 md:col-span-12">
                 {/* MOBILE ONLY: Title and Subtitle before image */}
                 <div className="mb-6 text-center md:hidden title-wrapper-mobile">
@@ -332,9 +364,9 @@ const SingleV2: React.FC = () => {
                       fetchPriority="high"
                       overlay={true}
                     />
-                    
+
                     {/* DESKTOP ONLY: Title Overlay */}
-                    <div className="hidden md:flex md:flex-col md:items-center md:justify-center md:absolute md:inset-0 md:z-10 md:px-10 text-center title-wrapper-desktop">
+                    <div className="hidden text-center md:flex md:flex-col md:items-center md:justify-center md:absolute md:inset-0 md:z-10 md:px-10 title-wrapper-desktop">
                       <h1 className="mb-5 font-serif text-front-hero text-front-icewhite">
                         {content?.title}
                       </h1>
@@ -343,14 +375,14 @@ const SingleV2: React.FC = () => {
                       </h3>
                     </div>
 
-                    <div className="absolute z-10 top-4 right-4 md:top-10 md:right-10">
+                    <div className="absolute top-4 right-4 z-10 md:top-10 md:right-10">
                       {renderEditButton()}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex flex-col justify-center px-5 py-5 mx-auto overflow-x-hidden break-words md:px-40 content-wrapper article-wrapper gap-y-[40px] md:gap-y-[50px]">
-                  <div className="flex justify-center text-center author-wrapper gap-x-5">
+                  <div className="flex gap-x-5 justify-center text-center author-wrapper">
                     <p className="text-front-shadowed-slate text-front-small">
                       {content?.author_name}
                     </p>
@@ -360,8 +392,8 @@ const SingleV2: React.FC = () => {
                   </div>
 
 
-                  {content?.tags_slugs?.length && (
-                    <div className="flex justify-center mx-auto text-center tag-wrapper gap-x-5">
+                  {content?.tags_slugs && content.tags_slugs.length > 0 && (
+                    <div className="flex gap-x-5 justify-center mx-auto text-center tag-wrapper">
                       {content?.tags_slugs.map((tag, index) => (
                         <p className="text-front-icewhite" key={index}>
                           <span className="bg-front-shadowed-slate px-4 py-2 rounded-[5px] capitalize">{tag}</span>
@@ -372,7 +404,7 @@ const SingleV2: React.FC = () => {
 
                   {content?.meta_data?.start_date && (
                     <div className="border-b-[1px] border-t-[1px] border-front-navy/50 py-4 flex flex-wrap text-center justify-center text-front-shadowed-slate font-light text-sm md:text-base">
-                      <p className="mr-1 ">Essential Schedule :</p>
+                      <p className="mr-1">Essential Schedule :</p>
                       {content?.meta_data?.start_date && (
                         <div className="">
                           {content?.meta_data?.start_date
@@ -408,7 +440,7 @@ const SingleV2: React.FC = () => {
 
                   <div className="text-center sharing-wrapper">
                     <p className="mb-5 text-front-small text-front-shadowed-slate">Share</p>
-                    <div className="flex items-center justify-center text-center share-buttons-wrapper gap-x-5">
+                    <div className="flex gap-x-5 justify-center items-center text-center share-buttons-wrapper">
                       {currentUrl && (
                         <>
                           <FacebookShareButton url={currentUrl}>
@@ -420,7 +452,7 @@ const SingleV2: React.FC = () => {
                           <WhatsappShareButton url={currentUrl}>
                             <WhatsappIconGreyDefault className="w-[28px] h-[28px] text-front-navy hover:text-front-dustly-slate transition-colors duration-200" />
                           </WhatsappShareButton>
-                          <CopyIconV2 className="w-[28px] h-[28px] text-front-navy hover:text-front-dustly-slate transition-colors duration-200" onClick={shareClickHandler} />
+                          <CopyIconV2 className="w-[28px] h-[28px] text-front-navy hover:text-front-dustly-slate transition-colors duration-200 cursor-pointer" onClick={shareClickHandler} />
                         </>
                       )}
                     </div>
@@ -446,7 +478,7 @@ const SingleV2: React.FC = () => {
               )}
               <div className="pt-16 pb-8 text-center button-wrapper">
                 <p className="font-sans text-front-charcoal-grey">
-                  <span className="inline-flex items-center gap-2 cursor-pointer group">
+                  <span className="inline-flex gap-2 items-center cursor-pointer group">
                     <span className="transition-transform duration-300 translate-x-6 group-hover:-translate-x-1">
                       <TextLink
                         text="Explore More"
@@ -454,7 +486,7 @@ const SingleV2: React.FC = () => {
                         color="black"
                       />
                     </span>
-                    <span className="transition-all duration-300 ease-out translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0">
+                    <span className="opacity-0 transition-all duration-300 ease-out translate-x-4 group-hover:opacity-100 group-hover:translate-x-0">
                       <span className="transition-colors duration-300 text-front-navy group-hover:text-red-500">
                         <ButtonChevronBorderArang />
                       </span>
@@ -462,9 +494,9 @@ const SingleV2: React.FC = () => {
                   </span>
                 </p>
               </div>
-              <div className="py-8">
-                <Newsletter />
-              </div>
+            </div>
+            <div className="py-8">
+              <Newsletter />
             </div>
           </div>
         </div>

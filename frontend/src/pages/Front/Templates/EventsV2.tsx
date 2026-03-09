@@ -320,7 +320,7 @@ const EventsV2: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{title || "Events"} - essentialbali</title>
+        <title>{title || "Events"} - Essential Bali</title>
         <meta
           name="description"
           content="essentialbali is the ultimate Bali area guide for travelers, expats, and locals."

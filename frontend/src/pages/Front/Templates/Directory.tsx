@@ -38,7 +38,7 @@ const RenderPages: React.FC<PageItemProps> = ({ page, onClick, currentPage }) =>
   
   return (
     <div 
-      className={`px-4 py-2 font-medium ${isDots ? '' : 'cursor-pointer'} ${isCurrent ? 'text-front-red' : ''}`} 
+      className={`px-4 py-2 font-medium ${isDots ? '' : 'cursor-pointer'} ${isCurrent ? 'text-front-shadowed-slate' : ''}`} 
       onClick={() => {
         if (isDots) return
         onClick(Number(page))
@@ -392,7 +392,7 @@ const Directory: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
     return (
         <>
             <Helmet>
-                <title>{isTrending ? 'Trending' : ''}{actualRoute.category?.title ?? ''} - essentialbali</title>
+                <title>{isTrending ? 'Trending' : ''}{actualRoute.category?.title ?? ''} - Essential Bali</title>
                 <meta name="description" content="essentialbali is the ultimate Bali area guide for travelers, expats, and locals, featuring the best dining, events, schools, wellness, and travel in Bali" />
             </Helmet>
             <section className="py-12 bg-front-icewhite">

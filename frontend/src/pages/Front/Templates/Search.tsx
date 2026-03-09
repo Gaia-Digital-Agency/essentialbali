@@ -73,24 +73,33 @@ const Search: React.FC = () => {
   const q = searchParams.get('q')
   const LIMIT = 7
   useEffect(() => {
+    // Reset state when search query changes
+    setContent([]);
+    setPage(1);
+    setTotalPage(1);
+  }, [q]);
+
+  useEffect(() => {
     if (!q || !clientChange) return;
     (async () => {
       const articles = await getArticleByKeyword({ keyword: q, page: page, limit: LIMIT })
       if (articles?.articles) {
-        // setContent(articles.articles)
-        setContent(prev => {
-          const newUniqueArticles = articles.articles.filter(newArticle =>
-            !prev.some(prevArticle => prevArticle.id === newArticle.id)
-          );
-          const newArticle = newUniqueArticles.map(article => ({ ...article }))
-          return [...prev, ...newArticle];
-        });
+        if (page === 1) {
+          setContent(articles.articles);
+        } else {
+          setContent(prev => {
+            const newUniqueArticles = articles.articles.filter(newArticle =>
+              !prev.some(prevArticle => prevArticle.id === newArticle.id)
+            );
+            return [...prev, ...newUniqueArticles];
+          });
+        }
       }
       if (articles?.pagination) {
         setTotalPage(articles.pagination.totalPages)
       }
     })()
-  }, [page])
+  }, [page, q]) // <-- Tambahkan 'q' di sini agar pencarian terpantau
 
   const clickMoreHandler = () => {
     if (page > totalPage) return

@@ -321,7 +321,7 @@ const SingleEvent: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{actualRoute.article?.title} - essentialbali</title>
+        <title>{actualRoute.article?.title} - Essential Bali</title>
         <meta
           name="description"
           content={String(
@@ -335,7 +335,7 @@ const SingleEvent: React.FC = () => {
         <meta property="og:type" content="article" />
         <meta
           property="og:title"
-          content={`${actualRoute.article?.title} - essentialbali`}
+          content={`${actualRoute.article?.title} - Essential Bali`}
         />
         <meta
           property="og:description"
@@ -353,7 +353,7 @@ const SingleEvent: React.FC = () => {
         <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="twitter:title"
-          content={`${actualRoute.article?.title} - essentialbali`}
+          content={`${actualRoute.article?.title} - Essential Bali`}
         />
         <meta
           name="twitter:description"

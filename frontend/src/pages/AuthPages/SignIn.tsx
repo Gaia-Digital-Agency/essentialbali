@@ -7,8 +7,8 @@ export default function SignIn() {
   return (
     <>
       <PageMeta
-        title="Sign In | essentialbali"
-        description="Sign in to essentialbali admin."
+        title="Sign In | Essential Bali"
+        description="Sign in to Essential Bali Admin"
       />
       <AuthLayout>
         <SignInForm />

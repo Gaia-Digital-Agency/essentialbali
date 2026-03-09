@@ -67,6 +67,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
   const [content, setContent] = useState<PreContentProps>(preContent);
 
   useEffect(() => {
+    // if(clientChange) return
     (async () => {
       const get = await generateContent({
         content: preContent,
@@ -132,6 +133,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
 
 
   if (content.length) {
+    
     return (
       <>
         <section className="bg-front-icewhite pt-[20px]">
@@ -150,6 +152,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
             >
               {content.map((item, i) => {
                 if (item) {
+                  console.log("Aden ketawa => ", getFeaturedImageUrl(item)) ;
                   return (
                     <SwiperSlide key={`image-${i}`}>
                       <Image
@@ -157,7 +160,7 @@ const HeroImage: React.FC<ComponentTemplateHomeProps> = ({
                         height="1080"
                         fetchPriority={i ? "low" : "high"}
                         isLazy={i ? true : false}
-                        url={getFeaturedImageUrl(item, "16_9")}
+                        url={getFeaturedImageUrl(item)}
                         ratio="45%"
                         mobileRatio="150%"
                         overlay={true}

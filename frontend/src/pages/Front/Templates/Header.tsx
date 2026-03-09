@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react"; // useMemo
-import { NavLink, useNavigate } from "react-router-dom"; //useNavigate
+import React, { useEffect, useState, useRef } from "react"; // useMemo
+import { NavLink, useNavigate, Link } from "react-router-dom"; //useNavigate
 import NavLogo from "../../../components/front/NavLogo";
 import MobileMenu from "../../../components/front/MobileMenu";
 import {
@@ -78,6 +78,7 @@ const Header: React.FC = () => {
   const { taxonomies } = useTaxonomies();
   const { actualRoute } = useRoute();
   const navigate = useNavigate();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     (async () => {
@@ -131,6 +132,10 @@ const Header: React.FC = () => {
 
     if (isSearchOpen) {
       window.addEventListener("keydown", handleKeyDown);
+      // Auto focus after a short delay to wait for transition
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
     }
 
     return () => {
@@ -168,22 +173,22 @@ const Header: React.FC = () => {
           </p>
           <form onSubmit={handleSearchSubmit} className="relative w-full group">
             <input
+              ref={searchInputRef}
               type="text"
               className="w-full py-6 font-serif text-3xl text-center transition-colors duration-300 bg-transparent border-b-2 border-front-navy/20 focus:border-front-navy md:text-7xl text-front-navy placeholder:text-front-dustly-slate focus:outline-none"
               placeholder="Search Bali..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              autoFocus={isSearchOpen}
             />
             {searchQuery.trim().length > 0 && searchQuery.trim().length < 3 && (
-              <p className="text-front-red text-center mt-4 font-sans text-sm animate-pulse">
+              <p className="mt-4 font-sans text-sm text-center text-front-red animate-pulse">
                 Please enter at least 3 characters
               </p>
             )}
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={searchQuery.trim().length < 3}
-              className={`flex items-center gap-3 px-8 py-3 mx-auto mt-12 font-sans font-bold tracking-widest uppercase transition-all duration-300 border-2 rounded-full ${searchQuery.trim().length < 3 ? 'opacity-50 cursor-not-allowed border-front-dustly-slate text-front-dustly-slate' : 'text-front-navy hover:text-front-red border-front-navy hover:border-front-red' } group`}
+              className={`flex items-center gap-3 px-8 py-3 mx-auto mt-12 font-sans font-bold tracking-widest uppercase transition-all duration-300 border-2 rounded-full ${searchQuery.trim().length < 3 ? 'opacity-50 cursor-not-allowed border-front-dustly-slate text-front-dustly-slate' : 'text-front-navy hover:text-front-red border-front-navy hover:border-front-red'} group`}
             >
               <span>Find Results</span>
               <SearchIcon className="w-5 h-5 duration-300 group-hover:translate-x-1" />
@@ -230,7 +235,7 @@ const Header: React.FC = () => {
 
         <div className="line bg-front-navy/30 h-[1px] w-full"></div>
 
-        <div 
+        <div
           className="flex items-center justify-between w-full px-6 py-4 cursor-pointer navbar-area md:hidden bg-front-navy"
           onClick={() => setIsAreaOpen(!isAreaOpen)}
         >
@@ -258,23 +263,28 @@ const Header: React.FC = () => {
             aria-label="Categories"
           >
             {forcedMenuCategories.map((menu: Category, index: number) => (
-              <>
+              <React.Fragment key={`header-menu-container-${menu.slug_title}`}>
                 <MenuNav
                   menu={menu}
                   menus={forcedMenuCategories}
-                  key={`header-menu-${menu.slug_title}`}
                 />
                 {index < forcedMenuCategories.length - 1 && (
                   <span className="mx-2 text-front-icewhite/40 text-[1em]">
                     |
                   </span>
                 )}
-              </>
+              </React.Fragment>
             ))}
             <div className="absolute items-center justify-center hidden lg:flex right-5 gap-x-4">
-              <FacebookIconGreyDefault className="w-5 h-5 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
-              <InstagramIconWhiteDefault className="w-6 h-6 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
-              <TwitterIconWhiteDefault className="w-5 h-5 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
+              <Link to={"https://www.facebook.com/essentialbali"} target="_blank">
+                <FacebookIconGreyDefault className="w-5 h-5 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
+              </Link>
+              <Link to={"https://www.instagram.com/essentialbali/"} target="_blank">
+                <InstagramIconWhiteDefault className="w-6 h-6 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
+              </Link>
+              <Link to={"https://twitter.com/essentialbali"} target="_blank">
+                <TwitterIconWhiteDefault className="w-5 h-5 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
+              </Link>
             </div>
           </nav>
         </div>

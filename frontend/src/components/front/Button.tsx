@@ -55,7 +55,7 @@ const Button: React.FC<ButtonProps> = ({
   const PrimaryButtonElement = () => {
     return (
       <div
-        className={`button md:px-8 px-4 inline-flex text-front-body font-light cursor-pointer 
+        className={`button md:px-8 px-4 flex justify-center md:inline-flex text-front-body font-light cursor-pointer 
                             rounded-sm border !border-color-navy text-front-navy
                             hover:bg-front-navy hover:text-front-icewhite hover:border-front-navy
                             transition-all duration-300 ease-in-out
@@ -72,7 +72,7 @@ const Button: React.FC<ButtonProps> = ({
   const PrimaryWhiteButtonElement = () => {
     return (
       <div
-        className={`button md:px-8 px-4 inline-flex text-front-body font-light cursor-pointer 
+        className={`button md:px-8 px-4 flex justify-center md:inline-flex text-front-body font-light cursor-pointer 
                             rounded-sm border !border-color-icewhite text-front-icewhite
                             hover:bg-front-icewhite hover:text-front-navy hover:border-front-icewhite
                             transition-all duration-300 ease-in-out
@@ -89,7 +89,7 @@ const Button: React.FC<ButtonProps> = ({
   const SecondaryButtonElement = () => {
     return (
       <div
-        className={`button md:px-8 px-4 inline-flex text-front-body font-light cursor-pointer
+        className={`button md:px-8 px-4 flex justify-center md:inline-flex text-front-body font-light cursor-pointer
                           rounded-[5px] border border-front-white text-front-icewhite
                           ${uppercase ? "uppercase " : ""}
                           ${bigger ? "py-4" : "py-3"} ${className}`}

@@ -184,20 +184,18 @@ const About: React.FC = () => {
               Essential Community
             </p>
             <div className="item flex gap-x-4">
-              <Link to={"#"} target="_blank">
-                <FacebookIconGreyDefault height={28} width={28} />
+              <Link to={"https://www.facebook.com/essentialbali"} target="_blank">
+                <FacebookIconGreyDefault height={28} width={28} className="duration-200 cursor-pointer text-front-navy hover:text-front-dustly-slate" />
               </Link>
-              <Link to={"#"} target="_blank">
-                <InstagramIconGreyDefault height={28} width={28} />
+              <Link to={"https://www.instagram.com/essentialbali/"} target="_blank">
+                <InstagramIconGreyDefault height={28} width={28} className="duration-200 cursor-pointer text-front-navy hover:text-front-dustly-slate" />
               </Link>
-              <Link to={"#"} target="_blank">
-                <TwitterIconGreyDefault height={28} width={28} />
+              <Link to={"https://twitter.com/essentialbali"} target="_blank">
+                <TwitterIconGreyDefault height={28} width={28} className="duration-200 cursor-pointer text-front-navy hover:text-front-dustly-slate" />
               </Link>
             </div>
           </div>
         </div>
-        {/* </div> */}
-        {/* </div> */}
       </div>
     </>
   );

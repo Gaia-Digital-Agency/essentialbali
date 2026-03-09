@@ -148,17 +148,17 @@ const SingleJob: React.FC = () => {
     return (
         <>
             <Helmet>
-                <title>{actualRoute.article?.title} - essentialbali</title>
+                <title>{actualRoute.article?.title} - Essential Bali</title>
                 <meta name="description" content={actualRoute.article?.sub_title} />
                 <link rel="canonical" href={`${SITE_URL}/${actualRoute.country?.slug}/${actualRoute.category?.slug_title}/${actualRoute.article?.slug}`} />
                 <meta property="og:type" content="article" />
-                <meta property="og:title" content={`${actualRoute.article?.title} - essentialbali`} />
+                <meta property="og:title" content={`${actualRoute.article?.title} - Essential Bali`} />
                 <meta property="og:description" content={actualRoute.article?.sub_title} />
                 <meta property="og:url" content={`${SITE_URL}/${actualRoute.country?.slug}/${actualRoute.category?.slug_title}/${actualRoute.article?.slug}`} />
                 <meta property="og:image" content={`${IMAGE_URL}/${actualRoute.article?.featured_image_16_9_url || actualRoute.article?.featured_image_url || 'images/placeholder.png'}`} />
                 <meta property="og:site_name" content="essentialbali" />
                 <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content={`${actualRoute.article?.title} - essentialbali`} />
+                <meta name="twitter:title" content={`${actualRoute.article?.title} - Essential Bali`} />
                 <meta name="twitter:description" content={actualRoute.article?.sub_title} />
                 <meta name="twitter:image" content={`${IMAGE_URL}/${actualRoute.article?.featured_image_16_9_url || actualRoute.article?.featured_image_url || 'images/placeholder.png'}`} />
             </Helmet>
