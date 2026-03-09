@@ -86,7 +86,7 @@ const HomeTemplate: React.FC = () => {
     return "Home";
   };
 
-  const pageTitle = `${getDeepestLocation()} - essentialbali`;
+  const pageTitle = `${getDeepestLocation()} - Essential Bali`;
 
   const getHelmet = () => {
     return (

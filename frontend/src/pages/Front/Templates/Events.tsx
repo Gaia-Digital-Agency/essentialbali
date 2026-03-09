@@ -383,7 +383,7 @@ const Events: React.FC = () => {
     return (
         <>
             <Helmet>
-                <title>Events - essentialbali</title>
+                <title>Events - Essential Bali</title>
                 <meta name="description" content="essentialbali is the ultimate Bali area guide for travelers, expats, and locals, featuring the best dining, events, schools, wellness, and travel in Bali" />
             </Helmet>
             <section className="events-page bg-front-icewhite">

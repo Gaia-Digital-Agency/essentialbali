@@ -166,7 +166,7 @@ const JobListing: React.FC<PropsWithChildren> = ({children}) => {
     return (
         <>
             <Helmet>
-                <title>Job Listing - essentialbali</title>
+                <title>Job Listing - Essential Bali</title>
             </Helmet>
             <div className="image-wrapper mb-10">
                 <Image url="/logo.png" ratio="38%" />

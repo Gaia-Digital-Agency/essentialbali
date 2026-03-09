@@ -146,7 +146,7 @@ const EventsV3: React.FC = () => {
       // Time Handling (Matching Events.tsx logic)
       const tParam = searchParams.get('time');
       if (tParam) {
-        if (tParam === 'morning') { params.append('metaData_start_time', '06:00'); params.append('metaData_end_time', '12:00'); }
+        if (tParam === 'morning') { params.append('metaData_start_time', '01:00'); params.append('metaData_end_time', '12:00'); }
         else if (tParam === 'afternoon') { params.append('metaData_start_time', '12:00'); params.append('metaData_end_time', '18:00'); }
         else if (tParam === 'night') { params.append('metaData_start_time', '18:00'); params.append('metaData_end_time', '24:00'); }
       }
@@ -212,7 +212,7 @@ const EventsV3: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{title || "Discover Events"} - essentialbali</title>
+        <title>{title || "Discover Events"} - Essential Bali</title>
       </Helmet>
       
       <section className="bg-front-icewhite min-h-screen py-12">
