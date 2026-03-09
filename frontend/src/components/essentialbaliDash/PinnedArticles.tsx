@@ -158,17 +158,6 @@ const PinnedArticles: React.FC = () => {
                 </TableCell>
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                   <div className="gap-3">
-                    <div className="mb-2 flex items-center justify-center">
-                      <Avatar
-                        src={generateImageUrl(
-                          article.country_flag,
-                          true,
-                          article.id
-                        )}
-                        size="xsmall"
-                        alt={article.name_country}
-                      />
-                    </div>
                     <div className="flex items-center justify-center">
                       <span className="text-gray-500 text-theme-xs dark:text-gray-400">
                         {article.name_country}
