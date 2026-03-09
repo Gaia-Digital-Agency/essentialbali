@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"; // useMemo
-import { NavLink, useNavigate } from "react-router-dom"; //useNavigate
+import { NavLink, useNavigate, Link } from "react-router-dom"; //useNavigate
 import NavLogo from "../../../components/front/NavLogo";
 import MobileMenu from "../../../components/front/MobileMenu";
 import {
@@ -176,14 +176,14 @@ const Header: React.FC = () => {
               autoFocus={isSearchOpen}
             />
             {searchQuery.trim().length > 0 && searchQuery.trim().length < 3 && (
-              <p className="text-front-red text-center mt-4 font-sans text-sm animate-pulse">
+              <p className="mt-4 font-sans text-sm text-center text-front-red animate-pulse">
                 Please enter at least 3 characters
               </p>
             )}
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={searchQuery.trim().length < 3}
-              className={`flex items-center gap-3 px-8 py-3 mx-auto mt-12 font-sans font-bold tracking-widest uppercase transition-all duration-300 border-2 rounded-full ${searchQuery.trim().length < 3 ? 'opacity-50 cursor-not-allowed border-front-dustly-slate text-front-dustly-slate' : 'text-front-navy hover:text-front-red border-front-navy hover:border-front-red' } group`}
+              className={`flex items-center gap-3 px-8 py-3 mx-auto mt-12 font-sans font-bold tracking-widest uppercase transition-all duration-300 border-2 rounded-full ${searchQuery.trim().length < 3 ? 'opacity-50 cursor-not-allowed border-front-dustly-slate text-front-dustly-slate' : 'text-front-navy hover:text-front-red border-front-navy hover:border-front-red'} group`}
             >
               <span>Find Results</span>
               <SearchIcon className="w-5 h-5 duration-300 group-hover:translate-x-1" />
@@ -230,7 +230,7 @@ const Header: React.FC = () => {
 
         <div className="line bg-front-navy/30 h-[1px] w-full"></div>
 
-        <div 
+        <div
           className="flex items-center justify-between w-full px-6 py-4 cursor-pointer navbar-area md:hidden bg-front-navy"
           onClick={() => setIsAreaOpen(!isAreaOpen)}
         >
@@ -272,9 +272,15 @@ const Header: React.FC = () => {
               </>
             ))}
             <div className="absolute items-center justify-center hidden lg:flex right-5 gap-x-4">
-              <FacebookIconGreyDefault className="w-5 h-5 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
-              <InstagramIconWhiteDefault className="w-6 h-6 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
-              <TwitterIconWhiteDefault className="w-5 h-5 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
+              <Link to={"#"} target="_blank">
+                <FacebookIconGreyDefault className="w-5 h-5 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
+              </Link>
+              <Link to={"#"} target="_blank">
+                <InstagramIconWhiteDefault className="w-6 h-6 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
+              </Link>
+              <Link to={"#"} target="_blank">
+                <TwitterIconWhiteDefault className="w-5 h-5 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
+              </Link>
             </div>
           </nav>
         </div>
