@@ -11,265 +11,172 @@ import { useNavigationPrompt } from "../../hooks/useNavigationPrompt";
 import Button from "../../components/ui/button/Button";
 import { useNotification } from "../../context/NotificationContext";
 import TextArea from "../../components/form/input/TextArea";
+import Label from "../../components/form/Label";
+
 const API_URL = import.meta.env.VITE_WHATSNEW_BACKEND_URL;
 
 type SettingsProps<T> = {
-  content: T,
-  isAvailable: boolean
-  isChanged: boolean
-}
+  content: T;
+  isAvailable: boolean;
+};
 
 const SettingPage: React.FC = () => {
-  const defaultSettingProps = {
-    isAvailable: false,
-    isChanged: false
-  }
   const { setNotification } = useNotification();
+  const { setBlock } = useNavigationPrompt();
+
   const [logoImage, setLogoImage] = useState<SettingsProps<{ id: number; url: string }>>({
-    content: {
-      id: 0,
-      url: "",
-    },
-    ...defaultSettingProps
+    content: { id: 0, url: "" },
+    isAvailable: false,
   });
 
-  const [headScript, setHeadScript] = useState<SettingsProps<string>>({
-    content: "",
-    ...defaultSettingProps
-  })
-  const [preBodyScript, setPreBodyScript] = useState<SettingsProps<string>>({
-    content: '',
-    ...defaultSettingProps
-  })
-  const [postBodyScript, setPostBodyScript] = useState<SettingsProps<string>>({
-    content: "",
-    ...defaultSettingProps
-  })
-  
-  // const [isLogoAvailable, setIsLogoAvailable] = useState<boolean>(false);
-  const { setBlock, isDirty } = useNavigationPrompt();
+  const [headScript, setHeadScript] = useState<SettingsProps<string>>({ content: "", isAvailable: false });
+  const [preBodyScript, setPreBodyScript] = useState<SettingsProps<string>>({ content: "", isAvailable: false });
+  const [postBodyScript, setPostBodyScript] = useState<SettingsProps<string>>({ content: "", isAvailable: false });
+
+  // Load all settings on mount
   useEffect(() => {
-    ;(async () => {
-      try {
-        const getTemplate = await getTemplateByUrl("/logo-header");
-        if (getTemplate?.status_code == 200 && getTemplate.data) {
-          const data = JSON.parse(getTemplate.data.content);
-          setLogoImage((prev) => ({...prev, content: data, isAvailable: true}));
+    const fetchSettings = async () => {
+      const endpoints = [
+        { key: "logo", url: "/logo-header", setter: setLogoImage },
+        { key: "head", url: "/script/head", setter: setHeadScript },
+        { key: "prebody", url: "/script/prebody", setter: setPreBodyScript },
+        { key: "postbody", url: "/script/postbody", setter: setPostBodyScript },
+      ];
+
+      for (const item of endpoints) {
+        try {
+          const res = await getTemplateByUrl(item.url);
+          if (res?.status_code === 200 && res.data) {
+            item.setter({
+              content: JSON.parse(res.data.content),
+              isAvailable: true,
+            });
+          }
+        } catch (e) {
+          console.error(`Error loading ${item.key}:`, e);
         }
-      } catch (e) {
-        console.log(e);
       }
-    })();
-    ;(async () => {
-      try {
-        const getTemplate = await getTemplateByUrl("/script/head");
-        if (getTemplate?.status_code == 200 && getTemplate.data) {
-          const data = JSON.parse(getTemplate.data.content);
-          setHeadScript((prev) => ({...prev, content: data, isAvailable: true}));
-        }
-      } catch (e) {
-        console.log(e);
-      }
-    })();
-    ;(async () => {
-      try {
-        const getTemplate = await getTemplateByUrl("/script/prebody");
-        if (getTemplate?.status_code == 200 && getTemplate.data) {
-          const data = JSON.parse(getTemplate.data.content);
-          setPreBodyScript((prev) => ({...prev, content: data, isAvailable: true}));
-        }
-      } catch (e) {
-        console.log(e);
-      }
-    })();
-    ;(async () => {
-      try {
-        const getTemplate = await getTemplateByUrl("/script/postbody");
-        if (getTemplate?.status_code == 200 && getTemplate.data) {
-          const data = JSON.parse(getTemplate.data.content);
-          setPostBodyScript((prev) => ({...prev, content: data, isAvailable: true}));
-        }
-      } catch (e) {
-        console.log(e);
-      }
-    })();
+    };
+
+    fetchSettings();
   }, []);
 
-  const saveLogoImageHandler = (file: AssetMedia) => {
-    setLogoImage(prev => ({...prev, content: { id: file.id, url: file.path }}));
-    setBlock(true);
+  const handleSaveTemplate = async (url: string, type: string, content: any, isAvailable: boolean) => {
+    try {
+      const payload = JSON.stringify(content);
+      const action = isAvailable 
+        ? editTemplateByUrl(url, type, payload) 
+        : createTemplate(url, type, payload);
+      
+      return await action;
+    } catch (e) {
+      console.error(`Error saving ${url}:`, e);
+      return false;
+    }
   };
 
-  const failedSave = (message: string = "Unexpected Error") => {
-    setNotification({ message: message, type: "fail", isClosed: false });
-    return false;
-  };
-  const successSave = (message: string = "successfully change logo header") => {
-    setNotification({ message: message, type: "neutral", isClosed: false });
-    setBlock(false);
-    return true;
-  };
-
-  const saveSettingHandler = async () => {
-
+  const showNotify = (success: boolean, message: string) => {
+    setNotification({
+      message: message,
+      type: success ? "neutral" : "fail",
+      isClosed: false,
+    });
+    if (success) setBlock(false);
   };
 
   const saveLogoHandler = async () => {
-    if (logoImage.isAvailable) {
-      try {
-        const edit = await editTemplateByUrl(
-          "/logo-header",
-          "Logo",
-          JSON.stringify(logoImage.content)
-        );
-        if (edit) {
-          return successSave();
-        } else {
-          return failedSave();
-        }
-      } catch (e) {
-        console.log(e);
-        return failedSave();
-      }
-    } else {
-      try {
-        const create = await createTemplate(
-          "/logo-header",
-          "Logo",
-          JSON.stringify(logoImage.content)
-        );
-        if (create) {
-          return successSave();
-        }
-        return failedSave();
-      } catch (e) {
-        console.log(e);
-        return failedSave();
-      }
-    }
-  }
+    const success = await handleSaveTemplate("/logo-header", "Logo", logoImage.content, logoImage.isAvailable);
+    showNotify(!!success, success ? "Logo header updated successfully" : "Failed to update logo");
+    if (success) setLogoImage(prev => ({ ...prev, isAvailable: true }));
+  };
 
-  const saveScripts = async () => {
-    ;(async () => {
-      try {
-        if(headScript.isAvailable) {
-          const edit = await editTemplateByUrl(
-            '/script/head',
-            'Script',
-            JSON.stringify(headScript.content)
-          )
-          if(edit) return successSave();
-          return failedSave()
-        } else {
-          const create = await createTemplate(
-            '/script/head',
-            'Script',
-            JSON.stringify(headScript.content)
-          )
-          if(create) return successSave();
-          return failedSave();
-        }
-      } catch(e) {
-        console.log(e);
-        return failedSave()
-      }
-    })()
+  const saveScriptsHandler = async () => {
+    const tasks = [
+      handleSaveTemplate("/script/head", "Script", headScript.content, headScript.isAvailable),
+      handleSaveTemplate("/script/prebody", "Script", preBodyScript.content, preBodyScript.isAvailable),
+      handleSaveTemplate("/script/postbody", "Script", postBodyScript.content, postBodyScript.isAvailable),
+    ];
 
-    ;(async () => {
-      try {
-        if(preBodyScript.isAvailable) {
-          const edit = await editTemplateByUrl(
-            '/script/prebody',
-            'Script',
-            JSON.stringify(preBodyScript.content)
-          )
-          if(edit) return successSave();
-          return failedSave()
-        } else {
-          const create = await createTemplate(
-            '/script/prebody',
-            'Script',
-            JSON.stringify(preBodyScript.content)
-          )
-          if(create) return successSave();
-          return failedSave();
-        }
-      } catch(e) {
-        console.log(e);
-        return failedSave()
-      }
-    })()
+    const results = await Promise.all(tasks);
+    const allSuccess = results.every(res => !!res);
 
-    ;(async () => {
-      try {
-        if(postBodyScript.isAvailable) {
-          const edit = await editTemplateByUrl(
-            '/script/postbody',
-            'Script',
-            JSON.stringify(postBodyScript.content)
-          )
-          if(edit) return successSave();
-          return failedSave()
-        } else {
-          const create = await createTemplate(
-            '/script/postbody',
-            'Script',
-            JSON.stringify(postBodyScript.content)
-          )
-          if(create) return successSave();
-          return failedSave();
-        }
-      } catch(e) {
-        console.log(e);
-        return failedSave()
-      }
-    })()
-  }
+    showNotify(allSuccess, allSuccess ? "All scripts saved successfully" : "Some scripts failed to save");
+    
+    // Refresh availability states
+    if (results[0]) setHeadScript(prev => ({ ...prev, isAvailable: true }));
+    if (results[1]) setPreBodyScript(prev => ({ ...prev, isAvailable: true }));
+    if (results[2]) setPostBodyScript(prev => ({ ...prev, isAvailable: true }));
+  };
 
   return (
-    <>
-      <div className="grid grid-cols-12">
-        <div className="col-span-6">
-          <ComponentCard title="Logo Image">
-            <div>
-              <AdminFeaturedImage
-                url={`${API_URL}/${logoImage.content.url}`}
-                onSave={saveLogoImageHandler}
-                // ratio="16/9"
-              />
+    <div className="p-6">
+      <div className="grid grid-cols-12 gap-6">
+        
+        {/* Branding Section */}
+        <div className="col-span-12 lg:col-span-4">
+          <ComponentCard title="Site Branding">
+            <div className="space-y-4">
+              <Label>Header Logo</Label>
+              <div className="p-4 border-2 border-dashed border-gray-200 rounded-xl">
+                <AdminFeaturedImage
+                  url={`${API_URL}/${logoImage.content.url}`}
+                  onSave={(file) => {
+                    setLogoImage(prev => ({ ...prev, content: { id: file.id, url: file.path } }));
+                    setBlock(true);
+                  }}
+                />
+              </div>
+              <Button onClick={saveLogoHandler} className="w-full">Update Logo</Button>
             </div>
-            <Button onClick={saveLogoHandler}>Save Logo</Button>
-          </ComponentCard>
-          <ComponentCard title="Additional Scripts">
-            <>
-            <p>Insert scripts inside {'<head>'} tag</p>
-              <TextArea placeholder="<script>" value={headScript.content} onChange={e => {setHeadScript(prev => ({...prev, content: e, isChanged: true})); setBlock(true)}}>
-
-              </TextArea>
-            </>
-            <div className="spacer py-8"></div>
-            <>
-            <p>Insert scripts right after {'<body>'} tag</p>
-              <TextArea placeholder="<script>" value={preBodyScript.content} onChange={e => {setPreBodyScript(prev => ({...prev, content: e, isChanged: true})); setBlock(true)}}>
-
-              </TextArea>
-            </>
-            <div className="spacer py-8"></div>
-            <>
-            <p>Insert scripts right before closing {'</body>'} tag</p>
-              <TextArea placeholder="<script>" value={postBodyScript.content} onChange={e => {setPostBodyScript(prev => ({...prev, content: e, isChanged: true})); setBlock(true)}}>
-
-              </TextArea>
-            </>
-            <div className="spacer py-8"></div>
-            <Button onClick={saveScripts}>Save Scripts</Button>
           </ComponentCard>
         </div>
+
+        {/* Scripts Section */}
+        <div className="col-span-12 lg:col-span-8">
+          <ComponentCard title="Advanced Customization (Scripts)">
+            <div className="space-y-6">
+              <div>
+                <Label>Header Scripts</Label>
+                <p className="text-xs text-gray-500 mb-2">Injected inside the {`<head>`} tag. Useful for Analytics or Meta tags.</p>
+                <TextArea 
+                  placeholder="<!-- Paste your script here -->" 
+                  value={headScript.content} 
+                  onChange={val => { setHeadScript(prev => ({ ...prev, content: val })); setBlock(true); }}
+                  rows={4}
+                />
+              </div>
+
+              <div>
+                <Label>After Body Open</Label>
+                <p className="text-xs text-gray-500 mb-2">Injected right after the {`<body>`} opening tag.</p>
+                <TextArea 
+                  placeholder="<!-- Paste your script here -->" 
+                  value={preBodyScript.content} 
+                  onChange={val => { setPreBodyScript(prev => ({ ...prev, content: val })); setBlock(true); }}
+                  rows={4}
+                />
+              </div>
+
+              <div>
+                <Label>Before Body Close</Label>
+                <p className="text-xs text-gray-500 mb-2">Injected right before the {`</body>`} closing tag.</p>
+                <TextArea 
+                  placeholder="<!-- Paste your script here -->" 
+                  value={postBodyScript.content} 
+                  onChange={val => { setPostBodyScript(prev => ({ ...prev, content: val })); setBlock(true); }}
+                  rows={4}
+                />
+              </div>
+
+              <div className="pt-4 border-t border-gray-100">
+                <Button onClick={saveScriptsHandler} type="primary" className="px-10">Save All Scripts</Button>
+              </div>
+            </div>
+          </ComponentCard>
+        </div>
+
       </div>
-      <div className="fixed bottom-6 right-6">
-        {isDirty && <Button onClick={saveSettingHandler}>Save all settings</Button>}
-      </div>
-    </>
+    </div>
   );
 };
 
