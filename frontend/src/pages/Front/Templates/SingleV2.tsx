@@ -215,14 +215,46 @@ const SingleV2: React.FC = () => {
   };
 
   const shareClickHandler = async () => {
-    if (currentUrl && navigator.clipboard) {
+    if (!currentUrl) return;
+
+    if (navigator.clipboard && window.isSecureContext) {
       try {
         await navigator.clipboard.writeText(currentUrl);
         setNotification({ message: "Copied URL to clipboard", type: "neutral" });
       } catch (err) {
-        console.error("Failed to copy: ", err);
+        console.error("Failed to copy using clipboard API: ", err);
+        fallbackCopyTextToClipboard(currentUrl);
       }
+    } else {
+      fallbackCopyTextToClipboard(currentUrl);
     }
+  };
+
+  const fallbackCopyTextToClipboard = (text: string) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    
+    // Pastikan textarea tidak terlihat dan tidak mengganggu layout
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    textArea.style.top = "0";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        setNotification({ message: "Copied URL to clipboard", type: "neutral" });
+      } else {
+        setNotification({ message: "Failed to copy", type: "fail" });
+      }
+    } catch (err) {
+      console.error('Fallback copy failed', err);
+      setNotification({ message: "Failed to copy", type: "fail" });
+    }
+
+    document.body.removeChild(textArea);
   };
 
   return (
@@ -387,7 +419,7 @@ const SingleV2: React.FC = () => {
                           <WhatsappShareButton url={currentUrl}>
                             <WhatsappIconGreyDefault className="w-[28px] h-[28px] text-front-navy hover:text-front-dustly-slate transition-colors duration-200" />
                           </WhatsappShareButton>
-                          <CopyIconV2 className="w-[28px] h-[28px] text-front-navy hover:text-front-dustly-slate transition-colors duration-200" onClick={shareClickHandler} />
+                          <CopyIconV2 className="w-[28px] h-[28px] text-front-navy hover:text-front-dustly-slate transition-colors duration-200 cursor-pointer" onClick={shareClickHandler} />
                         </>
                       )}
                     </div>
