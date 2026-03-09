@@ -67,8 +67,10 @@ const editTemplateByUrl = async (url: string, template: TemplateType, content: s
         if(edit.data.status_code == 200) {
             return true
         }
+        return false
     } catch(e) {
-        console.log(e)
+        console.error("Error at editTemplateByUrl => ", e)
+        return false
     }
 }
 

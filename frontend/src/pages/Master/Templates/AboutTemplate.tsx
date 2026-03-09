@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from "react";
 import { AboutContentProps } from "../../../components/front/About";
-import { getTemplateByUrl, createTemplate, editTemplate } from "../../../services/template.service";
+import { getTemplateByUrl, createTemplate, editTemplateByUrl } from "../../../services/template.service";
 import ComponentCard from "../../../components/common/ComponentCard";
 import Input from "../../../components/form/input/InputField";
 import TextArea from "../../../components/form/input/TextArea";
@@ -16,7 +16,6 @@ const AboutTemplate: React.FC = () => {
 
     const {setNotification} = useNotification()
     const TEMPLATE_SLUG = '/about'
-    // const {isOpen, closeModal, openModal} = useModal()
 
     useEffect(() => {
         (async () => {
@@ -33,7 +32,6 @@ const AboutTemplate: React.FC = () => {
         setContent(prev => ({...prev, title: e.target.value}))
     }
     const descriptionChangeHandler = (e:string) => {
-        console.log(e)
         setContent(prev => ({...prev, description: e}))
     }
     const linkChangeHandler = (e:React.ChangeEvent<HTMLInputElement>) => {
@@ -56,54 +54,59 @@ const AboutTemplate: React.FC = () => {
     const saveTemplateHandler = async () => {
         try {
             if(isTemplateAvailable) {
-                const edit = await editTemplate(TEMPLATE_SLUG, 'About', JSON.stringify(content))
+                const edit = await editTemplateByUrl(TEMPLATE_SLUG, 'About', JSON.stringify(content))
                 if(edit) {
-                    setNotificationHandler()
+                    setNotificationHandler('Successfully updated About page!', 'neutral')
                     return
                 }
-                setNotificationHandler('Failed', 'fail')
+                setNotificationHandler('Failed to update About page', 'fail')
             } else {
                 const create = await createTemplate(TEMPLATE_SLUG, 'About', JSON.stringify(content))
                 if(create) {
-                    setNotificationHandler()
+                    setNotificationHandler('Successfully created About page!', 'neutral')
                     return
                 }
-                setNotificationHandler('Failed', 'fail')
+                setNotificationHandler('Failed to create About page', 'fail')
             }
         } catch (e) {
-            console.log(e)
+            console.error("Save Error:", e)
+            setNotificationHandler('Internal Server Error', 'fail')
         }
     }
     return (
-        <>
-            <ComponentCard>
-                <div className="grid grid-cols-12 items-center gap-x-10">
-                    <div className="col-span-6">
-                        <div className="input-wrapper mb-8">
-                            <Label>Title</Label>
-                            <Input onChange={titleChangeHandler} value={content.title} placeholder="Title" />
-                        </div>
-                        <div className="input-wrapper mb-8">
-                            <Label>Description</Label>
-                            <TextArea onChange={descriptionChangeHandler} value={content.description} placeholder="Description" />
-                        </div>
-                        <div className="input-wrapper mb-8">
-                            <Label>Link</Label>
-                            <Input onChange={linkChangeHandler} value={content.link} placeholder="Link" />
-                        </div>
+        <ComponentCard title="About Template Settings">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-6">
+                <div className="space-y-6">
+                    <div className="input-wrapper">
+                        <Label>Title</Label>
+                        <Input onChange={titleChangeHandler} value={content.title} placeholder="Enter title" />
                     </div>
+                    <div className="input-wrapper">
+                        <Label>Description</Label>
+                        <TextArea onChange={descriptionChangeHandler} value={content.description} placeholder="Enter description" />
+                    </div>
+                    <div className="input-wrapper">
+                        <Label>Link URL</Label>
+                        <Input onChange={linkChangeHandler} value={content.link} placeholder="Enter link URL" />
+                    </div>
+                </div>
 
-                    <div className="col-span-6">
-                        <div className="input-wrapper mb-8">
-                            <Label>Image</Label>
+                <div className="space-y-6">
+                    <div className="input-wrapper">
+                        <Label>Featured Image</Label>
+                        <div className="mt-2">
                             {renderImage()}
                         </div>
                     </div>
-
                 </div>
-            </ComponentCard>
-            <Button onClick={saveTemplateHandler}>Save</Button>
-        </>
+            </div>
+
+            <div className="flex justify-end mt-8 border-t border-gray-100 dark:border-gray-800 pt-6">
+                <Button onClick={saveTemplateHandler} className="w-full sm:w-1/4">
+                    Save Changes
+                </Button>
+            </div>
+        </ComponentCard>
     )
 }
 
