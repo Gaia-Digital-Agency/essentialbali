@@ -388,7 +388,7 @@ const SingleV2: React.FC = () => {
                   </div>
 
 
-                  {content?.tags_slugs?.length && (
+                  {content?.tags_slugs && content.tags_slugs.length > 0 && (
                     <div className="flex justify-center mx-auto text-center tag-wrapper gap-x-5">
                       {content?.tags_slugs.map((tag, index) => (
                         <p className="text-front-icewhite" key={index}>
