@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { ArticleProps } from "../../../types/article.type";
 import useArticle from "../../../hooks/useArticle";
 import Image from "../../../components/front/Image";
-import TextLink from "../../../components/front/TextLink";
 import { useSearchParams, Link } from "react-router";
 import { getArticleByKeyword } from "../../../services/article.service";
 import Button from "../../../components/front/Button";
@@ -25,21 +24,35 @@ const ArticleCard: React.FC<{ article: ArticleProps & { createdAt?: string, publ
     year: 'numeric'
   })
 
+  const featuredImageUrl = getFeaturedImageUrl(article, '16_9')
+  const hasImage = featuredImageUrl && !featuredImageUrl.includes('logo.png')
+
   return (
     <article className="group flex flex-col h-full bg-transparent">
       {/* Editorial Thumbnail */}
-      <div className="relative overflow-hidden mb-8">
-        <Image 
-          link={permalink} 
-          url={getFeaturedImageUrl(article, '16_9')} 
-          ratio="66%" // Slightly taller aspect ratio for editorial feel
-          alt={article.title}
-        />
+      <div className="relative overflow-hidden mb-8 bg-gray-100 aspect-[3/2]">
+        {hasImage ? (
+          <Image 
+            link={permalink} 
+            url={featuredImageUrl} 
+            ratio="66%" 
+            alt={article.title}
+          />
+        ) : (
+          <Link to={permalink} className="absolute inset-0 flex items-center justify-center bg-gray-50 border border-gray-100 group-hover:bg-gray-100 transition-colors duration-500">
+            <div className="flex flex-col items-center opacity-20">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="text-[10px] uppercase tracking-widest font-bold">No Image Available</span>
+            </div>
+          </Link>
+        )}
         {/* Subtle Category Tag */}
         {category && (
           <div className="absolute bottom-0 left-0 bg-white/90 backdrop-blur-sm px-4 py-2 z-[2]">
             <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-front-navy">
-              {category.name}
+              {category.title}
             </span>
           </div>
         )}
@@ -79,7 +92,17 @@ const ArticleCard: React.FC<{ article: ArticleProps & { createdAt?: string, publ
   )
 }
 
-const RenderArticle: React.FC<{ content?: ArticleProps[], q?: string | null }> = ({ content, q }) => {
+const RenderArticle: React.FC<{ content?: ArticleProps[], q?: string | null, isLoading?: boolean }> = ({ content, q, isLoading }) => {
+  if (isLoading && (!content || content.length === 0)) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 lg:gap-x-16 gap-y-20 lg:gap-y-24 opacity-50">
+        {[1, 2, 3].map((n) => (
+          <div key={n} className="animate-pulse bg-gray-200 rounded-2xl aspect-[3/2]"></div>
+        ))}
+      </div>
+    )
+  }
+
   if (content && content.length) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 lg:gap-x-16 gap-y-20 lg:gap-y-24">
@@ -103,7 +126,7 @@ const RenderArticle: React.FC<{ content?: ArticleProps[], q?: string | null }> =
       </div>
     )
   }
-  if (q) {
+  if (q && !isLoading) {
     return <SearchEmptyState keyword={q} />
   }
   return null
@@ -112,41 +135,55 @@ const RenderArticle: React.FC<{ content?: ArticleProps[], q?: string | null }> =
 const Search: React.FC = () => {
   const { initialData } = useContent()
   const { clientChange } = useRoute()
-  // const article = useArticle()
   const [content, setContent] = useState<ArticleProps[]>(initialData?.articles ?? [])
   const [totalPage, setTotalPage] = useState<number>(initialData?.pagination?.totalPages ?? 1)
   const [page, setPage] = useState<number>(initialData?.pagination?.page ?? 1)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const [searchParams] = useSearchParams()
   const q = searchParams.get('q')
   const LIMIT = 7
+
   useEffect(() => {
-    // Reset state when search query changes
-    setContent([]);
-    setPage(1);
-    setTotalPage(1);
+    // Only reset if query actually changes and we're on client side
+    if (clientChange) {
+      setContent([]);
+      setPage(1);
+      setTotalPage(1);
+    }
   }, [q]);
 
   useEffect(() => {
-    if (!q || !clientChange) return;
+    if (!q) return;
+    
+    // If we already have content from initialData and it's not a client change, skip first fetch
+    if (!clientChange && content.length > 0 && page === 1) return;
+
     (async () => {
-      const articles = await getArticleByKeyword({ keyword: q, page: page, limit: LIMIT })
-      if (articles?.articles) {
-        if (page === 1) {
-          setContent(articles.articles);
-        } else {
-          setContent(prev => {
-            const newUniqueArticles = articles.articles.filter(newArticle =>
-              !prev.some(prevArticle => prevArticle.id === newArticle.id)
-            );
-            return [...prev, ...newUniqueArticles];
-          });
+      setIsLoading(true)
+      try {
+        const articles = await getArticleByKeyword({ keyword: q, page: page, limit: LIMIT })
+        if (articles?.articles) {
+          if (page === 1) {
+            setContent(articles.articles);
+          } else {
+            setContent(prev => {
+              const newUniqueArticles = articles.articles.filter(newArticle =>
+                !prev.some(prevArticle => prevArticle.id === newArticle.id)
+              );
+              return [...prev, ...newUniqueArticles];
+            });
+          }
         }
-      }
-      if (articles?.pagination) {
-        setTotalPage(articles.pagination.totalPages)
+        if (articles?.pagination) {
+          setTotalPage(articles.pagination.totalPages)
+        }
+      } catch (err) {
+        console.error("Search fetch error:", err)
+      } finally {
+        setIsLoading(false)
       }
     })()
-  }, [page, q]) // <-- Tambahkan 'q' di sini agar pencarian terpantau
+  }, [page, q])
 
   const clickMoreHandler = () => {
     if (page > totalPage) return
@@ -164,7 +201,7 @@ const Search: React.FC = () => {
           <Advertisement />
         </div> */}
         <div className="container py-12">
-          <RenderArticle content={content} q={q} />
+          <RenderArticle content={content} q={q} isLoading={isLoading} />
           {
             !!(page < totalPage) &&
             <div className="py-8 text-center button-wrapper">
