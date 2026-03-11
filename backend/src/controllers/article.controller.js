@@ -105,7 +105,7 @@ export default {
 
   async getArticlesNew(req, res) {
     try {
-      const vaData = await articleService.getArticlesNew(req);
+      const vaData = await articleService.getArticlesV2(req);
       return response(res, 200, vaData || []);
     } catch (error) {
       errResponse(error, res);
