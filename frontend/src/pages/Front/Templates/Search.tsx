@@ -4,62 +4,109 @@ import { ArticleProps } from "../../../types/article.type";
 import useArticle from "../../../hooks/useArticle";
 import Image from "../../../components/front/Image";
 import TextLink from "../../../components/front/TextLink";
-import { useSearchParams } from "react-router";
+import { useSearchParams, Link } from "react-router";
 import { getArticleByKeyword } from "../../../services/article.service";
 import Button from "../../../components/front/Button";
 import { useContent } from "../../../context/ContentContext";
 import { useRoute } from "../../../context/RouteContext";
 import { Helmet } from "react-helmet-async";
 
-const ArticleCard: React.FC<{ article: ArticleProps & { createdAt?: string } }> = ({ article }) => {
-  const { getPermalink, getFeaturedImageUrl } = useArticle()
+import SearchEmptyState from "../../../components/front/SearchEmptyState";
+
+const ArticleCard: React.FC<{ article: ArticleProps & { createdAt?: string, publishedAt?: string } }> = ({ article }) => {
+  const { getPermalink, getFeaturedImageUrl, getCategory } = useArticle()
+  const permalink = getPermalink(article)
+  const category = getCategory(article)
+  
+  // Format date: e.g. "11 March 2026"
+  const date = new Date(article.publishedAt || article.createdAt || Date.now()).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+
   return (
-    <>
-      <div className="grid grid-cols-12 gap-6 mb-16">
-        <div className="order-2 col-span-12 md:col-span-6 md:order-1">
-          <div className="mb-6 title-wrapper">
-            <p className="font-serif text-front-article-title">{article.title}</p>
+    <article className="group flex flex-col h-full bg-transparent">
+      {/* Editorial Thumbnail */}
+      <div className="relative overflow-hidden mb-8">
+        <Image 
+          link={permalink} 
+          url={getFeaturedImageUrl(article, '16_9')} 
+          ratio="66%" // Slightly taller aspect ratio for editorial feel
+          alt={article.title}
+        />
+        {/* Subtle Category Tag */}
+        {category && (
+          <div className="absolute bottom-0 left-0 bg-white/90 backdrop-blur-sm px-4 py-2 z-[2]">
+            <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-front-navy">
+              {category.name}
+            </span>
           </div>
-          <div className="mb-6 subtitle-wrapper">
-            <p>{article.sub_title}</p>
-          </div>
-          <div className="button-wrapper">
-            <TextLink link={getPermalink(article)} color="gray" text="READ MORE" />
-          </div>
+        )}
+      </div>
+
+      {/* Editorial Content */}
+      <div className="flex flex-col flex-grow">
+        <div className="mb-4">
+          <span className="text-[11px] font-medium text-front-dustly-slate uppercase tracking-[0.15em] italic">
+            {date}
+          </span>
         </div>
-        <div className="order-1 col-span-12 md:col-span-6 md:order-2">
-          <div className="image-wrapper">
-            <Image link={getPermalink(article)} url={getFeaturedImageUrl(article)} />
-          </div>
+        
+        <h3 className="mb-4 text-2xl lg:text-3xl font-serif font-medium text-front-navy leading-[1.2] group-hover:text-front-dustly-slate transition-colors duration-400">
+          <Link to={permalink} className="line-clamp-2">
+            {article.title}
+          </Link>
+        </h3>
+
+        <p className="text-front-charcoal-grey text-sm lg:text-base font-light leading-relaxed line-clamp-3 mb-8">
+          {article.sub_title}
+        </p>
+
+        <div className="mt-auto">
+          <Link 
+            to={permalink} 
+            className="inline-block relative text-[11px] font-bold uppercase tracking-[0.3em] text-front-navy after:content-[''] after:absolute after:bottom-[-6px] after:left-0 after:w-10 after:h-[1px] after:bg-front-dustly-slate group-hover:after:w-full after:transition-all after:duration-700"
+          >
+            Explore
+          </Link>
         </div>
       </div>
-    </>
+      
+      {/* Visual Separator for Mobile */}
+      <div className="mt-16 w-full h-[1px] bg-gray-100 md:hidden"></div>
+    </article>
   )
 }
 
 const RenderArticle: React.FC<{ content?: ArticleProps[], q?: string | null }> = ({ content, q }) => {
   if (content && content.length) {
     return (
-      <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 lg:gap-x-16 gap-y-20 lg:gap-y-24">
         {
           content?.map((article: ArticleProps) => (
-            <div className="mb-8 article-card">
+            <div key={article.id}>
               <ArticleCard article={article} />
             </div>
           ))
         }
-      </>
+      </div>
     )
   }
   if (q && q.length < 3) {
-    // return <>Keyword search need to have at least 3 characters</>
-    return <><div className="flex items-center justify-center col-span-12 font-serif">Keyword search need to have at least 3 characters</div></>
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4 text-center col-span-12">
+        <div className="bg-orange-50 text-front-dustly-slate p-6 rounded-2xl border border-orange-100 max-w-md">
+          <p className="font-serif text-xl mb-2">Search query too short</p>
+          <p className="font-sans text-sm opacity-80">Keyword search needs to have at least 3 characters to provide accurate results.</p>
+        </div>
+      </div>
+    )
   }
   if (q) {
-    // return <>Article not found</>
-    return <><div className="flex items-center justify-center col-span-12 font-serif">Article not found</div></>
+    return <SearchEmptyState keyword={q} />
   }
-  // return <SearchBar search="" />
+  return null
 }
 
 const Search: React.FC = () => {
