@@ -113,7 +113,10 @@ const Events: React.FC = () => {
         }
         const sub = taxonomies.categories?.filter(cat => (cat.id_parent == parentCat?.id))
         setAvailableSubCat(sub)
-    }, [actualRoute])
+        
+        // Reset to page 1 when route or filters change
+        setCurrentPage(1)
+    }, [actualRoute, searchParams])
 
     useEffect(() => {
         // const subCat = searchParams.get('subcat')
