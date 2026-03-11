@@ -1618,6 +1618,205 @@ export default {
     }
   },
 
+  async getArticlesV2(req) {
+    try {
+      const vaQuery = req.query;
+      const nPage = parseInt(vaQuery.page) || 1;
+      const nLimit = parseInt(vaQuery.limit) || 10;
+      const nOffset = (nPage - 1) * nLimit;
+
+      let cWhere = " WHERE a.title <> '' ";
+      let replacements = {};
+      let joinFilters = "";
+
+      let cFieldsTrending = "";
+      let cJoinTrending = "";
+      let cOrderByTrending = "";
+
+      // 1. Membangun Filter (Replikasi Logika getArticlesNew)
+      if (vaQuery.pinned) {
+        cWhere += " AND a.pinned = :pinned ";
+        replacements.pinned = vaQuery.pinned;
+      }
+
+      if (vaQuery.id) {
+        if (Array.isArray(vaQuery.id)) {
+          cWhere += " AND a.id IN (:id) ";
+        } else {
+          cWhere += " AND a.id = :id ";
+        }
+        replacements.id = vaQuery.id;
+      }
+
+      if (vaQuery.category) {
+        const vaCategories = [];
+        const dbCategory = await Category.findAll({
+          where: { [Op.or]: [{ id: vaQuery.category }, { id_parent: vaQuery.category }] },
+          raw: true,
+        });
+        dbCategory.map((cat) => vaCategories.push(cat.id));
+        if (vaCategories.length > 0) {
+          cWhere += " AND a.category IN (:categoryIds) ";
+          replacements.categoryIds = vaCategories;
+        }
+      }
+
+      ["id_country", "id_city", "id_region", "status"].forEach((field) => {
+        if (vaQuery[field]) {
+          cWhere += Array.isArray(vaQuery[field]) ? ` AND a.${field} IN (:${field}) ` : ` AND a.${field} = :${field} `;
+          replacements[field] = vaQuery[field];
+        }
+      });
+
+      if (vaQuery.tag || vaQuery.slug_tag) {
+        joinFilters += " INNER JOIN article_tags filter_at ON filter_at.id_article = a.id ";
+        if (vaQuery.tag) {
+          cWhere += Array.isArray(vaQuery.tag) ? " AND filter_at.id_tag IN (:tags) " : " AND filter_at.id_tag = :tags ";
+          replacements.tags = vaQuery.tag;
+        }
+        if (vaQuery.slug_tag) {
+          joinFilters += " INNER JOIN tags filter_t ON filter_t.id = filter_at.id_tag ";
+          cWhere += Array.isArray(vaQuery.slug_tag) ? " AND filter_t.slug IN (:slugTags) " : " AND filter_t.slug = :slugTags ";
+          replacements.slugTags = vaQuery.slug_tag;
+        }
+      }
+
+      ["slug", "slug_category", "slug_country", "slug_city", "slug_region"].forEach((field) => {
+        if (vaQuery[field]) {
+          const alias = field === "slug" ? "a.slug_title" : (field === "slug_category" ? "c.slug_title" : (field === "slug_country" ? "n.slug" : (field === "slug_city" ? "k.slug" : "r.slug")));
+          cWhere += Array.isArray(vaQuery[field]) ? ` AND ${alias} IN (:${field}) ` : ` AND ${alias} = :${field} `;
+          replacements[field] = vaQuery[field];
+        }
+      });
+
+      if (vaQuery.published_date_start && vaQuery.published_date_end) {
+        cWhere += " AND DATE(a.publishedAt) BETWEEN :published_date_start AND :published_date_end ";
+        replacements.published_date_start = vaQuery.published_date_start;
+        replacements.published_date_end = vaQuery.published_date_end;
+      }
+
+      // Meta Data Filters
+      Object.keys(vaQuery).filter(key => key.startsWith("metaData_")).forEach(key => {
+        const metaKey = key.replace("metaData_", "");
+        const value = vaQuery[key];
+        if (["start_date", "start_time"].includes(metaKey)) {
+          cWhere += ` AND JSON_UNQUOTE(JSON_EXTRACT(a.meta_data, '$.${metaKey}')) >= :${key} `;
+        } else if (["end_date", "end_time"].includes(metaKey)) {
+          cWhere += ` AND JSON_UNQUOTE(JSON_EXTRACT(a.meta_data, '$.${metaKey}')) <= :${key} `;
+        } else {
+          cWhere += Array.isArray(value) ? ` AND JSON_UNQUOTE(JSON_EXTRACT(a.meta_data, '$.${metaKey}')) IN (:${key}) ` : ` AND JSON_UNQUOTE(JSON_EXTRACT(a.meta_data, '$.${metaKey}')) = :${key} `;
+        }
+        replacements[key] = value;
+      });
+
+      if (vaQuery.isTrending) {
+        cFieldsTrending = ", COALESCE(aps.trending_score, 0) as trending_score";
+        cJoinTrending = ` LEFT JOIN (
+          SELECT id_article, SUM(point * EXP(-0.05 * (UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(createdAt)) / 3600)) AS trending_score 
+          FROM article_point_scoring GROUP BY id_article
+        ) aps ON aps.id_article = a.id `;
+        cOrderByTrending = " trending_score DESC, ";
+      }
+
+      // 2. Query Total Count
+      const countSQL = `SELECT COUNT(DISTINCT a.id) as total FROM articles a 
+                        LEFT JOIN category c ON c.id = a.category
+                        LEFT JOIN country n ON n.id = a.id_country
+                        LEFT JOIN city k ON k.id = a.id_city
+                        LEFT JOIN region r ON r.id = a.id_region
+                        ${joinFilters} ${cWhere}`;
+      
+      const [countResult] = await sequelize.query(countSQL, { replacements });
+      const totalData = countResult[0].total;
+
+      let vaResPagination = (!vaQuery.page || !vaQuery.limit) ? {} : {
+        pagination: {
+          page: nPage,
+          limit: nLimit,
+          totalData,
+          totalPages: Math.ceil(totalData / nLimit),
+        },
+      };
+
+      if (totalData === 0) return { ...vaResPagination, articles: [] };
+
+      // 3. Main Query with All Joins and Fields
+      const mainSQL = `
+        SELECT a.id, a.title, a.sub_title, a.slug_title as slug, a.article_post, a.tags,
+               a.featured_image as featured_image_id, m.path as featured_image_url, 
+               m.title as featured_image_title, m.alt_text as featured_image_alt_text,
+               m.caption as featured_image_caption, m.description as featured_image_description,
+               a.featured_image_4_3 as featured_image_4_3_id, m43.path as featured_image_4_3_url,  
+               m43.title as featured_image_4_3_title, m43.alt_text as featured_image_4_3_alt_text,
+               m43.caption as featured_image_4_3_caption, m43.description as featured_image_4_3_description,
+               a.featured_image_16_9 as featured_image_16_9_id, m169.path as featured_image_16_9_url, 
+               m169.title as featured_image_16_9_title, m169.alt_text as featured_image_16_9_alt_text,
+               m169.caption as featured_image_16_9_caption, m169.description as featured_image_16_9_description,
+               a.meta_data, a.status, a.createdAt as publishedAt, a.createdAt, a.createdBy, 
+               IFNULL(a.updatedAt, a.publishedAt) as updatedAt, a.updatedBy, a.author as author_name,
+               a.category as category_id, c.title as category_name, c.slug_title as slug_category,
+               a.parent_category_id, c1.title as parent_category_name,
+               a.id_country, n.name as name_country, n.slug as slug_country, mFlag.path as country_flag,
+               a.id_city, k.name as name_city, k.slug as slug_city,
+               a.id_region, r.name as name_region, r.slug as slug_region,
+               a.pinned, n.timezone, a.publishedBy
+               ${cFieldsTrending},
+               GROUP_CONCAT(t.id) as tag_ids_raw, GROUP_CONCAT(t.slug) as tag_slugs_raw
+        FROM articles a
+        ${cJoinTrending}
+        LEFT JOIN asset_media m ON m.id = a.featured_image
+        LEFT JOIN asset_media m43 ON m43.id = a.featured_image_4_3
+        LEFT JOIN asset_media m169 ON m169.id = a.featured_image_16_9
+        LEFT JOIN category c ON c.id = a.category
+        LEFT JOIN category c1 ON c1.id = a.parent_category_id
+        LEFT JOIN country n ON n.id = a.id_country
+        LEFT JOIN asset_media mFlag ON mFlag.id = n.flag_icon
+        LEFT JOIN city k ON k.id = a.id_city
+        LEFT JOIN region r ON r.id = a.id_region
+        LEFT JOIN article_tags at ON at.id_article = a.id
+        LEFT JOIN tags t ON t.id = at.id_tag
+        ${joinFilters}
+        ${cWhere}
+        GROUP BY a.id
+        ORDER BY a.pinned DESC, ${cOrderByTrending} a.publishedAt DESC
+        LIMIT :limit OFFSET :offset;
+      `;
+
+      // console.log("tengkyu yak!! " , mainSQL) ;
+
+      replacements.limit = nLimit;
+      replacements.offset = nOffset;
+
+      const [dbData] = await sequelize.query(mainSQL, { replacements });
+
+      // console.log("hasil dbData => ", dbData);
+
+      // 4. Formatting Exact Match
+      const articles = dbData.map(row => {
+        const timezone = row.timezone || "Asia/Makassar";
+        const formatTime = (date) => date ? DateTime.fromJSDate(date, { zone: "UTC" }).setZone(timezone).toFormat("yyyy-MM-dd'T'HH:mm:ssZZ") : null;
+
+        const formatted = {
+          ...row,
+          tags_ids: row.tag_ids_raw ? row.tag_ids_raw.split(",").map(Number) : [],
+          tags_slugs: row.tag_slugs_raw ? row.tag_slugs_raw.split(",") : [],
+          createdAt: formatTime(row.createdAt),
+          publishedAt: formatTime(row.publishedAt),
+          updatedAt: formatTime(row.updatedAt),
+        };
+        
+        delete formatted.tag_ids_raw;
+        delete formatted.tag_slugs_raw;
+        return formatted;
+      });
+
+      return { ...vaResPagination, articles };
+    } catch (error) {
+      console.error("Error in getArticlesV2:", error);
+      throw error;
+    }
+  },
+
   async getArticlesNew(req) {
     // USE
     try {
