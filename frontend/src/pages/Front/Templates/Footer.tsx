@@ -128,7 +128,7 @@ const Footer: React.FC = () => {
         <div className="py-5 copyright-wrapper outer">
           <div className="flex items-center justify-center text-center">
             <div className="font-light item text-front-small text-front-shadowed-slate">
-              Essential Bali {new Date().getFullYear()} | GAIA Digital Agency
+              Copyright &copy; {new Date().getFullYear()} Essential Bali
             </div>
           </div>
         </div>
