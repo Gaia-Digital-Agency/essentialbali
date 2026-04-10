@@ -1,6 +1,5 @@
 import React from "react";
 import GridShape from "../../components/common/GridShape";
-import { Link } from "react-router";
 import AdminLogo from "../../components/common/AdminLogo";
 // import ThemeTogglerTwo from "../../components/common/ThemeTogglerTwo";
 
