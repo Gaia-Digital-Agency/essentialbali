@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import AdminLogo from "../components/common/AdminLogo";
 import { Link, useLocation } from "react-router";
 import { HorizontaLDots } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
@@ -229,33 +230,11 @@ const AppSidebar: React.FC = () => {
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-center"
         }`}
       >
-        <Link to="/admin">
-          {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <img
-                className="dark:hidden"
-                src="/logo.png"
-                alt="essentialbali logo"
-                width={180}
-                height={75}
-              />
-              <img
-                className="hidden dark:block"
-                src="/logo.png"
-                alt="essentialbali logo"
-                width={180}
-                height={75}
-              />
-            </>
-          ) : (
-            <img
-              src="/logo.png"
-              alt="essentialbali logo"
-              width={44}
-              height={44}
-            />
-          )}
-        </Link>
+        {isExpanded || isHovered || isMobileOpen ? (
+          <AdminLogo width={180} height={75} />
+        ) : (
+          <AdminLogo width={44} height={44} />
+        )}
       </div>
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
         <nav className="mb-6">

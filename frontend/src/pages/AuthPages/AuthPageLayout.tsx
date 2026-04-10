@@ -1,6 +1,7 @@
 import React from "react";
 import GridShape from "../../components/common/GridShape";
 import { Link } from "react-router";
+import AdminLogo from "../../components/common/AdminLogo";
 // import ThemeTogglerTwo from "../../components/common/ThemeTogglerTwo";
 
 export default function AuthLayout({
@@ -17,14 +18,7 @@ export default function AuthLayout({
             {/* <!-- ===== Common Grid Shape Start ===== --> */}
             <GridShape />
             <div className="flex flex-col items-center max-w-xs">
-              <Link to="/" className="block mb-4">
-                <img
-                  width={220}
-                  height={92}
-                  src="/logo.png"
-                  alt="essentialbali logo"
-                />
-              </Link>
+              <AdminLogo className="block mb-4" width={220} height={92} to="/" />
               <p className="text-center text-front-charcoal-grey dark:text-white/60">
                 Essential Bali Content Management Dashboard
               </p>
