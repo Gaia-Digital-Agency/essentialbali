@@ -145,7 +145,7 @@ export default async function ArticlesMatrixFilter() {
                         display: "block",
                         padding: "0.45rem 0.4rem",
                         textDecoration: "none",
-                        color: "inherit",
+                        color: "var(--theme-text)",
                         background: cellBg(c.total),
                         borderLeft: `2px solid ${cellBorder(c.total)}`,
                       }}
@@ -153,9 +153,9 @@ export default async function ArticlesMatrixFilter() {
                     >
                       <div style={{ fontWeight: 600, fontSize: "0.85rem" }}>
                         {c.total}
-                        <span style={{ color: "#888", fontWeight: 400 }}> / {TARGET}</span>
+                        <span style={{ opacity: 0.6, fontWeight: 400 }}> / {TARGET}</span>
                       </div>
-                      <div style={{ fontSize: "0.6rem", color: "#888" }}>
+                      <div style={{ fontSize: "0.6rem", color: "var(--theme-elevation-500, var(--theme-text))", opacity: 0.85 }}>
                         {c.published > 0 && <span style={{ color: "#16a34a" }}>{c.published}p </span>}
                         {c.pending > 0 && <span style={{ color: "#d97706" }}>{c.pending}r </span>}
                         {c.draft > 0 && <span>{c.draft}d</span>}
@@ -171,10 +171,12 @@ export default async function ArticlesMatrixFilter() {
                       ...thStyle,
                       position: "sticky",
                       left: 0,
-                      background: "#fafafa",
+                      background: "var(--theme-elevation-100)",
+                      color: "var(--theme-text)",
                       textAlign: "left",
                       paddingLeft: "0.85rem",
                       whiteSpace: "nowrap",
+                      fontWeight: 500,
                     }}
                   >
                     {a.name}
@@ -188,7 +190,7 @@ export default async function ArticlesMatrixFilter() {
         </table>
       </div>
 
-      <p style={{ fontSize: "0.7rem", color: "#888", margin: "0.55rem 0 0" }}>
+      <p style={{ fontSize: "0.7rem", color: "var(--theme-elevation-500, var(--theme-text))", opacity: 0.75, margin: "0.55rem 0 0" }}>
         Click any cell to filter the list below. Cell shows <b>n / 20</b> total &middot; p=published, r=pending review, d=draft.
         Red = empty &middot; yellow = below target &middot; green = at target.
       </p>
@@ -199,42 +201,47 @@ export default async function ArticlesMatrixFilter() {
 const wrapStyle: React.CSSProperties = {
   margin: "1rem 0 1.25rem",
   padding: "1rem 1.25rem",
-  background: "#fff",
-  border: "1px solid rgba(0,0,0,0.08)",
-  borderRadius: 8,
+  background: "var(--theme-elevation-50)",
+  border: "1px solid var(--theme-elevation-150)",
+  borderRadius: "var(--style-radius-s, 4px)",
+  color: "var(--theme-text)",
 };
 const tableStyle: React.CSSProperties = {
   borderCollapse: "collapse",
   width: "100%",
   minWidth: 900,
   fontSize: "0.78rem",
+  color: "var(--theme-text)",
 };
 const thStyle: React.CSSProperties = {
   padding: "0.45rem 0.4rem",
   textAlign: "center",
-  borderBottom: "1px solid rgba(0,0,0,0.08)",
+  borderBottom: "1px solid var(--theme-elevation-150)",
   fontWeight: 500,
   fontSize: "0.7rem",
-  color: "rgba(0,0,0,0.6)",
+  color: "var(--theme-elevation-500, var(--theme-text))",
+  opacity: 0.85,
 };
 const tdStyle: React.CSSProperties = {
   padding: "0.4rem",
   textAlign: "center",
-  borderBottom: "1px solid rgba(0,0,0,0.04)",
+  borderBottom: "1px solid var(--theme-elevation-100)",
+  color: "var(--theme-text)",
 };
 
 const chipLabelStyle: React.CSSProperties = {
   alignSelf: "center",
   fontSize: "0.65rem",
   letterSpacing: "0.08em",
-  color: "#888",
+  color: "var(--theme-elevation-500, var(--theme-text))",
+  opacity: 0.7,
   marginRight: "0.4rem",
 };
 const chipStyle = (color: string): React.CSSProperties => ({
   padding: "0.32rem 0.7rem",
   borderRadius: 999,
-  background: "rgba(0,0,0,0.03)",
-  border: `1px solid ${color}33`,
+  background: "var(--theme-elevation-100)",
+  border: `1px solid ${color}55`,
   color,
   fontSize: "0.72rem",
   fontWeight: 500,

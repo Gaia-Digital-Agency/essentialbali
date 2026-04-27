@@ -15,10 +15,14 @@ export const Newsletters: CollectionConfig = {
   admin: {
     useAsTitle: "subject",
     description:
-      "Email broadcasts to all active subscribers. Save as draft, then change status to 'Sending' and save again to dispatch.",
+      "Compose and send broadcast emails to all active subscribers. See the panel above for instructions.",
     defaultColumns: ["subject", "status", "sentAt", "recipientCount"],
     listSearchableFields: ["subject"],
+    components: {
+      beforeListTable: ["@/components/NewslettersIntro"],
+    },
   },
+  defaultSort: "-createdAt",
   access: {
     read: () => true,
   },

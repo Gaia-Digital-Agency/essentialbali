@@ -95,6 +95,7 @@ export default buildConfig({
     "https://www.essentialbali.com",
     "http://localhost:3008",
     "http://localhost:5173",
+    "https://ess.gaiada0.online",
   ],
   csrf: [
     "https://essentialbali.gaiada.online",

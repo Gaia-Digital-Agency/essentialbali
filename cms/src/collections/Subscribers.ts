@@ -5,11 +5,8 @@ export const Subscribers: CollectionConfig = {
   admin: {
     useAsTitle: "email",
     description:
-      "Newsletter sign-ups. Use the Broadcast panel above to send a one-off email to all active subscribers.",
+      "All newsletter sign-ups. To compose and send a newsletter, go to the Newsletters collection.",
     defaultColumns: ["email", "status", "source", "createdAt"],
-    components: {
-      beforeListTable: ["@/components/SubscribersBroadcast"],
-    },
   },
   access: { read: () => true },
   fields: [

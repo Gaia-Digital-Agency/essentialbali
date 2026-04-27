@@ -80,17 +80,17 @@ export default async function MatrixDashboard() {
     <div style={{ padding: "1.5rem 2rem", maxWidth: 1400 }}>
       <header style={{ marginBottom: "1rem" }}>
         <h1 style={{ fontSize: "1.4rem", margin: 0 }}>Essential Bali — Content Matrix</h1>
-        <p style={{ color: "rgba(0,0,0,0.55)", marginTop: "0.25rem", fontSize: "0.85rem" }}>
+        <p style={{ color: "var(--theme-elevation-500, var(--theme-text))", opacity: 0.75, marginTop: "0.25rem", fontSize: "0.85rem" }}>
           8 areas × 8 topics. Click any cell to open its filtered Articles list. Tap the small ad
           dot to manage the hero ad slot.
         </p>
       </header>
 
-      <div style={{ overflowX: "auto", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 8, background: "#fff" }}>
+      <div style={{ overflowX: "auto", border: "1px solid var(--theme-elevation-150)", borderRadius: "var(--style-radius-s, 4px)", background: "var(--theme-elevation-50)", color: "var(--theme-text)" }}>
         <table style={{ borderCollapse: "collapse", width: "100%", minWidth: 1100, fontSize: "0.78rem" }}>
           <thead>
             <tr>
-              <th style={{ ...thStyle, width: 110, position: "sticky", left: 0, background: "#fafafa" }}>Area / Topic</th>
+              <th style={{ ...thStyle, width: 110, position: "sticky", left: 0, background: "var(--theme-elevation-100)" }}>Area / Topic</th>
               {TOPICS.map((t) => (
                 <th key={t.slug} style={thStyle}>{t.name}</th>
               ))}
@@ -101,7 +101,7 @@ export default async function MatrixDashboard() {
               const area = areaBySlug.get(a.slug);
               return (
                 <tr key={a.slug}>
-                  <th style={{ ...thStyle, position: "sticky", left: 0, background: "#fafafa", textAlign: "left", paddingLeft: "1rem" }}>
+                  <th style={{ ...thStyle, position: "sticky", left: 0, background: "var(--theme-elevation-100)", textAlign: "left", paddingLeft: "1rem", fontWeight: 500 }}>
                     {a.name}
                   </th>
                   {TOPICS.map((t) => {
@@ -118,7 +118,7 @@ export default async function MatrixDashboard() {
                       <td key={t.slug} style={tdStyle}>
                         <Link href={articlesHref} style={cellStyle}>
                           <span style={{ fontSize: "0.95rem", fontWeight: 500 }}>{c.total}</span>
-                          <span style={{ display: "block", fontSize: "0.65rem", color: "rgba(0,0,0,0.5)", marginTop: 2 }}>
+                          <span style={{ display: "block", fontSize: "0.65rem", color: "var(--theme-elevation-500, var(--theme-text))", opacity: 0.7, marginTop: 2 }}>
                             {c.published}p · {c.pending}r · {c.draft}d
                           </span>
                         </Link>
@@ -144,7 +144,7 @@ export default async function MatrixDashboard() {
         </table>
       </div>
 
-      <p style={{ marginTop: "0.75rem", fontSize: "0.7rem", color: "rgba(0,0,0,0.5)" }}>
+      <p style={{ marginTop: "0.75rem", fontSize: "0.7rem", color: "var(--theme-elevation-500, var(--theme-text))", opacity: 0.7 }}>
         Cell shows total articles · <b>p</b>ublished · pending <b>r</b>eview · <b>d</b>raft. Dot:
         green = hero ad active, grey = placeholder.
       </p>
@@ -155,21 +155,23 @@ export default async function MatrixDashboard() {
 const thStyle: React.CSSProperties = {
   textAlign: "center",
   padding: "0.55rem 0.4rem",
-  borderBottom: "1px solid rgba(0,0,0,0.08)",
+  borderBottom: "1px solid var(--theme-elevation-150)",
   fontWeight: 600,
   fontSize: "0.72rem",
-  color: "rgba(0,0,0,0.65)",
+  color: "var(--theme-elevation-500, var(--theme-text))",
+  opacity: 0.85,
 };
 const tdStyle: React.CSSProperties = {
   textAlign: "center",
   padding: "0.4rem",
-  borderBottom: "1px solid rgba(0,0,0,0.04)",
-  borderRight: "1px solid rgba(0,0,0,0.04)",
+  borderBottom: "1px solid var(--theme-elevation-100)",
+  borderRight: "1px solid var(--theme-elevation-100)",
+  color: "var(--theme-text)",
 };
 const cellStyle: React.CSSProperties = {
   display: "block",
   padding: "0.35rem",
-  borderRadius: 4,
+  borderRadius: "var(--style-radius-s, 4px)",
   textDecoration: "none",
-  color: "inherit",
+  color: "var(--theme-text)",
 };
