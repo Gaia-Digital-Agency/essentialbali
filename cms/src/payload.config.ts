@@ -25,6 +25,11 @@ export default buildConfig({
     meta: {
       titleSuffix: " — Essential Bali CMS",
     },
+    components: {
+      // Show a discreet creds hint under the login form when
+      // NEXT_PUBLIC_SHOW_LOGIN_HINT=true. Disable in real prod.
+      afterLogin: ["@/components/LoginHint"],
+    },
   },
   editor: lexicalEditor(),
   collections: [
