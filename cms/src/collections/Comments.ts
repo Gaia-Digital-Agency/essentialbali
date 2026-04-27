@@ -3,6 +3,7 @@ import type { CollectionConfig } from "payload";
 export const Comments: CollectionConfig = {
   slug: "comments",
   admin: {
+    hidden: () => true,
     useAsTitle: "body",
     description: "Comments on articles. AI agent can author as a persona; humans show with their own name.",
     defaultColumns: ["article", "persona", "authorName", "status", "createdAt"],

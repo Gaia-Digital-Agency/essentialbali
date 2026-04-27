@@ -3,6 +3,7 @@ import type { CollectionConfig } from "payload";
 export const Media: CollectionConfig = {
   slug: "media",
   admin: {
+    hidden: () => true,
     useAsTitle: "alt",
     description: "All images and files. AI-generated hero images include a prompt.",
   },

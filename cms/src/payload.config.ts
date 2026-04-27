@@ -24,6 +24,12 @@ export default buildConfig({
     user: Users.slug,
     meta: {
       titleSuffix: " — Essential Bali CMS",
+      icons: [
+        { rel: "icon", type: "image/png", url: "/favicon.png" },
+      ],
+      openGraph: {
+        images: [{ url: "/logo.png" }],
+      },
     },
     components: {
       // Show a discreet creds hint under the login form when

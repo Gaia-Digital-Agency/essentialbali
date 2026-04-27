@@ -3,6 +3,7 @@ import type { CollectionConfig } from "payload";
 export const Subscribers: CollectionConfig = {
   slug: "subscribers",
   admin: {
+    hidden: () => true,
     useAsTitle: "email",
     description: "Newsletter sign-ups.",
   },
