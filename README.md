@@ -138,6 +138,145 @@ The migration preserves the current frontend structure and routing. The data lay
 
 ---
 
+## PostgreSQL schema (Phase D target)
+
+Database: `essentialbali_db` · User: `essentialbali_user`
+
+Payload owns the schema and migrates it. The collections below describe the *intent* — Payload generates the actual tables.
+
+```sql
+-- ─── Taxonomy (8 + 8 fixed) ──────────────────────────────────────────
+CREATE TABLE areas (
+  id           SERIAL PRIMARY KEY,
+  slug         TEXT UNIQUE NOT NULL,    -- canggu, kuta, ubud, ...
+  name         TEXT NOT NULL,
+  hero_media   INT REFERENCES media(id),
+  intro        TEXT,
+  lat          NUMERIC(9,6),
+  lng          NUMERIC(9,6)
+);
+
+CREATE TABLE topics (
+  id           SERIAL PRIMARY KEY,
+  slug         TEXT UNIQUE NOT NULL,    -- events, news, featured, dine, ...
+  name         TEXT NOT NULL,
+  icon         TEXT,
+  intro        TEXT
+);
+
+-- ─── Personas (writer voices, for E-E-A-T SEO) ───────────────────────
+CREATE TABLE personas (
+  id           SERIAL PRIMARY KEY,
+  slug         TEXT UNIQUE NOT NULL,    -- maya, komang, putu, sari
+  name         TEXT NOT NULL,
+  bio          TEXT,
+  avatar_media INT REFERENCES media(id),
+  voice_notes  TEXT
+);
+
+-- ─── Articles ────────────────────────────────────────────────────────
+CREATE TABLE articles (
+  id              SERIAL PRIMARY KEY,
+  area_id         INT NOT NULL REFERENCES areas(id),
+  topic_id        INT NOT NULL REFERENCES topics(id),
+  persona_id      INT REFERENCES personas(id),
+  title           TEXT NOT NULL,
+  slug            TEXT NOT NULL,
+  sub_title       TEXT,
+  body            JSONB NOT NULL,                 -- Payload rich-text Lexical
+  hero_media      INT REFERENCES media(id),
+  status          TEXT NOT NULL DEFAULT 'draft',  -- draft|pending_review|approved|published|rejected
+  meta_title      TEXT,
+  meta_description TEXT,
+  keywords        TEXT[],
+  source_url      TEXT,                           -- crawler-cited reference
+  source_site     TEXT,
+  source_hash     TEXT,                           -- idempotency key
+  published_at    TIMESTAMPTZ,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (area_id, topic_id, slug),
+  UNIQUE (source_hash)                            -- AI re-runs never duplicate
+);
+CREATE INDEX idx_articles_area_topic_status ON articles(area_id, topic_id, status);
+CREATE INDEX idx_articles_published_at      ON articles(published_at DESC);
+
+-- ─── Media ───────────────────────────────────────────────────────────
+CREATE TABLE media (
+  id           SERIAL PRIMARY KEY,
+  filename     TEXT NOT NULL,
+  mime         TEXT NOT NULL,
+  width        INT,
+  height       INT,
+  alt          TEXT,
+  credit       TEXT,
+  generated_by TEXT,                  -- 'imager' | 'upload' | 'imported'
+  prompt       TEXT,                  -- if AI-generated
+  url          TEXT,
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ─── Comments (CRUD by AI agent + by humans) ─────────────────────────
+CREATE TABLE comments (
+  id           SERIAL PRIMARY KEY,
+  article_id   INT NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
+  persona_id   INT REFERENCES personas(id),       -- NULL = real human commenter
+  author_name  TEXT,                              -- if real human, captured display name
+  body         TEXT NOT NULL,
+  status       TEXT NOT NULL DEFAULT 'visible',   -- visible|hidden|spam
+  parent_id    INT REFERENCES comments(id),       -- threaded
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_comments_article ON comments(article_id, status);
+
+-- ─── Tags (secondary taxonomy for SEO) ───────────────────────────────
+CREATE TABLE tags (
+  id      SERIAL PRIMARY KEY,
+  slug    TEXT UNIQUE NOT NULL,
+  name    TEXT NOT NULL
+);
+CREATE TABLE article_tags (
+  article_id INT NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
+  tag_id     INT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (article_id, tag_id)
+);
+
+-- ─── Hero ad slots (64 fixed: 8 areas × 8 topics) ────────────────────
+-- Phase D placeholder: each cell shows "Ads space > {Area} > {Topic}" until activated
+CREATE TABLE hero_ads (
+  id          SERIAL PRIMARY KEY,
+  area_id     INT NOT NULL REFERENCES areas(id),
+  topic_id    INT NOT NULL REFERENCES topics(id),
+  active      BOOLEAN NOT NULL DEFAULT FALSE,    -- the Activate/Deactivate toggle
+  client      TEXT,
+  creative    INT REFERENCES media(id),
+  link_url    TEXT,
+  start_at    TIMESTAMPTZ,
+  end_at      TIMESTAMPTZ,
+  placeholder TEXT GENERATED ALWAYS AS
+              ('Ads space > ' || (SELECT name FROM areas WHERE id = area_id)
+                || ' > ' || (SELECT name FROM topics WHERE id = topic_id)) STORED,
+  UNIQUE (area_id, topic_id)
+);
+
+-- ─── Subscribers / newsletter (carryover from current site) ──────────
+CREATE TABLE subscribers (
+  id           SERIAL PRIMARY KEY,
+  email        TEXT UNIQUE NOT NULL,
+  status       TEXT NOT NULL DEFAULT 'active',
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ─── Audit (Payload-managed) ─────────────────────────────────────────
+-- Payload maintains its own _users, _api_keys, _versions tables.
+```
+
+**URL contract:** `/{area_slug}/{topic_slug}/{article_slug}` — preserved from current routing.
+
+**Idempotency:** AI agent uses `source_hash` so re-runs of the same crawler URL never create duplicates.
+
+---
+
 ## Content strategy (driven by `.openclaw-ess` AI agents)
 
 The site is content-managed by an AI agent system running on `gda-ai01` at `/opt/.openclaw-ess` (separate repo: [openclaw-ess](https://github.com/Gaia-Digital-Agency/openclaw-ess)). The agent:
