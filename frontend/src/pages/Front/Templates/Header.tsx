@@ -201,7 +201,7 @@ const Header: React.FC = () => {
         className="sticky top-0 left-0 right-0 z-[100] bg-front-icewhite shadow-sm"
         role="banner"
       >
-        <div className="container relative flex items-center justify-between h-[110px] py-5 mx-auto bg-front-icewhite md:h-44">
+        <div className="container relative flex items-center justify-between h-[110px] pt-5 pb-7 md:pb-10 mx-auto bg-front-icewhite md:h-44">
           {/* LOGO (Left on Mobile, Center Absolute on Desktop) */}
           <div className="flex-1 md:flex-none md:absolute md:left-1/2 md:-translate-x-1/2 z-101">
             <NavLogo url="/logo-header" to={toNav()} />

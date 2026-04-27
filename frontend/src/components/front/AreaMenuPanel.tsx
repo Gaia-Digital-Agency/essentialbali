@@ -46,14 +46,14 @@ const AreaMenuPanel: React.FC<AreaMenuPanelProps> = ({ open, onSelect }) => {
                   transition-all duration-300 ease-in-out
                   ${open ? "opacity-100 -translate-y-1 visible shadow-[inset_0_20px_20px_-15px_rgba(0,0,0,0.3),0_10px_20px_rgba(0,0,0,0.2)]" : "opacity-0 -translate-y-4 invisible"}`}
     >
-      <div className="container px-12 py-7 max-h-[80vh] overflow-y-auto">
-        <div className="pb-7">
+      <div className="container px-6 sm:px-12 pt-7 pb-12 sm:pb-14 max-h-[80vh] overflow-y-auto">
+        <div className="pb-6 sm:pb-7">
           <h2 className="font-serif text-front-title text-front-charcoal-grey">
             Explore The Essentials by Area
           </h2>
         </div>
 
-        <div className="flex flex-col gap-y-5 md:grid md:grid-rows-5 md:grid-flow-col md:auto-cols-max md:gap-x-[100px] w-fit area-wrapper">
+        <div className="flex flex-row flex-wrap items-center gap-x-6 sm:gap-x-8 gap-y-3 area-wrapper">
           <p
             key="all"
             className="font-sans transition-colors cursor-pointer text-front-body text-front-shadowed-slate hover:text-front-navy"
