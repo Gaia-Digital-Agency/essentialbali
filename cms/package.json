@@ -1,0 +1,39 @@
+{
+  "name": "essentialbali-cms",
+  "version": "0.1.0",
+  "description": "Headless Payload CMS for Essential Bali",
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "dev": "PAYLOAD_DISABLE_ADMIN=false next dev -p 4008",
+    "build": "next build",
+    "start": "next start -p 4008",
+    "payload": "payload",
+    "generate:types": "payload generate:types",
+    "seed": "node --env-file=.env --import tsx src/seed.ts"
+  },
+  "dependencies": {
+    "@payloadcms/db-postgres": "latest",
+    "@payloadcms/next": "latest",
+    "@payloadcms/richtext-lexical": "latest",
+    "@tailwindcss/postcss": "^4.2.4",
+    "graphql": "^16.8.1",
+    "next": "15.1.4",
+    "payload": "latest",
+    "postcss": "^8.5.12",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "sharp": "0.33.5",
+    "tailwindcss": "^4.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "19.0.1",
+    "@types/react-dom": "19.0.2",
+    "tsx": "^4.19.0",
+    "typescript": "5.7.2"
+  },
+  "engines": {
+    "node": "^18.20.2 || >=20.9.0"
+  }
+}

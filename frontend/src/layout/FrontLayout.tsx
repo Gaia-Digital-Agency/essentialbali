@@ -2,6 +2,7 @@ import React from 'react'
 import 'react-loading-skeleton/dist/skeleton.css'
 import Header from '../pages/Front/Templates/Header'
 import Footer from '../pages/Front/Templates/Footer'
+import FloatingActions from '../components/front/FloatingActions'
 // import "../index.css"
 import { NotificationProvider } from '../context/NotificationContext'
 import { Outlet } from 'react-router'
@@ -24,6 +25,7 @@ const FrontLayout: React.FC = () => {
                             <Outlet />
                         </NotificationProvider>
                     <Footer />
+                    <FloatingActions />
                 {/* </ProtectedRoute> */}
         </>
     )
