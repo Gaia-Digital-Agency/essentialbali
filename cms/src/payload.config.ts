@@ -3,6 +3,8 @@ import { fileURLToPath } from "url";
 import { buildConfig } from "payload";
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
+import { nodemailerAdapter } from "@payloadcms/email-nodemailer";
+import nodemailer from "nodemailer";
 import sharp from "sharp";
 
 import { Areas } from "./collections/Areas";
@@ -14,6 +16,7 @@ import { Comments } from "./collections/Comments";
 import { Tags } from "./collections/Tags";
 import { HeroAds } from "./collections/HeroAds";
 import { Subscribers } from "./collections/Subscribers";
+import { Newsletters } from "./collections/Newsletters";
 import { Users } from "./collections/Users";
 
 const filename = fileURLToPath(import.meta.url);
@@ -35,6 +38,12 @@ export default buildConfig({
       // Show a discreet creds hint under the login form when
       // NEXT_PUBLIC_SHOW_LOGIN_HINT=true. Disable in real prod.
       afterLogin: ["@/components/LoginHint"],
+      // Replace the default dashboard with the 8x8 matrix view.
+      views: {
+        dashboard: {
+          Component: "@/components/MatrixDashboard",
+        },
+      },
     },
   },
   editor: lexicalEditor(),
@@ -49,6 +58,7 @@ export default buildConfig({
     Tags,
     HeroAds,
     Subscribers,
+    Newsletters,
   ],
   secret: process.env.PAYLOAD_SECRET || "dev-secret-change-me",
   serverURL: process.env.PAYLOAD_PUBLIC_SERVER_URL,
@@ -56,6 +66,19 @@ export default buildConfig({
     outputFile: path.resolve(dirname, "payload-types.ts"),
   },
   sharp,
+  email: nodemailerAdapter({
+    defaultFromAddress: process.env.SMTP_FROM_ADDRESS || "noreply@gaiada.com",
+    defaultFromName: process.env.SMTP_FROM_NAME || "Essential Bali",
+    transport: nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: process.env.SMTP_SECURE === "true",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    }),
+  }),
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URI,
