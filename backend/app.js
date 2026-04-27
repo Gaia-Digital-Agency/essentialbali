@@ -64,6 +64,9 @@ db.sequelize
 const port = process.env.PORT || 7777;
 const url = process.env.URL || "";
 const app = express();
+// Trust nginx reverse proxy: makes req.protocol read x-forwarded-proto (https),
+// req.ip read the real client IP, and silences express-rate-limit warnings.
+app.set("trust proxy", 1);
 const basePathRaw = process.env.BASE_PATH || "";
 const basePath = basePathRaw === "/" ? "" : basePathRaw.replace(/\/$/, "");
 const pathWithBase = (p) => `${basePath}${p}`;
@@ -118,35 +121,39 @@ app.use(
   ["/sitemap.xml", pathWithBase("/sitemap.xml")],
   async (req, res, next) => {
     try {
-      const BASE = `${req.protocol}://${req.host}${basePath}`;
+      const BASE = `${req.protocol}://${req.hostname}${basePath}`;
 
-      const taxonomies = await fetchTaxonomyData();
+      const taxonomies = (await fetchTaxonomyData()) || {};
+      const countries = Array.isArray(taxonomies.countries) ? taxonomies.countries : [];
+      const cities = Array.isArray(taxonomies.cities) ? taxonomies.cities : [];
+      const regions = Array.isArray(taxonomies.regions) ? taxonomies.regions : [];
+
       const urls = [];
       urls.push({ changeFreq: "daily", url: `${BASE}/`, priority: "1.0" });
 
-      // Countries
-
-      taxonomies.countries.forEach((country) => {
+      // Countries → cities → regions
+      countries.forEach((country) => {
+        if (!country?.slug) return;
         urls.push({
           changeFreq: "daily",
           url: `${BASE}/${country.slug}`,
           priority: "0.9",
         });
 
-        // City
-        taxonomies.cities
-          .filter((city) => city.id_parent == country.id)
+        cities
+          .filter((city) => city?.id_parent == country.id)
           .forEach((city) => {
+            if (!city?.slug) return;
             urls.push({
               changeFreq: "daily",
               url: `${BASE}/${country.slug}/${city.slug}`,
               priority: "0.8",
             });
 
-            // Region
-            taxonomies.regions
-              .filter((region) => region.id_parent == city.id)
+            regions
+              .filter((region) => region?.id_parent == city.id)
               .forEach((region) => {
+                if (!region?.slug) return;
                 urls.push({
                   changeFreq: "daily",
                   url: `${BASE}/${country.slug}/${city.slug}/${region.slug}`,
@@ -157,17 +164,15 @@ app.use(
       });
 
       const getDate = (article) => {
-        if (article.updatedAt) {
-          return new Date(article.updatedAt).toISOString();
-        }
-        if (article.createdAt) {
-          return new Date(article.createdAt).toISOString();
-        }
+        if (article?.updatedAt) return new Date(article.updatedAt).toISOString();
+        if (article?.createdAt) return new Date(article.createdAt).toISOString();
         return false;
       };
 
-      const articles = await fetchArticlesData({ limit: -1 });
-      articles.articles.forEach((article) => {
+      const articlesResult = (await fetchArticlesData({ limit: -1 })) || {};
+      const articles = Array.isArray(articlesResult.articles) ? articlesResult.articles : [];
+      articles.forEach((article) => {
+        if (!article?.slug || !article?.slug_country || !article?.slug_category) return;
         urls.push({
           url: `${BASE}/${article.slug_country}/${article.slug_category}/${article.slug}`,
           priority: "0.7",
@@ -200,7 +205,7 @@ Disallow: /signin
 Disallow: /api/
 Allow: /
 
-Sitemap: ${req.protocol}://${req.host}${basePath}/sitemap.xml`);
+Sitemap: ${req.protocol}://${req.hostname}${basePath}/sitemap.xml`);
 });
 
 const uploadsAbsolute = path.join(__dirname, "uploads");
