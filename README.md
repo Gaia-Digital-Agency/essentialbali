@@ -6,7 +6,37 @@ Live: https://essentialbali.gaiada.online
 
 ---
 
-## Architecture (current — pre-3PVTRN)
+## Architecture (current — Phase D foundation deployed; cutover pending)
+
+After Phase D foundation:
+
+```
+                        ┌─────────────────────────────┐
+                        │  Browser / Crawler          │
+                        └──────────────┬──────────────┘
+                                       │ HTTPS
+                                       ▼
+                  ┌────────────────────────────────────┐
+                  │  nginx (gda-s01, :443)             │
+                  └─────┬───────────────────────────────┘
+                        │
+              ┌─────────┴────────────┐
+              │ (today)              │ (post-cutover, deferred)
+              ▼                      ▼
+   ┌──────────────────┐   ┌─────────────────────────────────┐
+   │ Express+SSR :8082│   │ Vite SSR :3008  (frontend)      │
+   │ + MySQL          │   │ ──────────────► Payload :4008   │
+   │ (live prod)      │   │                 + Postgres      │
+   └──────────────────┘   └─────────────────────────────────┘
+                                          ▲
+                                          │ REST/GraphQL + API key
+                                          │
+                                  .openclaw-ess @ gda-ai01
+```
+
+Phase D foundation already shipped (this README has the schema); Phase D cutover is deferred to a later session for safety.
+
+## Architecture (legacy — pre-3PVTRN, still serving prod)
 
 ```
                                  ┌──────────────────────────┐
@@ -77,6 +107,40 @@ essentialbali/
 │           ├── auth.fetch.js
 │           └── utils/
 │
+├── cms/                          Payload v3 (headless) — Phase D foundation
+│   ├── package.json              Next 15 + Payload v3 + Postgres adapter + Lexical
+│   ├── next.config.mjs           withPayload wrapper
+│   ├── tsconfig.json
+│   ├── ecosystem.config.cjs      pm2 entry (port 4008)
+│   ├── .env                      DATABASE_URI, PAYLOAD_SECRET, PAYLOAD_AI_API_KEY (gitignored)
+│   ├── .env.example              template
+│   └── src/
+│       ├── payload.config.ts     central config
+│       ├── seed.ts               idempotent taxonomy + 64 hero_ads + admin user
+│       ├── collections/
+│       │   ├── Users.ts
+│       │   ├── Areas.ts
+│       │   ├── Topics.ts
+│       │   ├── Personas.ts
+│       │   ├── Articles.ts
+│       │   ├── Media.ts          local upload + 3 image sizes (thumb/card/hero)
+│       │   ├── Comments.ts
+│       │   ├── Tags.ts
+│       │   ├── HeroAds.ts        beforeChange hook auto-fills "Ads space > {Area} > {Topic}"
+│       │   └── Subscribers.ts
+│       └── app/                  Next.js App Router
+│           ├── page.tsx          landing (just shows /admin link)
+│           ├── layout.tsx
+│           └── (payload)/        Payload-owned routes
+│               ├── layout.tsx
+│               ├── admin/[[...segments]]/
+│               │   ├── page.tsx
+│               │   └── not-found.tsx
+│               └── api/
+│                   ├── [...slug]/route.ts        REST
+│                   ├── graphql/route.ts          GraphQL POST
+│                   └── graphql-playground/route.ts
+│
 └── frontend/                     React + Vite + TS + Tailwind
     ├── index.html
     ├── package.json
@@ -126,13 +190,13 @@ Workflow: feature → PR → `dev` → PR → `main`.
 
 Migrating to: **PostgreSQL · Python · Payload · Vite · React · Tailwind · Node**
 
-| Layer | Today | Target |
-|---|---|---|
-| DB | MySQL | **PostgreSQL** (`essentialbali_db`) |
-| CMS | Custom Express | **Payload CMS** (headless, port `:4008`) |
-| Frontend | Vite + React + TS | **Vite + React + Tailwind** (kept) |
-| Server scripts | Node | **Node + Python** (scrapers, migration, ML) |
-| Styling | Tailwind v4 | **Tailwind v4** (kept) |
+| Layer | Today (prod, `main`) | Target (dev, `dev`) | Phase D status |
+|---|---|---|---|
+| DB | MySQL | **PostgreSQL** (`essentialbali_db`) | ✅ provisioned |
+| CMS | Custom Express on `:8082` | **Payload v3.84.1** (`cms/`, port `:4008`) | ✅ deployed, 10 collections, seeded |
+| Frontend | Vite + React + TS | **Vite + React + Tailwind** (kept) | ⚠ rewire pending |
+| Server scripts | Node | **Node + Python** | ⚠ scrapers later |
+| Styling | Tailwind v4 | **Tailwind v4** (kept) | ✅ already wired |
 
 The migration preserves the current frontend structure and routing. The data layer (`src/api/*` and backend SSR fetchers) gets rewired to talk to Payload's REST/GraphQL.
 
@@ -318,18 +382,42 @@ For SSR locally, point backend `FRONTEND_PATH` env to `../frontend`.
 ## Operations cheatsheet
 
 ```bash
-# Status
+# Legacy (prod, main branch, port 8082)
 pm2 list | grep essentialbali
-
-# Logs
 pm2 logs essentialbali --lines 100
 
-# Restart after deploy
+# CMS (Payload v3, dev branch, port 4008)
+pm2 list | grep essentialbali-cms
+pm2 logs essentialbali-cms --lines 100
+curl http://127.0.0.1:4008/admin              # admin UI
+curl http://127.0.0.1:4008/api/areas          # REST
+curl http://127.0.0.1:4008/api/hero-ads       # 64 placeholder slots
+
+# Re-seed (idempotent — safe to re-run)
+ssh gda-s01
+cd /var/www/essentialbali-dev/cms && pnpm seed
+
+# Restart after deploy (legacy)
 cd /var/www/essentialbali && git pull && cd backend && npm install --omit=dev \
   && cd ../frontend && npm install && npm run build \
   && pm2 restart essentialbali
+
+# Restart after deploy (CMS)
+cd /var/www/essentialbali-dev && git pull && cd cms && pnpm install \
+  && pnpm build && pm2 restart essentialbali-cms
 
 # Verify SEO endpoints
 curl https://essentialbali.gaiada.online/robots.txt
 curl https://essentialbali.gaiada.online/sitemap.xml | head -20
 ```
+
+## Database (Phase D)
+
+| Item | Value |
+|---|---|
+| DB host | 127.0.0.1 (gda-s01 internal) |
+| DB port | 5432 |
+| Database | `essentialbali_db` |
+| User | `essentialbali_user` |
+| Password | stored in `cms/.env` (gitignored), generated at provisioning |
+| Migrations | Payload-managed (`pnpm payload migrate` if needed) |

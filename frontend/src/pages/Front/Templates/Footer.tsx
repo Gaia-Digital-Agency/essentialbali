@@ -126,10 +126,17 @@ const Footer: React.FC = () => {
         </div>
         <div className="line bg-front-shadowed-slate/25 h-[1px] w-full"></div>
         <div className="py-5 copyright-wrapper outer">
-          <div className="flex items-center justify-center text-center">
+          <div className="flex flex-col items-center justify-center gap-1 text-center">
             <div className="font-light item text-front-small text-front-shadowed-slate">
               Copyright &copy; {new Date().getFullYear()} Essential Bali
             </div>
+            <a
+              href="/admin"
+              className="text-[11px] tracking-wide uppercase text-front-shadowed-slate/50 hover:text-front-navy transition-colors"
+              aria-label="Admin login"
+            >
+              Admin
+            </a>
           </div>
         </div>
       </div>
