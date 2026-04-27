@@ -4,7 +4,9 @@ export const Subscribers: CollectionConfig = {
   slug: "subscribers",
   admin: {
     useAsTitle: "email",
-    description: "Newsletter sign-ups.",
+    description:
+      "All newsletter sign-ups. To compose and send a newsletter, go to the Newsletters collection.",
+    defaultColumns: ["email", "status", "source", "createdAt"],
   },
   access: { read: () => true },
   fields: [

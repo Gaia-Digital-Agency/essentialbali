@@ -3,6 +3,7 @@ import type { CollectionConfig } from "payload";
 export const Areas: CollectionConfig = {
   slug: "areas",
   admin: {
+    hidden: () => true,
     useAsTitle: "name",
     description: "8 fixed Bali areas: Canggu, Kuta, Ubud, Jimbaran, Denpasar, Kintamani, Singaraja, Nusa Penida.",
     defaultColumns: ["name", "slug"],

@@ -3,6 +3,7 @@ import type { CollectionConfig } from "payload";
 export const Topics: CollectionConfig = {
   slug: "topics",
   admin: {
+    hidden: () => true,
     useAsTitle: "name",
     description: "8 fixed topics: Events, News, Featured, Dine, Health & Wellness, Nightlife, Activities, People & Culture.",
     defaultColumns: ["name", "slug"],

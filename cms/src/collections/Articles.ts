@@ -4,9 +4,19 @@ export const Articles: CollectionConfig = {
   slug: "articles",
   admin: {
     useAsTitle: "title",
-    description: "All editorial content. AI agent submits as pending_review; human approves before publish.",
-    defaultColumns: ["title", "area", "topic", "status", "publishedAt"],
+    description:
+      "All editorial content. AI submits as pending_review; human approves before publish. Use the matrix above to filter by area × topic.",
+    defaultColumns: ["title", "area", "topic", "status", "updatedAt"],
+    pagination: {
+      defaultLimit: 25,
+      limits: [25, 50, 100],
+    },
+    components: {
+      // 8×8 matrix filter + status chips, rendered above the standard list table.
+      beforeListTable: ["@/components/ArticlesMatrixFilter"],
+    },
   },
+  defaultSort: "-updatedAt",
   access: { read: () => true },
   fields: [
     {

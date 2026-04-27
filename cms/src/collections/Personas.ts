@@ -3,6 +3,7 @@ import type { CollectionConfig } from "payload";
 export const Personas: CollectionConfig = {
   slug: "personas",
   admin: {
+    hidden: () => true,
     useAsTitle: "name",
     description: "Writer personas — pen names with distinct voice. E-E-A-T helps SEO.",
   },
