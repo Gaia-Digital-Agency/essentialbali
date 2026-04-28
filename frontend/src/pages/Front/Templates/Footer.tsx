@@ -9,6 +9,7 @@ import { useTaxonomies } from "../../../context/TaxonomyContext";
 import { Category } from "../../../types/category.type";
 import { RouteProps, useRoute } from "../../../context/RouteContext";
 import { getTemplateByUrl } from "../../../services/template.service";
+import { AdvertiseModal } from "../../../components/front/AdvertiseModal";
 
 
 const MenuNav: React.FC<{
@@ -67,6 +68,7 @@ const Footer: React.FC = () => {
   // const [userLocation, setUserLocation] = useState("Bali Area");
   // const [userTime, setUserTime] = useState("");
   const [menuList, setMenuList] = useState<Category[]>([]);
+  const [advertiseOpen, setAdvertiseOpen] = useState(false);
   const { taxonomies } = useTaxonomies();
   useEffect(() => {
     // if (!headerMenus || headerMenus.length === 0) {
@@ -127,13 +129,14 @@ const Footer: React.FC = () => {
         <div className="line bg-front-shadowed-slate/25 h-[1px] w-full"></div>
         <div className="py-5 copyright-wrapper outer">
           <div className="flex flex-col items-center justify-center gap-3 text-center">
-            <a
-              href="mailto:info@gaiada.com?subject=Inquiry%20For%20Ads%20Placement&body=Hi%20Essential%20Bali%20team%2C%0A%0AI%27m%20interested%20in%20placing%20an%20ad%20on%20your%20site.%20Could%20you%20share%20your%20rates%2C%20available%20slots%2C%20and%20audience%20stats%3F%0A%0AThanks%2C%0A"
-              className="inline-flex items-center px-5 py-2 font-sans text-front-small font-medium tracking-wide uppercase rounded-full border border-front-navy text-front-navy hover:bg-front-navy hover:text-front-icewhite transition-colors duration-200"
+            <button
+              type="button"
+              onClick={() => setAdvertiseOpen(true)}
+              className="inline-flex items-center px-5 py-2 font-sans text-front-small font-medium tracking-wide uppercase rounded-full border border-front-navy text-front-navy hover:bg-front-navy hover:text-front-icewhite transition-colors duration-200 cursor-pointer"
               aria-label="Advertise with Essential Bali"
             >
               Advertise With Us
-            </a>
+            </button>
             <div className="font-light item text-front-small text-front-shadowed-slate">
               Copyright &copy; {new Date().getFullYear()} Essential Bali
             </div>
@@ -147,6 +150,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
       </div>
+      <AdvertiseModal open={advertiseOpen} onClose={() => setAdvertiseOpen(false)} />
     </footer>
   );
   // }

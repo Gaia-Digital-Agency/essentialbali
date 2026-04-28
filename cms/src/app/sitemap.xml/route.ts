@@ -1,50 +1,29 @@
-import { fetchAreas, fetchTopics, fetchArticles, SITE, AREA_ORDER, TOPIC_ORDER } from "@/lib/payload";
+/**
+ * /sitemap.xml — sitemap index (no URLs, only references to sub-sitemaps).
+ *
+ * Sub-sitemaps:
+ *   /sitemap-areas.xml      — 8 area landing pages
+ *   /sitemap-topics.xml     — 8 topic landing pages
+ *   /sitemap-articles.xml   — every published article
+ */
+const SITE = process.env.SITE_BASE_URL || "https://essentialbali.gaiada.online";
 
-const esc = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const SUB = [
+  { loc: `${SITE}/sitemap-areas.xml`, freq: "weekly" },
+  { loc: `${SITE}/sitemap-topics.xml`, freq: "weekly" },
+  { loc: `${SITE}/sitemap-articles.xml`, freq: "daily" },
+];
 
-const url = (loc: string, lastmod?: string, priority?: string, freq?: string) =>
-  `<url><loc>${esc(loc)}</loc>${
-    lastmod ? `<lastmod>${esc(lastmod)}</lastmod>` : ""
-  }${freq ? `<changefreq>${freq}</changefreq>` : ""}${
-    priority ? `<priority>${priority}</priority>` : ""
-  }</url>`;
+export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const BASE = SITE.baseUrl;
-
-  const [areas, topics, articles] = await Promise.all([
-    fetchAreas(),
-    fetchTopics(),
-    fetchArticles({ limit: 5000 }),
-  ]);
-
-  const items: string[] = [];
-  items.push(url(`${BASE}/`, undefined, "1.0", "daily"));
-
-  for (const a of areas) {
-    items.push(url(`${BASE}/${a.slug}`, undefined, "0.8", "daily"));
-    for (const t of topics) {
-      items.push(url(`${BASE}/${a.slug}/${t.slug}`, undefined, "0.7", "daily"));
-    }
-  }
-  for (const t of topics) {
-    items.push(url(`${BASE}/topic/${t.slug}`, undefined, "0.6", "weekly"));
-  }
-  for (const article of articles.docs as any[]) {
-    if (!article.area?.slug || !article.topic?.slug) continue;
-    items.push(
-      url(
-        `${BASE}/${article.area.slug}/${article.topic.slug}/${article.slug}`,
-        article.updatedAt || article.publishedAt,
-        "0.7",
-      ),
-    );
-  }
-
+export function GET() {
+  const now = new Date().toISOString();
+  const items = SUB.map(
+    (s) =>
+      `<sitemap><loc>${s.loc}</loc><lastmod>${now}</lastmod></sitemap>`,
+  ).join("");
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${items.join("")}</urlset>`;
-
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${items}</sitemapindex>`;
   return new Response(xml, {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
