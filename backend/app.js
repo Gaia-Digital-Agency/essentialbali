@@ -47,19 +47,24 @@ const templatePath = frontendPath
 
 dotenv.config();
 
-console.log("🔥 Loaded models:");
-console.table(Object.keys(db));
+const usePayload = process.env.USE_PAYLOAD_DATA === "true";
 
-db.sequelize
-  .authenticate()
-  .then(() => {
-    console.log("✅ Database connected");
-    // Sync database schema - creates tables if they don't exist
-    // return db.sequelize.sync({ alter: true });
-    return Promise.resolve();
-  })
-  .then(() => console.log("✅ Database ready (migration mode)"))
-  .catch((err) => console.error("❌ Error DB:", err));
+if (usePayload) {
+  console.log("⏭  Skipping Sequelize/MySQL connect (USE_PAYLOAD_DATA=true) — SSR uses Payload REST");
+} else {
+  console.log("🔥 Loaded models:");
+  console.table(Object.keys(db));
+  db.sequelize
+    .authenticate()
+    .then(() => {
+      console.log("✅ Database connected");
+      // Sync database schema - creates tables if they don't exist
+      // return db.sequelize.sync({ alter: true });
+      return Promise.resolve();
+    })
+    .then(() => console.log("✅ Database ready (migration mode)"))
+    .catch((err) => console.error("❌ Error DB:", err));
+}
 
 const port = process.env.PORT || 7777;
 const url = process.env.URL || "";
