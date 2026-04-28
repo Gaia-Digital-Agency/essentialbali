@@ -24,7 +24,7 @@ const AGENTS: Agent[] = [
     workspace: "/opt/.openclaw-ess/workspace-main",
     status: "live",
     skills: [
-      { name: "plan-wave", signature: "plan-wave()", desc: "pick next batch of (area, topic, count) targets based on Payload article counts + wave strategy" },
+      { name: "plan-wave", signature: "plan-wave(--limit?, --execute?, --dry-run?, --gap?)", desc: "LIVE — reads Payload counts, computes per-cell deficit, emits prioritised dispatch queue; --execute fires at 1/min with retry" },
       { name: "dispatch-article", signature: "dispatch-article(area, topic)", desc: "run full chain: crawler → scraper → copywriter → imager → seo → web-manager" },
       { name: "review-gate", signature: "review-gate(article)", desc: "pre-flight: word count, persona match, image, SEO, AI-isms, dedupe by source.hash" },
       { name: "status-report", signature: "status-report()", desc: "per-cell: published/approved/pending_review/draft" },
