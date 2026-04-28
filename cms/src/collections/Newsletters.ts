@@ -1,3 +1,4 @@
+import { isStaffOrAgent } from "../access";
 import type { CollectionConfig } from "payload";
 
 /**
@@ -24,6 +25,9 @@ export const Newsletters: CollectionConfig = {
   },
   defaultSort: "-createdAt",
   access: {
+    create: isStaffOrAgent,
+    update: isStaffOrAgent,
+    delete: isStaffOrAgent,
     read: () => true,
   },
   fields: [

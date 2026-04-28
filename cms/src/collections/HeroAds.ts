@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { isStaffOrAgent } from "../access";
 
 /**
  * 64 fixed hero ad slots — one per (area, topic) cell.
@@ -16,7 +17,12 @@ export const HeroAds: CollectionConfig = {
       "64 ad slots (8 areas × 8 topics). Default placeholder shows until 'active' is toggled on. Schedule with start/end. Manage clients here.",
     defaultColumns: ["label", "active", "client", "startAt", "endAt"],
   },
-  access: { read: () => true },
+  access: {
+    read: () => true,
+    create: isStaffOrAgent,
+    update: isStaffOrAgent,
+    delete: isStaffOrAgent,
+  },
   fields: [
     {
       type: "row",
