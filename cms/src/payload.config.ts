@@ -10,7 +10,7 @@ import sharp from "sharp";
 import { readFileSync } from "node:fs";
 
 const ALLOWED_ORIGINS: string[] = JSON.parse(
-  readFileSync("/var/www/essentialbali/shared-allowed-origins.json", "utf-8"),
+  readFileSync("/var/www/essentialbali/shared/allowed-origins.json", "utf-8"),
 );
 
 import { Areas } from "./collections/Areas";
@@ -121,7 +121,7 @@ export default buildConfig({
       }
     : {}),
   // CORS + CSRF — single source of truth at
-  // /var/www/essentialbali/shared-allowed-origins.json. Express SSR
+  // /var/www/essentialbali/shared/allowed-origins.json. Express SSR
   // reads the same file at boot. To add/remove a host: edit that JSON,
   // then restart both pm2 processes.
   cors: ALLOWED_ORIGINS,

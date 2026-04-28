@@ -103,7 +103,7 @@ app.use(requestTimer);
 const allowedOrigins = (() => {
   try {
     const raw = fs.readFileSync(
-      "/var/www/essentialbali/shared-allowed-origins.json",
+      "/var/www/essentialbali/shared/allowed-origins.json",
       "utf-8",
     );
     return JSON.parse(raw);
