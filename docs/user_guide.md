@@ -236,18 +236,175 @@ read access to your Payload data. It's good at:
 It's NOT a write surface — it cannot publish, delete, or edit anything.
 For that, you click in the admin yourself or run the dispatch script.
 
-The agents Elliot orchestrates (each shown on the page with its skills,
-parameters, and current status):
+---
 
-| Agent | What it does | Backend |
-|---|---|---|
-| Elliot (orchestrator) | Plans waves, dispatches sub-agents, gates quality | Anthropic Haiku 4.5 + Vertex fallback |
-| Copywriter | Drafts the article body in a persona voice | Vertex Gemini 2.5 Flash |
-| SEO | Meta title, meta description, keywords, JSON-LD | Vertex Gemini 2.5 Flash |
-| Imager | 16:9 hero image (and optional inline 1:1 supporting images) | Vertex Imagen 3 |
-| Crawler | Pulls research excerpts from honeycombers / nowbali / whatsnew / balibible | Node fetch + Gemini analysis |
-| Scraper | Reads the operator's xlsx tracker + Google Doc bodies | Python (no LLM) |
-| Web Manager | Pushes the assembled article to Payload as `pending_review` | Payload REST + JWT |
+## Agent skills reference
+
+### One-line summary — Elliot + 6 agents = 39 skills
+
+(Was billed as ~37 in earlier notes — actual current count is 39 after
+plan-wave + dispatch-article landed live and Scraper picked up its
+helpers.)
+
+| # | Who | What they can do | Skills |
+|---|---|---|---:|
+| 1 | **Elliot** (orchestrator) | Plans content waves, dispatches the chain, gates quality before submit | 5 |
+| 2 | **Copywriter** | Drafts article body in one of 4 personas (maya / komang / putu / sari), banned-phrase guarded | 4 |
+| 3 | **SEO** | Meta title (≤60), meta description (≤160), keywords, internal-link anchors, JSON-LD schema | 5 |
+| 4 | **Imager** | Hero image (16:9) + inline images (1:1) via Imagen 3, with auto alt-text | 4 |
+| 5 | **Web Manager** | Bridge to Payload — submit, upload media, link hero, toggle hero-ads, fetch status, list pending | 7 |
+| 6 | **Crawler** | Research from 4 benchmark Bali sites (honeycombers, whatsnew, nowbali, balibible), 1 req/s, robots.txt respected, never republishes | 4 |
+| 7 | **Scraper** | Reads xlsx tracker + Google Docs deterministically (no LLM); fetches, parses listings, extracts articles + JSON-LD, geocodes places | 10 |
+
+**Total: 39 skills** across 7 entities. Detail below.
+
+All 7 agents and what each skill does, marked **🟢 LIVE** when verified
+end-to-end or **🟡 scaffolded** when documented but not yet wired.
+
+### 🟢 Elliot — orchestrator
+
+Workspace: `/opt/.openclaw-ess/workspace-main/`
+Model: Anthropic Claude Haiku 4.5, fallback Vertex Gemini 2.5 Flash
+
+| Skill | Status | Invocation | What it does |
+|---|---|---|---|
+| `plan-wave` | 🟢 LIVE | `node workspace-main/scripts/plan-wave.mjs [--limit=N] [--execute] [--dry-run] [--gap=SECONDS]` | Reads Payload counts per (area, topic), computes deficit vs 20-per-cell target, picks persona + brief from rotating templates, emits prioritised dispatch queue. With `--execute` runs the queue at 1/min default with retry. |
+| `dispatch-article` | 🟢 LIVE | `echo '{...}' \| node workspace-main/scripts/dispatch-article.mjs` | Full chain: copywriter → seo → imager → web-manager. Hash-locked (Path B). |
+| `review-gate` | 🟡 scaffolded | (in-script in dispatch) | Pre-flight checks before submit: word count, persona match, hero present, SEO non-empty, banned-phrase scan, source.hash dedupe. Currently runs as part of `dispatch-article`; not exposed as a standalone skill. |
+| `status-report` | 🟡 scaffolded | — | Per-cell summary (published / approved / pending_review / draft). Available data via Payload `/api/articles?where[status][...]&limit=0`; no dedicated skill yet. |
+| `maintenance-pass` | 🟡 scaffolded | — | Find stale Events past their date or News > 30 days old, queue refreshes. Not built yet. |
+
+### 🟢 Copywriter — drafts article bodies
+
+Workspace: `/opt/.openclaw-ess/workspace-copywriter/`
+Model: Vertex Gemini 2.5 Flash (response bound to JSON schema)
+
+| Skill | Status | Invocation | What it does |
+|---|---|---|---|
+| `draft-article` | 🟢 LIVE | `echo '{"area":"...","topic":"...","persona":"...","brief":"..."}' \| node workspace-copywriter/scripts/draft-article.mjs` | Drafts title + body_markdown + sub_title + meta + sources, in the chosen persona's voice. |
+| `rewrite-article` | 🟡 scaffolded | — | Pass `{article, instruction}` and re-prompt. Today: re-run `draft-article` with brief = original + instruction. |
+| `regenerate-title` | 🟡 scaffolded | — | Produce 5 alternative titles. Today: re-prompt with low temperature for title-only JSON. |
+| `persona-check` | 🟡 scaffolded | — | Score voice match 0–10 against persona guidelines. Owned by Elliot post-draft. |
+
+**Personas (voice presets):**
+- **maya** — local foodie. Warm, sensory. Names ingredients specifically.
+- **komang** — activities + wellness. Practical, calm, safety-aware.
+- **putu** — cultural insider. Italicises Balinese terms on first use.
+- **sari** — nightlife + events. Energetic, short paragraphs, names DJs/dates.
+
+**Banned-phrase blocklist** (regex enforced in-script):
+`delve`, `tapestry`, `hidden gem`, `bustling`, `in the realm of`,
+`navigate the landscape`, `unveil`, `embark on a journey`, `testament to`,
+`a myriad of`, `it goes without saying`, `game-changer`.
+
+### 🟢 SEO — meta + keywords + schema
+
+Workspace: `/opt/.openclaw-ess/workspace-seo/`
+Implementation: `cms/src/lib/seo-agent.ts` (single source of truth)
+Model: Vertex Gemini 2.5 Flash
+
+Single source — same `optimizeSeo()` function is used by:
+- `Articles.beforeChange` hook (in-process, when you save an article with empty SEO fields)
+- HTTP service `POST /api/seo-optimize` (called by Elliot's `dispatch-article`)
+
+| Skill | Status | Invocation | What it does |
+|---|---|---|---|
+| `optimize-meta` | 🟢 LIVE | `POST https://essentialbali.gaiada.online/api/seo-optimize` (JWT auth) with `{area, topic, title, bodyText?, subTitle?, existingMetaTitle?}` | Returns `meta_title` (≤60), `meta_description` (≤160), `internal_link_anchors[]`. |
+| `keyword-research` | 🟢 LIVE | same endpoint | Returns `primary_keyword` + `long_tail_keywords[]` as part of optimize-meta output. |
+| `schema-markup` | 🟢 LIVE | (auto-generated server-side from article fields) | Schema.org Article JSON-LD emitted at render time on the public page. |
+| `internal-link` | 🟢 LIVE | same endpoint | Returns `internal_link_anchors[]` (3–5 short noun phrases for inbound link bait). |
+| `competitor-gap` | 🟡 scaffolded | — | Diff what benchmarks rank for vs us. Crawler feeds the data; SEO ranks gaps. |
+
+### 🟢 Imager — hero + inline images
+
+Workspace: `/opt/.openclaw-ess/workspace-imager/`
+Model: Vertex Imagen 3 (`imagen-3.0-generate-002`)
+
+| Skill | Status | Invocation | What it does |
+|---|---|---|---|
+| `generate-hero` | 🟢 LIVE | `echo '{"area":"...","topic":"...","title":"...","summary":"..."}' \| node workspace-imager/scripts/generate-hero.mjs` | One 16:9 hero image (Imagen native ~1408×768). Per-area visual cues + per-topic composition cues + persona hint. Auto-uploads to GCS via `/api/media`. |
+| `generate-inline` | 🟢 LIVE | same script with `--inline=N` (max 4) | N square 1024×1024 inline images, varied compositions. |
+| `regenerate` | 🟡 scaffolded | — | Re-call generate-hero with extra `--negative` and adjusted summary based on operator feedback. |
+| `alt-text` | 🟢 LIVE | (auto-generated per file) | `{title} — {area} {topic} editorial photograph` written automatically to media doc. |
+
+**Visual standards:**
+- Photographic, editorial — never stock-photo cliché.
+- Always includes the area name in the prompt for visual specificity.
+- Negative prompt blocks watermarks, logos, text overlays, blurry, low quality.
+- No close-up faces of people unless explicitly requested.
+
+### 🟢 Web Manager — bridge to Payload
+
+Workspace: `/opt/.openclaw-ess/workspace-web-manager/`
+Auth: JWT login at `https://essentialbali.gaiada.online/api/users/login` as `elliot@gaiada.com`
+
+| Skill | Status | Invocation | What it does |
+|---|---|---|---|
+| `submit-article` | 🟢 LIVE | `POST /api/articles` with `Authorization: JWT <token>` | Idempotent submit via `source.hash`. Always sets `status: "pending_review"`. |
+| `upload-media` | 🟢 LIVE | `POST /api/media` (multipart) | Uploads file to GCS bucket `gda-essentialbali-media`, returns Payload media doc with public GCS URL. |
+| `link-hero` | 🟢 LIVE | `PATCH /api/articles/{id}` with `{hero: mediaId}` | Sets `Article.hero` to the uploaded media. |
+| `submit-comment` | 🟢 LIVE | `POST /api/comments` | Used by Elliot if it generates persona-style first-comment seed. |
+| `toggle-hero-ad` | 🟢 LIVE | `PATCH /api/hero-ads/{id}` with `{active: bool}` | Flip an ad slot (you do this via the Hero Ads grid; agent can do it programmatically). |
+| `fetch-status` | 🟢 LIVE | `GET /api/articles/{id}` | Read the current status. |
+| `list-pending-review` | 🟢 LIVE | `GET /api/articles?where[status][equals]=pending_review` | What's in your review queue. Drives Elliot's status-report. |
+
+### 🟢 Crawler — benchmark research
+
+Workspace: `/opt/.openclaw-ess/workspace-crawler/`
+Sources: thehoneycombers.com/bali · whatsnewindonesia.com · nowbali.co.id · thebalibible.com
+Manners: `EssentialBaliBot/1.0` user-agent, 1 req/s rate limit, robots.txt respected, **research only — never republished**.
+
+| Skill | Status | Invocation | What it does |
+|---|---|---|---|
+| `discover` | 🟢 LIVE | `node workspace-crawler/scripts/crawl-benchmark.mjs --discover --site=... --area=... --topic=...` | List up to 10 candidate URLs from one of the 4 benchmark sites for a given (area, topic). |
+| `analyze` | 🟢 LIVE | `node workspace-crawler/scripts/crawl-benchmark.mjs <url>` | Fetch one URL, extract title + h1/h2/h3 + paragraphs + hero image + outbound links + word count. JSON to stdout. |
+| `trend-scan` | 🟡 scaffolded | — | Merge candidates across all 4 sources, sort by recency. Useful for "what's getting written about Bali this week." |
+| `gap-report` | 🟡 scaffolded | — | What benchmarks cover that we don't (cell-level). Pairs with SEO `competitor-gap`. |
+
+### 🟢 Scraper — deterministic data extraction
+
+Workspace: `/opt/.openclaw-ess/workspace-scraper/`
+Stack: Python venv with `openpyxl`, `requests`, `bs4`. No LLM.
+
+| Skill | Status | Invocation | What it does |
+|---|---|---|---|
+| `read-articles-xlsx` | 🟢 LIVE | `python3 workspace-scraper/scripts/read-articles-xlsx.py [--month=Apr] [--status=draft]` | Parse the `Essential Bali Proofread.xlsx` tracker → JSON list of rows ready to ingest. |
+| `pull-xlsx-from-drive` | 🟢 LIVE | `python3 workspace-scraper/scripts/pull-xlsx-from-drive.py` | Download the xlsx from Drive (auto-exports Google Sheets). Replaces the local rsync bridge. |
+| `read-google-doc` | 🟢 LIVE | `python3 workspace-scraper/scripts/read-google-doc.py <doc-url>` | Fetch a shared Google Doc body as Markdown. (Doc must be shared with `ai@gaiada.com`.) |
+| `check-doc-access` | 🟢 LIVE | `python3 workspace-scraper/scripts/check-doc-access.py` | Per-row report of which Draft Links are reachable for `ai@gaiada.com` and which still need sharing. |
+| `process-inbox` | 🟢 LIVE | `python3 workspace-scraper/scripts/process-inbox.py [--pull] [--month=Apr] [--status=draft]` | End-to-end: optionally refresh xlsx from Drive, parse rows, fetch each Draft Link's body if accessible, emit one record per row with `body_source ∈ {"draft","metadata"}`. **Never skips a row** — falls back to xlsx metadata when the Doc isn't shared yet. |
+| `fetch` | 🟢 LIVE | (helper used by other scripts) | HTTP GET with proper UA + rate limit + retry. |
+| `extract-article` | 🟢 LIVE | (helper) | title, dateline, body, hero, author, tags from arbitrary HTML. |
+| `extract-listing` | 🟢 LIVE | (helper) | List items per CSS/XPath selectors. |
+| `extract-jsonld` | 🟢 LIVE | (helper) | Pull all Schema.org JSON-LD blobs. |
+| `geocode` | 🟢 LIVE | (helper) | Area/place name → lat/lng (Google Geocoding API, cached aggressively). |
+
+---
+
+## Quick command cookbook
+
+```bash
+# See what plan-wave WOULD do (no side effects)
+ssh gda-ai01 'node /opt/.openclaw-ess/workspace-main/scripts/plan-wave.mjs --limit=10'
+
+# Fire 5 dispatches, 60s pacing, lands in pending_review
+ssh gda-ai01 'node /opt/.openclaw-ess/workspace-main/scripts/plan-wave.mjs --execute --limit=5'
+
+# One-off article in canggu / dine, foodie persona
+ssh gda-ai01 'echo "{\"area\":\"canggu\",\"topic\":\"dine\",\"persona\":\"maya\",\
+\"brief\":\"three honest warungs in Canggu\"}" | \
+  node /opt/.openclaw-ess/workspace-main/scripts/dispatch-article.mjs'
+
+# Crawl one benchmark URL for research
+ssh gda-ai01 'node /opt/.openclaw-ess/workspace-crawler/scripts/crawl-benchmark.mjs \
+  https://thehoneycombers.com/bali/best-warungs-canggu/'
+
+# Refresh xlsx tracker from Drive + extract rows
+ssh gda-ai01 'python3 /opt/.openclaw-ess/workspace-scraper/scripts/process-inbox.py --pull'
+
+# Check which Draft Links still need to be shared with ai@gaiada.com
+ssh gda-ai01 'python3 /opt/.openclaw-ess/workspace-scraper/scripts/check-doc-access.py'
+```
 
 ---
 
