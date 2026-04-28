@@ -98,30 +98,77 @@ app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(requestTimer);
 
-// CORS allowlist — single source at shared-allowed-origins.json.
-// Both Express SSR (here) and Payload CMS read this same file at boot.
-const allowedOrigins = (() => {
+// CORS allowlist — single source at shared/allowed-origins.json.
+//
+// Defence in depth (this code path got us into trouble before):
+//   1. Hot-reload with 30s TTL — editing the JSON file does NOT require a
+//      restart. Cache invalidates by mtime; reads only happen when stale.
+//   2. Hard-coded FALLBACK so the site never goes dark if the JSON file
+//      is missing, corrupt, or briefly unreadable mid-deploy.
+//   3. cors() origin callback returns `false` (deny without throwing) —
+//      never `new Error(...)`. A throw goes to Express"""s error handler
+//      and turns every static-asset request into an HTML 500.
+//   4. Static-asset paths bypass CORS entirely (they"""re public files;
+//      browsers don"""t need CORS for same-origin same-file requests, and
+//      cross-origin asset loads work via the standard `crossorigin` flag).
+const FALLBACK_ORIGINS = [
+  "https://essentialbali.gaiada.online",
+  "https://essentialbali.com",
+  "https://www.essentialbali.com",
+  "https://ess.gaiada0.online",
+];
+const ALLOWED_ORIGINS_FILE = "/var/www/essentialbali/shared/allowed-origins.json";
+let _origCache = { list: FALLBACK_ORIGINS, mtimeMs: 0, checkedAt: 0 };
+function getAllowedOrigins() {
+  const now = Date.now();
+  if (now - _origCache.checkedAt < 30_000) return _origCache.list;
+  _origCache.checkedAt = now;
   try {
-    const raw = fs.readFileSync(
-      "/var/www/essentialbali/shared/allowed-origins.json",
-      "utf-8",
-    );
-    return JSON.parse(raw);
+    const stat = fs.statSync(ALLOWED_ORIGINS_FILE);
+    if (stat.mtimeMs === _origCache.mtimeMs) return _origCache.list;
+    const parsed = JSON.parse(fs.readFileSync(ALLOWED_ORIGINS_FILE, "utf-8"));
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      console.error("❌ allowed-origins.json invalid (not array / empty) — using fallback");
+      _origCache = { list: FALLBACK_ORIGINS, mtimeMs: stat.mtimeMs, checkedAt: now };
+    } else {
+      _origCache = { list: parsed, mtimeMs: stat.mtimeMs, checkedAt: now };
+    }
   } catch (e) {
-    console.warn("⚠ could not read shared-allowed-origins.json:", e.message);
-    return [];
+    console.error("❌ allowed-origins.json unreadable —", e.message, "— using fallback");
+    _origCache = { list: FALLBACK_ORIGINS, mtimeMs: 0, checkedAt: now };
   }
-})();
-if (isProd && url) allowedOrigins.push(url);
+  return _origCache.list;
+}
+// Warm cache + log loaded list at boot (visible in pm2 logs).
+console.log("✅ CORS allowed origins:", getAllowedOrigins().join(", "));
+
+// Static-asset paths bypass CORS entirely (no risk of HTML-500 black-out
+// when origin allowlist has a hiccup).
+const ASSET_BYPASS = /^\/(assets|uploads|media|favicon|logo|static|fonts?|img|images|src)\b/i;
+app.use((req, res, next) => {
+  if (ASSET_BYPASS.test(req.path)) {
+    const origin = req.headers.origin;
+    if (origin && getAllowedOrigins().includes(origin)) {
+      res.set("Access-Control-Allow-Origin", origin);
+      res.set("Access-Control-Allow-Credentials", "true");
+      res.set("Vary", "Origin");
+    }
+    return next();
+  }
+  return next();
+});
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      } else {
-        return callback(new Error("Not allowed by CORS"));
-      }
+      // No-origin (server-to-server, curl) → allow.
+      if (!origin) return callback(null, true);
+      const list = getAllowedOrigins();
+      if (list.includes(origin)) return callback(null, true);
+      // Reject WITHOUT throwing. Browser blocks per spec; request still
+      // returns its actual content-type and status (no HTML-500).
+      console.warn("⚠ CORS deny:", origin);
+      return callback(null, false);
     },
     credentials: true,
   }),
