@@ -271,9 +271,9 @@ Model: Anthropic Claude Haiku 4.5, fallback Vertex Gemini 2.5 Flash
 |---|---|---|---|
 | `plan-wave` | 🟢 LIVE | `node workspace-main/scripts/plan-wave.mjs [--limit=N] [--execute] [--dry-run] [--gap=SECONDS]` | Reads Payload counts per (area, topic), computes deficit vs 20-per-cell target, picks persona + brief from rotating templates, emits prioritised dispatch queue. With `--execute` runs the queue at 1/min default with retry. |
 | `dispatch-article` | 🟢 LIVE | `echo '{...}' \| node workspace-main/scripts/dispatch-article.mjs` | Full chain: copywriter → seo → imager → web-manager. Hash-locked (Path B). |
-| `review-gate` | 🟡 scaffolded | (in-script in dispatch) | Pre-flight checks before submit: word count, persona match, hero present, SEO non-empty, banned-phrase scan, source.hash dedupe. Currently runs as part of `dispatch-article`; not exposed as a standalone skill. |
+| `review-gate` | 🟢 LIVE | `node workspace-main/scripts/review-gate.mjs --id=N` | Standalone pre-flight. Returns `{ok, issues}`. Hard rules: empty fields, missing hero, word_count < floor, banned phrases, SEO meta missing/too-long, duplicate source.hash. Soft rules: long body, no sources, no keywords. Exit 0 pass / 2 fail. |
 | `status-report` | 🟢 LIVE | `node workspace-main/scripts/status-report.mjs [--table] [--status=<one>]` | Per-cell snapshot of every status (published/approved/pending_review/draft/rejected). Default JSON; `--table` prints an ASCII grid. |
-| `maintenance-pass` | 🟡 scaffolded | — | Find stale Events past their date or News > 30 days old, queue refreshes. Not built yet. |
+| `maintenance-pass` | 🟢 LIVE | `node workspace-main/scripts/maintenance-pass.mjs [--apply] [--news-days=N] [--feature-days=N]` | Dry-run by default. Finds stale Events (>14d), News (>30d), Features (>180d). With `--apply` flips expired Events to draft (drops from public/sitemap, keeps audit). |
 
 ### 🟢 Copywriter — drafts article bodies
 
@@ -285,7 +285,7 @@ Model: Vertex Gemini 2.5 Flash (response bound to JSON schema)
 | `draft-article` | 🟢 LIVE | `echo '{"area":"...","topic":"...","persona":"...","brief":"..."}' \| node workspace-copywriter/scripts/draft-article.mjs` | Drafts title + body_markdown + sub_title + meta + sources, in the chosen persona's voice. |
 | `rewrite-article` | 🟢 LIVE | `node workspace-copywriter/scripts/rewrite-article.mjs --id=N --instruction="..."` | Take existing article + instruction, produce fresh draft. `source.hash` gets `_v2` / `_v3` / … suffix to replace, not duplicate. |
 | `regenerate-title` | 🟢 LIVE | `node workspace-copywriter/scripts/regenerate-title.mjs --id=N` | 5 alternative titles (≤60 chars), each with an editorial angle (numbered list / question hook / lead-with-dish, etc.). Vertex Gemini, schema-bound, temp 0.7. |
-| `persona-check` | 🟡 scaffolded | — | Score voice match 0–10 against persona guidelines. Owned by Elliot post-draft. |
+| `persona-check` | 🟢 LIVE | `node workspace-copywriter/scripts/persona-check.mjs --id=N [--persona=maya|komang|putu|sari]` | Vertex Gemini structured score 0–10 + verdict + summary + 3–5 issues with line excerpts + 3–5 concrete rewrite suggestions. |
 
 **Personas (voice presets):**
 - **maya** — local foodie. Warm, sensory. Names ingredients specifically.
@@ -325,7 +325,7 @@ Model: Vertex Imagen 3 (`imagen-3.0-generate-002`)
 |---|---|---|---|
 | `generate-hero` | 🟢 LIVE | `echo '{"area":"...","topic":"...","title":"...","summary":"..."}' \| node workspace-imager/scripts/generate-hero.mjs` | One 16:9 hero image (Imagen native ~1408×768). Per-area visual cues + per-topic composition cues + persona hint. Auto-uploads to GCS via `/api/media`. |
 | `generate-inline` | 🟢 LIVE | same script with `--inline=N` (max 4) | N square 1024×1024 inline images, varied compositions. |
-| `regenerate` | 🟡 scaffolded | — | Re-call generate-hero with extra `--negative` and adjusted summary based on operator feedback. |
+| `regenerate` | 🟢 LIVE | `node workspace-imager/scripts/regenerate.mjs --id=N --feedback="..."` | Augments prompt with feedback + smart negative mapping ("no people" → people/faces/humans). Uploads new PNG to GCS, returns old + new media ids; caller PATCHes `article.hero` to swap. |
 | `alt-text` | 🟢 LIVE | (auto-generated per file) | `{title} — {area} {topic} editorial photograph` written automatically to media doc. |
 
 **Visual standards:**
