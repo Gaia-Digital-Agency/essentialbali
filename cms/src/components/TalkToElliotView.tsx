@@ -3,7 +3,12 @@ import React, { useEffect, useRef, useState } from "react";
 
 type Msg = { role: "user" | "elliot"; text: string; ts: number };
 
-type Skill = { name: string; signature: string; desc: string };
+type Skill = {
+  name: string;
+  signature: string;
+  desc: string;
+  status: "live" | "scaffolded";
+};
 type Agent = {
   id: string;
   name: string;
@@ -15,119 +20,124 @@ type Agent = {
   invoker?: string; // shell command or path that backs the skill
 };
 
+// Mirrors docs/user_guide.md — every skill listed, with explicit
+// live/scaffolded status. Total: 39 skills across 7 entities.
 const AGENTS: Agent[] = [
   {
     id: "main",
     name: "Elliot",
-    role: "Orchestrator — plans content, dispatches to sub-agents, gates quality before submitting to Payload",
+    role: "Orchestrator — plans content waves, dispatches the chain, gates quality before submit",
     model: "Anthropic Claude Haiku 4.5  ·  fallback Gemini 2.5 Flash",
     workspace: "/opt/.openclaw-ess/workspace-main",
     status: "live",
     skills: [
-      { name: "plan-wave", signature: "plan-wave(--limit?, --execute?, --dry-run?, --gap?)", desc: "LIVE — reads Payload counts, computes per-cell deficit, emits prioritised dispatch queue; --execute fires at 1/min with retry" },
-      { name: "dispatch-article", signature: "dispatch-article(area, topic)", desc: "run full chain: crawler → scraper → copywriter → imager → seo → web-manager" },
-      { name: "review-gate", signature: "review-gate(article)", desc: "pre-flight: word count, persona match, image, SEO, AI-isms, dedupe by source.hash" },
-      { name: "status-report", signature: "status-report()", desc: "per-cell: published/approved/pending_review/draft" },
-      { name: "maintenance-pass", signature: "maintenance-pass()", desc: "find stale Events / News > 30 days, queue refreshes" },
+      { status: "live",       name: "plan-wave",        signature: "plan-wave(--limit?, --execute?, --dry-run?, --gap?)", desc: "Reads Payload counts per (area, topic), computes per-cell deficit vs the 20-per-cell target, picks persona + brief from rotating templates, emits prioritised dispatch queue. --execute fires at 1/min default." },
+      { status: "live",       name: "dispatch-article", signature: "dispatch-article({area, topic, persona, brief, target_words?, research_url?, skip_imager?})", desc: "Full chain: copywriter → seo → imager → web-manager. Hash-locked (Path B) so accidental re-runs of the same brief are blocked." },
+      { status: "scaffolded", name: "review-gate",      signature: "review-gate(article)", desc: "Pre-flight checks before submit: word count, persona match, hero present, SEO non-empty, banned phrases, source.hash dedupe. Currently runs as part of dispatch-article — not a standalone skill yet." },
+      { status: "scaffolded", name: "status-report",    signature: "status-report()", desc: "Per-cell summary (published / approved / pending_review / draft). Data is one Payload query away; no dedicated skill yet." },
+      { status: "scaffolded", name: "maintenance-pass", signature: "maintenance-pass()", desc: "Find stale Events past their date or News > 30 days old, queue refreshes." },
     ],
+    invoker: "node /opt/.openclaw-ess/workspace-main/scripts/{plan-wave,dispatch-article}.mjs",
   },
   {
     id: "copywriter",
     name: "Copywriter",
     role: "Writes article body in a persona voice (Maya / Komang / Putu / Sari)",
-    model: "Gemini 2.5 Flash",
+    model: "Vertex Gemini 2.5 Flash (response bound to JSON schema)",
     workspace: "/opt/.openclaw-ess/workspace-copywriter",
     status: "live",
     skills: [
-      { name: "draft-article", signature: "draft-article(area, topic, brief, persona, research)", desc: "produce { title, slug, body_markdown, meta_title, meta_description, persona, area, topic, word_count, sources }" },
-      { name: "rewrite-article", signature: "rewrite-article(article, instruction)", desc: "rework existing article per human feedback" },
-      { name: "regenerate-title", signature: "regenerate-title(article)", desc: "produce 5 alternative titles for human pick" },
-      { name: "persona-check", signature: "persona-check(text, persona)", desc: "score voice match 0-10, suggest fixes" },
+      { status: "live",       name: "draft-article",     signature: "draft-article({area, topic, persona, brief, target_words?, research?})", desc: "Drafts title + body_markdown + sub_title + meta + sources, in chosen persona's voice. Banned-phrase regex enforced in-script." },
+      { status: "scaffolded", name: "rewrite-article",   signature: "rewrite-article(article, instruction)", desc: "Rework an existing article per human feedback. Today: re-runs draft-article with brief = original + instruction." },
+      { status: "scaffolded", name: "regenerate-title",  signature: "regenerate-title(article)", desc: "Produce 5 alternative titles for a human pick. Today: re-prompt with low temperature for title-only JSON." },
+      { status: "scaffolded", name: "persona-check",     signature: "persona-check(text, persona)", desc: "Score voice match 0–10 against persona guidelines, suggest fixes." },
     ],
-    invoker: "node /opt/.openclaw-ess/workspace-copywriter/scripts/draft-article.mjs"
-  },
-  {
-    id: "web-manager",
-    name: "Web Manager",
-    role: "Bridge to Payload CMS — pushes drafts, uploads media, manages comments + ads",
-    model: "Gemini 2.5 Flash",
-    workspace: "/opt/.openclaw-ess/workspace-web-manager",
-    status: "live",
-    skills: [
-      { name: "submit-article", signature: "submit-article(article)", desc: "POST /api/articles with status=pending_review (idempotent via source.hash)" },
-      { name: "upload-media", signature: "upload-media(file, alt, credit)", desc: "POST multipart to /api/media, returns mediaId" },
-      { name: "link-hero", signature: "link-hero(articleId, mediaId)", desc: "PATCH article.hero" },
-      { name: "submit-comment", signature: "submit-comment(articleId, persona, body)", desc: "POST /api/comments" },
-      { name: "toggle-hero-ad", signature: "toggle-hero-ad(area, topic, active)", desc: "PATCH /api/hero-ads cell" },
-      { name: "fetch-status", signature: "fetch-status(articleId)", desc: "GET status (review/approved/published/rejected)" },
-      { name: "list-pending-review", signature: "list-pending-review()", desc: "for Elliot status-report" },
-    ],
-    invoker: "JWT login at https://essentialbali.gaiada.online/api/users/login",
+    invoker: "node /opt/.openclaw-ess/workspace-copywriter/scripts/draft-article.mjs",
   },
   {
     id: "seo",
     name: "SEO",
     role: "Search optimization — keywords, meta, schema, internal links",
-    model: "Gemini 2.5 Flash",
+    model: "Vertex Gemini 2.5 Flash (single source: cms/src/lib/seo-agent.ts)",
     workspace: "/opt/.openclaw-ess/workspace-seo",
     status: "live",
     skills: [
-      { name: "keyword-research", signature: "keyword-research(area, topic)", desc: "primary + 5 long-tail keywords with rough volumes" },
-      { name: "optimize-meta", signature: "optimize-meta(article)", desc: "meta title (≤60) + description (≤160)" },
-      { name: "schema-markup", signature: "schema-markup(article)", desc: "Article + BreadcrumbList + Event/LocalBusiness when applicable" },
-      { name: "internal-link", signature: "internal-link(article, candidates)", desc: "pick 3-5 same-area or same-topic links" },
-      { name: "competitor-gap", signature: "competitor-gap(area, topic)", desc: "what benchmarks rank for that we don't" },
+      { status: "live",       name: "optimize-meta",    signature: "POST /api/seo-optimize {area, topic, title, bodyText?, subTitle?, existingMetaTitle?}", desc: "Returns meta_title (≤60), meta_description (≤160), internal_link_anchors[]." },
+      { status: "live",       name: "keyword-research", signature: "(included in optimize-meta response)", desc: "primary_keyword + 3–5 long-tail variants returned alongside meta." },
+      { status: "live",       name: "schema-markup",    signature: "(emitted server-side at render time)", desc: "Schema.org Article JSON-LD computed from the published article fields." },
+      { status: "live",       name: "internal-link",    signature: "(included in optimize-meta response)", desc: "3–5 short noun-phrase anchors as inbound link bait." },
+      { status: "scaffolded", name: "competitor-gap",   signature: "competitor-gap(area, topic)", desc: "Diff: what benchmarks rank for that we don't. Crawler feeds the data; SEO ranks gaps." },
     ],
-    invoker: "node /opt/.openclaw-ess/workspace-seo/scripts/optimize-meta.mjs"
+    invoker: "POST https://essentialbali.gaiada.online/api/seo-optimize (JWT)",
   },
   {
     id: "imager",
     name: "Imager",
     role: "Image generation via Imagen 3 — hero + inline + alt text",
-    model: "Imagen 3.0",
+    model: "Vertex Imagen 3 (imagen-3.0-generate-002)",
     workspace: "/opt/.openclaw-ess/workspace-imager",
     status: "live",
     skills: [
-      { name: "generate-hero", signature: "generate-hero(article)", desc: "1 hero image, 16:9, 1920×1080, photographic" },
-      { name: "generate-inline", signature: "generate-inline(article, n)", desc: "N inline images, varied compositions" },
-      { name: "regenerate", signature: "regenerate(article, feedback)", desc: "re-prompt with human feedback" },
-      { name: "alt-text", signature: "alt-text(image, article)", desc: "SEO-friendly descriptive alt (10-15 words)" },
+      { status: "live",       name: "generate-hero",   signature: "generate-hero({area, topic, title, summary?, persona?, out_dir?})", desc: "One 16:9 hero (Imagen native ~1408×768). Per-area visual cues + per-topic composition cues + persona hint. Uploads to GCS via /api/media when wired into dispatch." },
+      { status: "live",       name: "generate-inline", signature: "generate-hero(... --inline=N)", desc: "N square 1024×1024 inline images (max 4), varied compositions." },
+      { status: "scaffolded", name: "regenerate",      signature: "regenerate(article, feedback)", desc: "Re-prompt with extra negative + adjusted summary based on human feedback." },
+      { status: "live",       name: "alt-text",        signature: "(auto-emitted per file)", desc: "{title} — {area} {topic} editorial photograph — written automatically into the media doc." },
     ],
-    invoker: "node /opt/.openclaw-ess/workspace-imager/scripts/generate-hero.mjs"
+    invoker: "node /opt/.openclaw-ess/workspace-imager/scripts/generate-hero.mjs",
+  },
+  {
+    id: "web-manager",
+    name: "Web Manager",
+    role: "Bridge to Payload CMS — pushes drafts, uploads media, manages comments + ads",
+    model: "Payload REST + JWT (elliot@gaiada.com, role ai-agent)",
+    workspace: "/opt/.openclaw-ess/workspace-web-manager",
+    status: "live",
+    skills: [
+      { status: "live", name: "submit-article",      signature: "POST /api/articles", desc: "Idempotent via source.hash. Always sets status=pending_review on submit." },
+      { status: "live", name: "upload-media",        signature: "POST /api/media (multipart)", desc: "Uploads file to GCS bucket gda-essentialbali-media; returns Payload media doc with public GCS URL." },
+      { status: "live", name: "link-hero",           signature: "PATCH /api/articles/{id} {hero: mediaId}", desc: "Sets Article.hero to the uploaded media id." },
+      { status: "live", name: "submit-comment",      signature: "POST /api/comments", desc: "Used by Elliot if it generates a persona-style first-comment seed." },
+      { status: "live", name: "toggle-hero-ad",      signature: "PATCH /api/hero-ads/{id} {active: bool}", desc: "Flip an ad slot on/off. Same endpoint your Hero Ads grid hits." },
+      { status: "live", name: "fetch-status",        signature: "GET /api/articles/{id}", desc: "Read the current article status (review / approved / published / rejected)." },
+      { status: "live", name: "list-pending-review", signature: "GET /api/articles?where[status][equals]=pending_review", desc: "What's in your review queue. Drives Elliot's status-report." },
+    ],
+    invoker: "JWT login at https://essentialbali.gaiada.online/api/users/login",
   },
   {
     id: "crawler",
     name: "Crawler",
-    role: "Benchmark research across the 4 reference sites",
+    role: "Benchmark research across 4 reference sites — research only, never republished",
     model: "Node fetch + Gemini for analysis",
     workspace: "/opt/.openclaw-ess/workspace-crawler",
     status: "live",
     skills: [
-      { name: "discover", signature: "discover(area, topic, site?)", desc: "list candidate URLs (≤10) from honeycombers/whatsnew/nowbali/balibible" },
-      { name: "analyze", signature: "analyze(url)", desc: "extract title, h1/h2/h3, paragraphs, hero, links, word count" },
-      { name: "trend-scan", signature: "trend-scan(area)", desc: "merge candidates across sources, sort by recency" },
-      { name: "gap-report", signature: "gap-report(area, topic)", desc: "what they cover that we don't" },
+      { status: "live",       name: "discover",   signature: "discover({area, topic, site?})", desc: "List up to 10 candidate URLs from one of honeycombers / whatsnew / nowbali / balibible for a given (area, topic)." },
+      { status: "live",       name: "analyze",    signature: "analyze(url)", desc: "Fetch one URL, extract title + h1/h2/h3 + paragraphs + hero + outbound links + word count. JSON to stdout." },
+      { status: "scaffolded", name: "trend-scan", signature: "trend-scan(area)", desc: "Merge candidates across all 4 sources, sort by recency. \"What's getting written about Bali this week.\"" },
+      { status: "scaffolded", name: "gap-report", signature: "gap-report(area, topic)", desc: "What benchmarks cover that we don't (cell-level). Pairs with SEO competitor-gap." },
     ],
     invoker: "node /opt/.openclaw-ess/workspace-crawler/scripts/crawl-benchmark.mjs",
   },
   {
     id: "scraper",
     name: "Scraper",
-    role: "Deterministic data extraction — xlsx, Google Docs, listings",
-    model: "Python + openpyxl + Google APIs",
+    role: "Deterministic data extraction — xlsx, Google Docs, listings (no LLM)",
+    model: "Python venv + openpyxl + requests + bs4",
     workspace: "/opt/.openclaw-ess/workspace-scraper",
     status: "live",
     skills: [
-      { name: "read-articles-xlsx", signature: "read-articles-xlsx(month?, status?)", desc: "parse Essential Bali Proofread.xlsx tracker → row JSON" },
-      { name: "pull-xlsx-from-drive", signature: "pull-xlsx-from-drive(name?)", desc: "download tracker from Drive (auto-export Sheets)" },
-      { name: "read-google-doc", signature: "read-google-doc(url)", desc: "fetch Doc body as Markdown (must be shared with ai@gaiada.com)" },
-      { name: "check-doc-access", signature: "check-doc-access()", desc: "for each Draft Link, report if accessible to ai@gaiada.com" },
-      { name: "process-inbox", signature: "process-inbox(--pull?, --month?, --status?)", desc: "end-to-end: xlsx → optional doc body → article-ready records (never skips a row)" },
-      { name: "fetch", signature: "fetch(url)", desc: "HTTP GET with UA + rate limit + retry" },
-      { name: "extract-jsonld", signature: "extract-jsonld(html)", desc: "pull all structured data blobs" },
-      { name: "geocode", signature: "geocode(query)", desc: "place name → lat/lng (cached)" },
+      { status: "live", name: "read-articles-xlsx",   signature: "read-articles-xlsx(month?, status?)", desc: "Parse Essential Bali Proofread.xlsx tracker → row JSON ready to ingest." },
+      { status: "live", name: "pull-xlsx-from-drive", signature: "pull-xlsx-from-drive(name?)", desc: "Download tracker from Google Drive (auto-exports Sheets to xlsx)." },
+      { status: "live", name: "read-google-doc",      signature: "read-google-doc(url)", desc: "Fetch Doc body as Markdown. Doc must be shared with ai@gaiada.com." },
+      { status: "live", name: "check-doc-access",     signature: "check-doc-access()", desc: "Per-row report of which Draft Links are reachable for ai@gaiada.com." },
+      { status: "live", name: "process-inbox",        signature: "process-inbox(--pull?, --month?, --status?)", desc: "End-to-end pipeline. Never skips a row — falls back to xlsx metadata when Doc isn't shared." },
+      { status: "live", name: "fetch",                signature: "fetch(url)", desc: "HTTP GET with proper UA + rate limit + retry. Helper used by other skills." },
+      { status: "live", name: "extract-article",      signature: "extract-article(html)", desc: "title, dateline, body, hero, author, tags from arbitrary HTML." },
+      { status: "live", name: "extract-listing",      signature: "extract-listing(html, selectors)", desc: "List items per CSS/XPath selectors." },
+      { status: "live", name: "extract-jsonld",       signature: "extract-jsonld(html)", desc: "Pull all Schema.org JSON-LD blobs from a page." },
+      { status: "live", name: "geocode",              signature: "geocode(query)", desc: "Place name → lat/lng via Google Geocoding API, cached aggressively." },
     ],
-    invoker: "python3 /opt/.openclaw-ess/workspace-scraper/scripts/...",
+    invoker: "python3 /opt/.openclaw-ess/workspace-scraper/scripts/{...}.py",
   },
 ];
 
@@ -271,12 +281,40 @@ export default function TalkToElliotView() {
           </div>
 
           <div style={{ marginTop: "1rem" }}>
-            <div style={listLabel}>Skills ({agent.skills.length})</div>
+            <div style={listLabel}>
+              Skills ({agent.skills.length})
+              {" — "}
+              <span style={{ color: "#16a34a", fontWeight: 600 }}>
+                {agent.skills.filter((s) => s.status === "live").length} live
+              </span>
+              {agent.skills.some((s) => s.status === "scaffolded") && (
+                <>
+                  {" · "}
+                  <span style={{ color: "#d97706", fontWeight: 600 }}>
+                    {agent.skills.filter((s) => s.status === "scaffolded").length} scaffolded
+                  </span>
+                </>
+              )}
+            </div>
             <ul style={skillList}>
               {agent.skills.map((s) => (
                 <li key={s.name} style={skillItem}>
-                  <code style={skillSig}>{s.signature}</code>
-                  <div style={{ fontSize: "0.78rem", opacity: 0.85, marginTop: "0.2rem", lineHeight: 1.5 }}>{s.desc}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                    <span
+                      style={{
+                        ...skillStatusPill,
+                        background:
+                          s.status === "live" ? "rgba(22,163,74,0.18)" : "rgba(217,119,6,0.18)",
+                        color: s.status === "live" ? "#16a34a" : "#d97706",
+                        borderColor:
+                          s.status === "live" ? "rgba(22,163,74,0.45)" : "rgba(217,119,6,0.45)",
+                      }}
+                    >
+                      {s.status === "live" ? "● LIVE" : "○ scaffolded"}
+                    </span>
+                    <code style={skillSig}>{s.signature}</code>
+                  </div>
+                  <div style={{ fontSize: "0.78rem", opacity: 0.85, marginTop: "0.3rem", lineHeight: 1.5 }}>{s.desc}</div>
                 </li>
               ))}
             </ul>
@@ -411,6 +449,15 @@ const skillSig: React.CSSProperties = {
   padding: "0.15rem 0.4rem",
   borderRadius: 3,
   color: "var(--theme-text)",
+};
+const skillStatusPill: React.CSSProperties = {
+  fontSize: "0.62rem",
+  fontWeight: 700,
+  letterSpacing: "0.04em",
+  padding: "0.12rem 0.45rem",
+  borderRadius: 999,
+  border: "1px solid",
+  whiteSpace: "nowrap",
 };
 const statusPill = (status: Agent["status"]): React.CSSProperties => {
   const colors = {
