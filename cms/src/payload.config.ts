@@ -4,6 +4,7 @@ import { buildConfig } from "payload";
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { nodemailerAdapter } from "@payloadcms/email-nodemailer";
+import { gcsStorage } from "@payloadcms/storage-gcs";
 import nodemailer from "nodemailer";
 import sharp from "sharp";
 
@@ -44,11 +45,6 @@ export default buildConfig({
       views: {
         dashboard: {
           Component: "@/components/MatrixDashboard",
-        },
-        // Talk to Elliot — custom admin route at /admin/elliot
-        elliot: {
-          Component: "@/components/TalkToElliotView",
-          path: "/elliot",
         },
       },
     },
@@ -97,6 +93,28 @@ export default buildConfig({
     // Switch to migration-based once schema stabilizes.
     push: true,
   }),
+  // GCS bucket for all media uploads. Falls back to local disk when
+  // GCS_BUCKET env is not set (dev / first-run).
+  ...(process.env.GCS_BUCKET
+    ? {
+        plugins: [
+          gcsStorage({
+            bucket: process.env.GCS_BUCKET,
+            options: {
+              projectId: process.env.GCP_PROJECT_ID || "gda-viceroy",
+              keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+            },
+            collections: {
+              media: {
+                // Public-read bucket — Payload returns the GCS URL directly
+                // so the public site can hot-link without a signed URL.
+                disablePayloadAccessControl: true,
+              },
+            },
+          }),
+        ],
+      }
+    : {}),
   // Headless: keep CORS open to the frontend host(s).
   cors: [
     "https://essentialbali.gaiada.online",
