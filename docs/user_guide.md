@@ -246,17 +246,18 @@ For that, you click in the admin yourself or run the dispatch script.
 plan-wave + dispatch-article landed live and Scraper picked up its
 helpers.)
 
-| # | Who | What they can do | Skills |
+| # | Who | What they can do (skills enumerated) | Skills |
 |---|---|---|---:|
-| 1 | **Elliot** (orchestrator) | Plans content waves, dispatches the chain, gates quality before submit | 5 |
-| 2 | **Copywriter** | Drafts article body in one of 4 personas (maya / komang / putu / sari), banned-phrase guarded | 4 |
-| 3 | **SEO** | Meta title (≤60), meta description (≤160), keywords, internal-link anchors, JSON-LD schema | 5 |
-| 4 | **Imager** | Hero image (16:9) + inline images (1:1) via Imagen 3, with auto alt-text | 4 |
-| 5 | **Web Manager** | Bridge to Payload — submit, upload media, link hero, toggle hero-ads, fetch status, list pending | 7 |
-| 6 | **Crawler** | Research from 4 benchmark Bali sites (honeycombers, whatsnew, nowbali, balibible), 1 req/s, robots.txt respected, never republishes | 4 |
-| 7 | **Scraper** | Reads xlsx tracker + Google Docs deterministically (no LLM); fetches, parses listings, extracts articles + JSON-LD, geocodes places | 10 |
+| 1 | **Elliot** (orchestrator) | `plan-wave`, `dispatch-article`, `review-gate`, `status-report`, `maintenance-pass` | 5 |
+| 2 | **Copywriter** | `draft-article`, `rewrite-article`, `regenerate-title`, `persona-check` | 4 |
+| 3 | **SEO** | `optimize-meta`, `keyword-research`, `schema-markup`, `internal-link`, `competitor-gap` | 5 |
+| 4 | **Imager** | `generate-hero`, `generate-inline`, `regenerate`, `alt-text` | 4 |
+| 5 | **Web Manager** | `submit-article`, `upload-media`, `link-hero`, `submit-comment`, `toggle-hero-ad`, `fetch-status`, `list-pending-review` | 7 |
+| 6 | **Crawler** | `discover`, `analyze`, `trend-scan`, `gap-report` | 4 |
+| 7 | **Scraper** | `read-articles-xlsx`, `pull-xlsx-from-drive`, `read-google-doc`, `check-doc-access`, `process-inbox`, `fetch`, `extract-article`, `extract-listing`, `extract-jsonld`, `geocode` | 10 |
 
-**Total: 39 skills** across 7 entities. Detail below.
+**Total: 39 skills** across 7 entities. Each skill is documented in
+detail (status, invocation, what it does) below.
 
 All 7 agents and what each skill does, marked **🟢 LIVE** when verified
 end-to-end or **🟡 scaffolded** when documented but not yet wired.
