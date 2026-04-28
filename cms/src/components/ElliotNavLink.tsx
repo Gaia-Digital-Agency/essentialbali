@@ -10,6 +10,13 @@ export default function ElliotNavLink() {
         <span style={dot} aria-hidden />
         Talk to Elliot
       </Link>
+      <Link href="/admin/hero-grid" style={{ ...link, marginTop: "0.4rem" }}>
+        <span
+          style={{ ...dot, background: "var(--theme-warning-500, #f59e0b)" }}
+          aria-hidden
+        />
+        Hero ad grid
+      </Link>
     </div>
   );
 }
