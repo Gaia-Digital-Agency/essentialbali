@@ -1,26 +1,29 @@
 import React from "react";
 import Link from "next/link";
 
-/** Sidebar entry rendered AFTER the Collections list, linking to /admin/elliot. */
-export default function ElliotNavLink() {
+/**
+ * Sidebar entry rendered after the Collections list.
+ *
+ * Holds only the AI-agent group. Hero Ads is no longer here — it lives
+ * under Collections (where it belongs) and its list view is the
+ * 8×8 visual grid.
+ */
+export default function SidebarNavLinks() {
   return (
-    <div style={{ marginTop: "1rem", padding: "0 1.25rem" }}>
-      <div style={section}>Channels</div>
+    <div style={wrap}>
+      <div style={section}>AI agent</div>
       <Link href="/admin/elliot" style={link}>
-        <span style={dot} aria-hidden />
-        Talk to Elliot
-      </Link>
-      <Link href="/admin/hero-grid" style={{ ...link, marginTop: "0.4rem" }}>
         <span
-          style={{ ...dot, background: "var(--theme-warning-500, #f59e0b)" }}
+          style={{ ...dot, background: "var(--theme-success-500, #16a34a)" }}
           aria-hidden
         />
-        Hero ad grid
+        Talk to Elliot
       </Link>
     </div>
   );
 }
 
+const wrap: React.CSSProperties = { marginTop: "1rem", padding: "0 1.25rem" };
 const section: React.CSSProperties = {
   fontSize: "0.65rem",
   letterSpacing: "0.1em",
@@ -41,11 +44,11 @@ const link: React.CSSProperties = {
   fontSize: "0.85rem",
   fontWeight: 500,
   border: "1px solid var(--theme-elevation-150)",
+  marginBottom: "0.4rem",
 };
 const dot: React.CSSProperties = {
   display: "inline-block",
   width: 8,
   height: 8,
   borderRadius: "50%",
-  background: "var(--theme-success-500, #16a34a)",
 };

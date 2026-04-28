@@ -131,13 +131,6 @@ const AGENTS: Agent[] = [
   },
 ];
 
-const PRODUCTION_MATRIX = {
-  areas: ["Canggu", "Kuta", "Ubud", "Jimbaran", "Denpasar", "Kintamani", "Singaraja", "Nusa Penida"],
-  topics: ["Events", "News", "Featured", "Dine", "Health & Wellness", "Nightlife", "Activities", "People & Culture"],
-  cells: 64,
-  targetPerCell: 20,
-  totalTarget: 1280,
-};
 
 export default function TalkToElliotView() {
   const [activeAgent, setActiveAgent] = useState<string>("main");
@@ -229,31 +222,6 @@ export default function TalkToElliotView() {
           </div>
         </div>
       </header>
-
-      {/* Production matrix card */}
-      <div style={matrixCard}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.6rem" }}>
-          <div>
-            <div style={{ fontSize: "0.72rem", letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.6 }}>
-              Production matrix
-            </div>
-            <div style={{ fontSize: "1.05rem", fontWeight: 600, marginTop: "0.2rem" }}>
-              {PRODUCTION_MATRIX.areas.length} areas × {PRODUCTION_MATRIX.topics.length} topics ={" "}
-              {PRODUCTION_MATRIX.cells} cells · target ≈ {PRODUCTION_MATRIX.totalTarget.toLocaleString()} articles
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: "1.4rem", fontSize: "0.78rem" }}>
-            <a href="/admin/collections/articles" style={linkCard}>Articles →</a>
-            <a href="/admin/collections/hero-ads" style={linkCard}>Hero ads →</a>
-            <a href="/admin" style={linkCard}>Matrix dashboard →</a>
-          </div>
-        </div>
-        <div style={{ marginTop: "0.8rem", fontSize: "0.78rem", opacity: 0.85, lineHeight: 1.55 }}>
-          Areas: {PRODUCTION_MATRIX.areas.join(" · ")}
-          <br />
-          Topics: {PRODUCTION_MATRIX.topics.join(" · ")}
-        </div>
-      </div>
 
       {/* Agent picker + skill detail */}
       <div style={twoCol}>
@@ -381,18 +349,6 @@ const sub: React.CSSProperties = {
   opacity: 0.8,
 };
 
-const matrixCard: React.CSSProperties = {
-  marginBottom: "1.1rem",
-  padding: "0.95rem 1.1rem",
-  background: "var(--theme-elevation-50)",
-  border: "1px solid var(--theme-elevation-150)",
-  borderRadius: "var(--style-radius-s, 4px)",
-};
-const linkCard: React.CSSProperties = {
-  color: "var(--theme-text)",
-  textDecoration: "none",
-  borderBottom: "1px dashed var(--theme-elevation-200)",
-};
 
 const twoCol: React.CSSProperties = {
   display: "grid",

@@ -7,6 +7,11 @@ import { nodemailerAdapter } from "@payloadcms/email-nodemailer";
 import { gcsStorage } from "@payloadcms/storage-gcs";
 import nodemailer from "nodemailer";
 import sharp from "sharp";
+import { readFileSync } from "node:fs";
+
+const ALLOWED_ORIGINS: string[] = JSON.parse(
+  readFileSync("/var/www/essentialbali/shared-allowed-origins.json", "utf-8"),
+);
 
 import { Areas } from "./collections/Areas";
 import { Topics } from "./collections/Topics";
@@ -115,19 +120,11 @@ export default buildConfig({
         ],
       }
     : {}),
-  // Headless: keep CORS open to the frontend host(s).
-  cors: [
-    "https://essentialbali.gaiada.online",
-    "https://www.essentialbali.gaiada.online",
-    "https://essentialbali.com",
-    "https://www.essentialbali.com",
-    "http://localhost:3008",
-    "http://localhost:5173",
-    "https://ess.gaiada0.online",
-  ],
-  csrf: [
-    "https://essentialbali.gaiada.online",
-    "https://essentialbali.com",
-  ],
+  // CORS + CSRF — single source of truth at
+  // /var/www/essentialbali/shared-allowed-origins.json. Express SSR
+  // reads the same file at boot. To add/remove a host: edit that JSON,
+  // then restart both pm2 processes.
+  cors: ALLOWED_ORIGINS,
+  csrf: ALLOWED_ORIGINS.filter(o => o.startsWith("https://essentialbali")),
   // GraphQL is enabled by default at /api/graphql
 });

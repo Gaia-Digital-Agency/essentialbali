@@ -16,6 +16,15 @@ export const HeroAds: CollectionConfig = {
     description:
       "64 ad slots (8 areas × 8 topics). Default placeholder shows until 'active' is toggled on. Schedule with start/end. Manage clients here.",
     defaultColumns: ["label", "active", "client", "startAt", "endAt"],
+    // The default Payload list view is replaced with the 8×8 visual grid
+    // (HeroGridView). Detail edit pages remain at /admin/collections/hero-ads/{id}.
+    components: {
+      views: {
+        list: {
+          Component: "@/components/HeroGridView",
+        },
+      },
+    },
   },
   access: {
     read: () => true,

@@ -98,13 +98,21 @@ app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(requestTimer);
 
-const allowedOrigins = (process.env.FRONTEND_URL || "")
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter((origin) => origin.length > 0);
-if (isProd) {
-  allowedOrigins.push(url);
-}
+// CORS allowlist — single source at shared-allowed-origins.json.
+// Both Express SSR (here) and Payload CMS read this same file at boot.
+const allowedOrigins = (() => {
+  try {
+    const raw = fs.readFileSync(
+      "/var/www/essentialbali/shared-allowed-origins.json",
+      "utf-8",
+    );
+    return JSON.parse(raw);
+  } catch (e) {
+    console.warn("⚠ could not read shared-allowed-origins.json:", e.message);
+    return [];
+  }
+})();
+if (isProd && url) allowedOrigins.push(url);
 
 app.use(
   cors({
