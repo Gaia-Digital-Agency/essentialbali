@@ -190,6 +190,26 @@ export default function TalkToElliotView() {
 
   return (
     <div style={shell}>
+      <a
+        href="/admin"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.4rem",
+          fontSize: "0.78rem",
+          color: "var(--theme-text)",
+          textDecoration: "none",
+          opacity: 0.75,
+          marginBottom: "0.7rem",
+          padding: "0.35rem 0.7rem",
+          border: "1px solid var(--theme-elevation-150)",
+          borderRadius: "6px",
+          background: "var(--theme-elevation-50)",
+          width: "fit-content",
+        }}
+      >
+        ← Back to Payload admin
+      </a>
       <header style={head}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.7rem" }}>
           <span style={dot} />
