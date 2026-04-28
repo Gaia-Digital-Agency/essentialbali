@@ -79,3 +79,16 @@
 77. Smoke test full agent pipeline — Elliot crawler → 1 article → Payload pending_review → published → on homepage
 78. Share Drive folder "Essential Bali — Elliot Inbox" with ai@gaiada.com (unblocks 8 draft Doc fetches)
 79. Promote 8 placeholder articles to status=published once Elliot has filled bodies (Wave 1 seed)
+
+# Tomorrow — promote 10 scaffolded skills to live (29/39 → 39/39)
+
+80. Elliot review-gate — extract pre-flight checks out of dispatch-article.mjs into standalone review-gate.mjs (article JSON in → {ok, issues} out)
+81. Elliot status-report — per-cell counts (published/approved/pending_review/draft/rejected) printed as table or JSON
+82. Elliot maintenance-pass — find stale Events past endAt + News > 30 days, set draft/rejected, queue refresh via plan-wave
+83. Copywriter rewrite-article — take existing article + instruction, re-call draft-article with augmented brief, preserve source.hash with _v2 suffix
+84. Copywriter regenerate-title — re-prompt Vertex with title-only schema, return 5 alternatives at temp 0.7
+85. Copywriter persona-check — score voice match 0–10 against persona guidelines via structured Vertex output
+86. SEO competitor-gap — rank crawler gap-report results by search potential, emit prioritised gaps per cell (depends on 88 + 89)
+87. Imager regenerate — wrapper around generate-hero with negative-prompt augmentation from feedback, replace media in place
+88. Crawler trend-scan — discover across all 4 benchmark sites for an area, merge + sort by recency, emit top 20
+89. Crawler gap-report — cluster benchmark titles vs our published articles per (area, topic), emit {cell: [missing themes]} JSON (feeds 86)
