@@ -1,14 +1,12 @@
 # Essential Bali
 
-Bali lifestyle, events, dine, wellness, nightlife, activities, and culture — by area.
+Bali, by area. Events, dine, wellness, nightlife, activities, news, culture, featured.
 
-Live: https://essentialbali.gaiada.online
+Live: **https://essentialbali.gaiada.online** · `essentialbali.com` cutover pending Damian's DNS finish (apex moved, `www` + AAAA cleanup remaining).
 
 ---
 
-## Architecture (current — Phase D foundation deployed; cutover pending)
-
-After Phase D foundation:
+## Architecture
 
 ```
                         ┌─────────────────────────────┐
@@ -17,63 +15,39 @@ After Phase D foundation:
                                        │ HTTPS
                                        ▼
                   ┌────────────────────────────────────┐
-                  │  nginx (gda-s01, :443)             │
+                  │  nginx @ gda-s01 (:443)            │
+                  │  TLS · path-aware routing          │
                   └─────┬───────────────────────────────┘
                         │
-              ┌─────────┴────────────┐
-              │ (today)              │ (post-cutover, deferred)
-              ▼                      ▼
-   ┌──────────────────┐   ┌─────────────────────────────────┐
-   │ Express+SSR :8082│   │ Vite SSR :3008  (frontend)      │
-   │ + MySQL          │   │ ──────────────► Payload :4008   │
-   │ (live prod)      │   │                 + Postgres      │
-   └──────────────────┘   └─────────────────────────────────┘
-                                          ▲
-                                          │ REST/GraphQL + API key
-                                          │
-                                  .openclaw-ess @ gda-ai01
+       ┌────────────────┼─────────────────────────────┐
+       │ /admin                                       │ /
+       │ /_next                                       │ /sitemap.xml
+       │ /api/{users,areas,topics,articles,           │ /robots.txt
+       │       personas,media,comments,hero-ads,      │ /…  (everything else)
+       │       subscribers,newsletters,               │
+       │       payload-preferences,access,            │
+       │       graphql,graphql-playground,            │
+       │       ai-chat,_internal}                     │
+       ▼                                              ▼
+┌──────────────────────┐                ┌──────────────────────────────┐
+│ Payload CMS @ :4008  │                │ Vite SSR + Express @ :8082   │
+│ Next.js 15           │                │ Original frontend, unchanged │
+│ • admin              │                │ Reads taxonomies + articles  │
+│ • REST + GraphQL     │                │ from Payload via SSR fetcher │
+│ • email (Gmail SMTP) │                │ rewire (USE_PAYLOAD_DATA=true│
+│ • /api/ai-chat       │                │                              │
+│   (Vertex Gemini,    │                └──────────────────────────────┘
+│    Elliot persona)   │
+└──────┬───────────────┘
+       │
+       ▼
+┌──────────────────┐    ┌──────────────────┐
+│ PostgreSQL 5432  │    │ Redis 6379       │
+│ essentialbali_db │    │ rate-limit cache │
+└──────────────────┘    └──────────────────┘
 ```
 
-Phase D foundation already shipped (this README has the schema); Phase D cutover is deferred to a later session for safety.
-
-## Architecture (legacy — pre-3PVTRN, still serving prod)
-
-```
-                                 ┌──────────────────────────┐
-                                 │   Browser / Crawler      │
-                                 └────────────┬─────────────┘
-                                              │ HTTPS
-                                              ▼
-                          ┌────────────────────────────────────┐
-                          │  nginx (gda-s01, :443)             │
-                          │  TLS, gzip, proxy                  │
-                          └────────────┬───────────────────────┘
-                                       │ proxy_pass 127.0.0.1:8082
-                                       ▼
-   ┌──────────────────────────────────────────────────────────────┐
-   │                Node + Express + Vite SSR                     │
-   │                 backend/app.js (port 8082)                   │
-   │                                                              │
-   │  ┌─────────────┐  ┌─────────────┐  ┌──────────────────────┐  │
-   │  │  REST /api  │  │  /sitemap   │  │  Vite SSR (catch-all)│  │
-   │  │  routers/   │  │  /robots    │  │  React render → HTML │  │
-   │  └──────┬──────┘  └──────┬──────┘  └──────────┬───────────┘  │
-   │         │                │                    │              │
-   │         └────────┬───────┴───────────────┬────┘              │
-   │                  ▼                       ▼                   │
-   │           Sequelize ORM             SSR fetchers             │
-   └──────────┬────────────────────────────┬──────────────────────┘
-              │                            │
-              ▼                            ▼
-        ┌──────────┐              ┌──────────────┐
-        │  MySQL   │              │  Redis       │
-        │  (3306)  │              │  cache (6379)│
-        └──────────┘              └──────────────┘
-```
-
-**Stack today:** Node 20 · Express 4 · Sequelize · MySQL · Redis · Vite + React 18 + TypeScript · TailwindCSS v4
-
-**Process manager:** PM2 (`essentialbali`)
+**Stack:** PostgreSQL · Python (Elliot's scraper) · Payload v3.84 · Vite · React 18 · TailwindCSS v4 · Node 20
 
 **Hosting:** GCP `gda-s01.asia-southeast1-b` (`34.124.244.233`)
 
@@ -84,340 +58,187 @@ Phase D foundation already shipped (this README has the schema); Phase D cutover
 ```
 essentialbali/
 ├── README.md                     ← you are here
-├── backend/                      Node + Express + Vite SSR (port 8082)
-│   ├── app.js                    Express bootstrap, SSR wiring, sitemap+robots
-│   ├── package.json
-│   ├── redisClient.js
-│   ├── config/                   DB / env config
-│   ├── scripts/                  one-off ops (DB seeding, migrations)
+├── backend/                      Express + Vite SSR (port 8082)
+│   ├── app.js                    bootstrap, sitemap+robots, SSR wiring
+│   ├── src/
+│   │   ├── routers/              /api/* legacy routes (still used by SSR)
+│   │   ├── services/             Sequelize-backed services (legacy)
+│   │   ├── ssr/                  ★ Phase E rewire — reads from Payload
+│   │   │   ├── articles.fetch.js     fetchArticleData / fetchArticlesData
+│   │   │   ├── locations.fetch.js    areas → legacy "country" shape
+│   │   │   ├── categories.fetch.js   topics → legacy "category" shape
+│   │   │   └── route.fetch.js        URL → article|area|topic resolver
+│   │   ├── lib/payload.client.js     thin HTTP client (USE_PAYLOAD_DATA=true)
+│   │   └── workers/                  background jobs
+│   └── .env                      DATABASE_*, FRONTEND_URL, USE_PAYLOAD_DATA=true,
+│                                  PAYLOAD_BASE_URL=http://127.0.0.1:4008
+├── cms/                          Payload v3 + Next.js 15 (port 4008)
+│   ├── ecosystem.config.cjs      pm2 entry
+│   ├── package.json              Payload + Postgres adapter + Lexical + Tailwind
+│   ├── postcss.config.mjs
+│   ├── next.config.mjs
+│   ├── .env                      DATABASE_URI, PAYLOAD_SECRET, SMTP_* (Gmail),
+│   │                              GCP_VERTEX_*, GOOGLE_APPLICATION_CREDENTIALS
 │   └── src/
-│       ├── routers/              /api/* route mounting
-│       ├── controllers/          request handlers
-│       ├── services/             business logic
-│       ├── models/               Sequelize models (articles, categories, …)
-│       ├── migrations/           Sequelize CLI migrations
-│       ├── seeders/              seed data
-│       ├── helpers/              response shapers, utilities
-│       ├── middlewares/          auth, request timer, CORS
-│       ├── workers/              background jobs
-│       └── ssr/                  SSR data-fetch layer
-│           ├── route.fetch.js
-│           ├── content.fetch.js
-│           ├── articles.fetch.js
-│           ├── auth.fetch.js
-│           └── utils/
-│
-├── cms/                          Payload v3 (headless) — Phase D foundation
-│   ├── package.json              Next 15 + Payload v3 + Postgres adapter + Lexical
-│   ├── next.config.mjs           withPayload wrapper
-│   ├── tsconfig.json
-│   ├── ecosystem.config.cjs      pm2 entry (port 4008)
-│   ├── .env                      DATABASE_URI, PAYLOAD_SECRET, PAYLOAD_AI_API_KEY (gitignored)
-│   ├── .env.example              template
-│   └── src/
-│       ├── payload.config.ts     central config
-│       ├── seed.ts               idempotent taxonomy + 64 hero_ads + admin user
+│       ├── payload.config.ts     central config (collections, email, admin views)
+│       ├── access.ts             isStaffOrAgent helper for CRUD policies
+│       ├── seed.ts               idempotent: 8 areas, 8 topics, 4 personas, 64 hero_ads, admin
+│       ├── seed-articles-placeholders.ts  64 article placeholders (1 per cell, draft)
+│       ├── create-elliot-user.ts          create the ai-agent service account
+│       ├── admin-update.ts                rotate super_admin user
 │       ├── collections/
-│       │   ├── Users.ts
-│       │   ├── Areas.ts
-│       │   ├── Topics.ts
-│       │   ├── Personas.ts
-│       │   ├── Articles.ts
-│       │   ├── Media.ts          local upload + 3 image sizes (thumb/card/hero)
-│       │   ├── Comments.ts
-│       │   ├── Tags.ts
-│       │   ├── HeroAds.ts        beforeChange hook auto-fills "Ads space > {Area} > {Topic}"
-│       │   └── Subscribers.ts
-│       └── app/                  Next.js App Router
-│           ├── page.tsx          landing (just shows /admin link)
-│           ├── layout.tsx
-│           └── (payload)/        Payload-owned routes
-│               ├── layout.tsx
-│               ├── admin/[[...segments]]/
-│               │   ├── page.tsx
-│               │   └── not-found.tsx
-│               └── api/
-│                   ├── [...slug]/route.ts        REST
-│                   ├── graphql/route.ts          GraphQL POST
-│                   └── graphql-playground/route.ts
-│
-└── frontend/                     React + Vite + TS + Tailwind
-    ├── index.html
-    ├── package.json
-    ├── vite.config.ts            client build
-    ├── vite.config.ssr.ts        SSR build (consumed by backend)
-    ├── postcss.config.ts
-    ├── tsconfig*.json
-    ├── nginx.conf                static assets reference (legacy)
-    ├── public/                   static (favicon, fonts, images, robots*, …)
-    ├── dist/                     build output (gitignored)
-    └── src/
-        ├── main.tsx              client entry
-        ├── App.tsx               app shell
-        ├── router-config.tsx     React Router routes (admin + public catch-all)
-        ├── routes/
-        │   ├── AdminApp.tsx
-        │   └── FrontApp.tsx
-        ├── pages/                public + admin pages
-        ├── components/           shared UI
-        ├── context/              providers (Route, Auth, Theme, …)
-        └── api/                  client-side data fetching
+│       │   ├── Users.ts          auth + API key support
+│       │   ├── Areas.ts          8 fixed (hidden in admin nav)
+│       │   ├── Topics.ts         8 fixed (hidden)
+│       │   ├── Personas.ts       4 writer voices (hidden)
+│       │   ├── Articles.ts       ★ matrix filter UI + status chips
+│       │   ├── Media.ts          local upload + 3 sizes (hidden)
+│       │   ├── Comments.ts       (hidden)
+│       │   ├── Tags.ts           (hidden)
+│       │   ├── HeroAds.ts        64 fixed slots, beforeChange auto-label
+│       │   ├── Subscribers.ts    pure list
+│       │   └── Newsletters.ts    compose + send workflow (beforeChange dispatch)
+│       ├── components/
+│       │   ├── LoginHint.tsx                  creds card on /admin/login
+│       │   ├── MatrixDashboard.tsx            8×8 grid as admin home
+│       │   ├── ArticlesMatrixFilter.tsx       8×8 grid + status chips above Articles list
+│       │   ├── NewslettersIntro.tsx           stats + compose CTA + how-to walkthrough
+│       │   ├── TalkToElliotView.tsx           full-page chat panel (uses /api/ai-chat)
+│       │   └── ElliotNavLink.tsx              sidebar entry under "Channels"
+│       ├── app/
+│       │   ├── globals.css       Tailwind + Essential Bali brand tokens
+│       │   ├── icon.png          /admin tab favicon (Next.js convention)
+│       │   ├── (frontend)/api/
+│       │   │   ├── ai-chat/route.ts          Vertex Gemini, Elliot persona, Redis rate limit
+│       │   │   └── subscribers/broadcast/route.ts   one-shot bulk email (legacy)
+│       │   └── (payload)/        Payload admin + REST + GraphQL routes
+│       └── migrations/           Postgres migrations (Drizzle)
+├── frontend/                     Vite + React 18 + Tailwind v4 (legacy, served by Express)
+│   ├── src/
+│   │   ├── components/front/
+│   │   │   ├── AreaMenuPanel.tsx              one-line area nav
+│   │   │   ├── AIChatPopup.tsx                Ask Elliot popup (calls /api/ai-chat)
+│   │   │   └── FloatingActions.tsx            Back to Top + Ask Elliot launcher
+│   │   ├── pages/Front/Templates/
+│   │   │   ├── Header.tsx
+│   │   │   └── Footer.tsx                     "Advertise With Us" mailto button
+│   │   ├── layout/FrontLayout.tsx             mounts FloatingActions
+│   │   └── routes/                            React Router config
+│   └── .env.production           VITE_BASE_PATH=/, VITE_SITE_URL, VITE_IMAGE_URL
+└── old_assets/                   archived legacy uploads (132 files + manifest.tsv)
 ```
 
 ---
 
-## Routes
+## URL routing (single domain `essentialbali.gaiada.online`)
 
-- **Public:** all paths under `/` (Vite SSR catch-all → `PathResolver` resolves to area / topic / article from DB)
-- **Admin:** `/admin/*` (auth required), `/signin`
-- **API:** `/api/auth`, `/api/article`, `/api/location`, `/api/category`, `/api/asset_media`, `/api/templating`, `/api/tags`, `/api/socmed`, `/api/advertising`, `/api/timezone`, `/api/newsletter`, `/api/setting`, `/api/job`
-- **SEO:** `/robots.txt`, `/sitemap.xml` (dynamic — countries / cities / regions / articles)
-
----
-
-## Branches
-
-| Branch | Purpose |
+| Path | Backend |
 |---|---|
-| `main` | production, served on gda-s01 |
-| `dev` | development worktree at `/var/www/essentialbali-dev` |
-
-Workflow: feature → PR → `dev` → PR → `main`.
-
----
-
-## Roadmap — 3PVTRN migration
-
-Migrating to: **PostgreSQL · Python · Payload · Vite · React · Tailwind · Node**
-
-| Layer | Today (prod, `main`) | Target (dev, `dev`) | Phase D status |
-|---|---|---|---|
-| DB | MySQL | **PostgreSQL** (`essentialbali_db`) | ✅ provisioned |
-| CMS | Custom Express on `:8082` | **Payload v3.84.1** (`cms/`, port `:4008`) | ✅ deployed, 10 collections, seeded |
-| Frontend | Vite + React + TS | **Vite + React + Tailwind** (kept) | ⚠ rewire pending |
-| Server scripts | Node | **Node + Python** | ⚠ scrapers later |
-| Styling | Tailwind v4 | **Tailwind v4** (kept) | ✅ already wired |
-
-The migration preserves the current frontend structure and routing. The data layer (`src/api/*` and backend SSR fetchers) gets rewired to talk to Payload's REST/GraphQL.
+| `/admin*` | Payload Next.js (`:4008`) |
+| `/_next/*` | Payload (Next.js asset chunks) |
+| `/api/users` `/api/areas` `/api/topics` `/api/articles` `/api/personas` `/api/media` `/api/comments` `/api/hero-ads` `/api/subscribers` `/api/newsletters` `/api/payload-preferences` `/api/access` `/api/graphql*` `/api/ai-chat` `/api/_internal*` | Payload |
+| `/signin` `/signup` | **410 Gone** (legacy admin retired) |
+| `/sitemap.xml` `/robots.txt` | Express SSR (Payload-backed via fetchers) |
+| Everything else (`/`, `/canggu`, `/canggu/dine/...`) | Vite SSR via Express |
 
 ---
 
-## PostgreSQL schema (Phase D target)
+## Admin features
 
-Database: `essentialbali_db` · User: `essentialbali_user`
-
-Payload owns the schema and migrates it. The collections below describe the *intent* — Payload generates the actual tables.
-
-```sql
--- ─── Taxonomy (8 + 8 fixed) ──────────────────────────────────────────
-CREATE TABLE areas (
-  id           SERIAL PRIMARY KEY,
-  slug         TEXT UNIQUE NOT NULL,    -- canggu, kuta, ubud, ...
-  name         TEXT NOT NULL,
-  hero_media   INT REFERENCES media(id),
-  intro        TEXT,
-  lat          NUMERIC(9,6),
-  lng          NUMERIC(9,6)
-);
-
-CREATE TABLE topics (
-  id           SERIAL PRIMARY KEY,
-  slug         TEXT UNIQUE NOT NULL,    -- events, news, featured, dine, ...
-  name         TEXT NOT NULL,
-  icon         TEXT,
-  intro        TEXT
-);
-
--- ─── Personas (writer voices, for E-E-A-T SEO) ───────────────────────
-CREATE TABLE personas (
-  id           SERIAL PRIMARY KEY,
-  slug         TEXT UNIQUE NOT NULL,    -- maya, komang, putu, sari
-  name         TEXT NOT NULL,
-  bio          TEXT,
-  avatar_media INT REFERENCES media(id),
-  voice_notes  TEXT
-);
-
--- ─── Articles ────────────────────────────────────────────────────────
-CREATE TABLE articles (
-  id              SERIAL PRIMARY KEY,
-  area_id         INT NOT NULL REFERENCES areas(id),
-  topic_id        INT NOT NULL REFERENCES topics(id),
-  persona_id      INT REFERENCES personas(id),
-  title           TEXT NOT NULL,
-  slug            TEXT NOT NULL,
-  sub_title       TEXT,
-  body            JSONB NOT NULL,                 -- Payload rich-text Lexical
-  hero_media      INT REFERENCES media(id),
-  status          TEXT NOT NULL DEFAULT 'draft',  -- draft|pending_review|approved|published|rejected
-  meta_title      TEXT,
-  meta_description TEXT,
-  keywords        TEXT[],
-  source_url      TEXT,                           -- crawler-cited reference
-  source_site     TEXT,
-  source_hash     TEXT,                           -- idempotency key
-  published_at    TIMESTAMPTZ,
-  created_at      TIMESTAMPTZ DEFAULT NOW(),
-  updated_at      TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE (area_id, topic_id, slug),
-  UNIQUE (source_hash)                            -- AI re-runs never duplicate
-);
-CREATE INDEX idx_articles_area_topic_status ON articles(area_id, topic_id, status);
-CREATE INDEX idx_articles_published_at      ON articles(published_at DESC);
-
--- ─── Media ───────────────────────────────────────────────────────────
-CREATE TABLE media (
-  id           SERIAL PRIMARY KEY,
-  filename     TEXT NOT NULL,
-  mime         TEXT NOT NULL,
-  width        INT,
-  height       INT,
-  alt          TEXT,
-  credit       TEXT,
-  generated_by TEXT,                  -- 'imager' | 'upload' | 'imported'
-  prompt       TEXT,                  -- if AI-generated
-  url          TEXT,
-  created_at   TIMESTAMPTZ DEFAULT NOW()
-);
-
--- ─── Comments (CRUD by AI agent + by humans) ─────────────────────────
-CREATE TABLE comments (
-  id           SERIAL PRIMARY KEY,
-  article_id   INT NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
-  persona_id   INT REFERENCES personas(id),       -- NULL = real human commenter
-  author_name  TEXT,                              -- if real human, captured display name
-  body         TEXT NOT NULL,
-  status       TEXT NOT NULL DEFAULT 'visible',   -- visible|hidden|spam
-  parent_id    INT REFERENCES comments(id),       -- threaded
-  created_at   TIMESTAMPTZ DEFAULT NOW()
-);
-CREATE INDEX idx_comments_article ON comments(article_id, status);
-
--- ─── Tags (secondary taxonomy for SEO) ───────────────────────────────
-CREATE TABLE tags (
-  id      SERIAL PRIMARY KEY,
-  slug    TEXT UNIQUE NOT NULL,
-  name    TEXT NOT NULL
-);
-CREATE TABLE article_tags (
-  article_id INT NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
-  tag_id     INT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
-  PRIMARY KEY (article_id, tag_id)
-);
-
--- ─── Hero ad slots (64 fixed: 8 areas × 8 topics) ────────────────────
--- Phase D placeholder: each cell shows "Ads space > {Area} > {Topic}" until activated
-CREATE TABLE hero_ads (
-  id          SERIAL PRIMARY KEY,
-  area_id     INT NOT NULL REFERENCES areas(id),
-  topic_id    INT NOT NULL REFERENCES topics(id),
-  active      BOOLEAN NOT NULL DEFAULT FALSE,    -- the Activate/Deactivate toggle
-  client      TEXT,
-  creative    INT REFERENCES media(id),
-  link_url    TEXT,
-  start_at    TIMESTAMPTZ,
-  end_at      TIMESTAMPTZ,
-  placeholder TEXT GENERATED ALWAYS AS
-              ('Ads space > ' || (SELECT name FROM areas WHERE id = area_id)
-                || ' > ' || (SELECT name FROM topics WHERE id = topic_id)) STORED,
-  UNIQUE (area_id, topic_id)
-);
-
--- ─── Subscribers / newsletter (carryover from current site) ──────────
-CREATE TABLE subscribers (
-  id           SERIAL PRIMARY KEY,
-  email        TEXT UNIQUE NOT NULL,
-  status       TEXT NOT NULL DEFAULT 'active',
-  created_at   TIMESTAMPTZ DEFAULT NOW()
-);
-
--- ─── Audit (Payload-managed) ─────────────────────────────────────────
--- Payload maintains its own _users, _api_keys, _versions tables.
-```
-
-**URL contract:** `/{area_slug}/{topic_slug}/{article_slug}` — preserved from current routing.
-
-**Idempotency:** AI agent uses `source_hash` so re-runs of the same crawler URL never create duplicates.
+- **`/admin`** — Payload v3 admin (login: `super_admin@email.com` / `Teameditor@123`)
+- **`/admin/elliot`** — Talk to Elliot full-page chat (sidebar: Channels)
+- **MatrixDashboard** as admin home — 8×8 article grid, ad activate dots
+- **Articles list** — matrix filter + status chips + per-cell counts (`n / 20` color-coded vs target)
+- **Newsletters** — compose + Save with status=Sending → BCC dispatch via Gmail SMTP, history kept
+- **Subscribers** — pure list
+- **Hero Ads** — 64 slots, toggle `active` + assign creative
+- **Hidden collections** (still functional via API): Users, Media, Personas, Comments, Tags, Areas, Topics
 
 ---
 
-## Content strategy (driven by `.openclaw-ess` AI agents)
+## Data layer (Postgres = source of truth)
 
-The site is content-managed by an AI agent system running on `gda-ai01` at `/opt/.openclaw-ess` (separate repo: [openclaw-ess](https://github.com/Gaia-Digital-Agency/openclaw-ess)). The agent:
+| Collection | Count | Notes |
+|---|---|---|
+| areas | 8 | seeded fixed |
+| topics | 8 | seeded fixed |
+| personas | 4 | Maya, Komang, Putu, Sari |
+| hero_ads | 64 | placeholder labels until `active=true` |
+| articles | 64 (placeholders) | all `draft`, populated by Elliot |
+| users | 2 | super_admin (admin) + elliot (ai-agent) |
+| subscribers | 0+ | newsletter sign-ups |
+| newsletters | 0+ | broadcast history |
 
-1. **Crawls** 4 benchmark sites (whatsnewindonesia, thehoneycombers/bali, nowbali, thebalibible) for inspiration + benchmarking
-2. **Drafts** articles via copywriter agents
-3. **Generates** images with Gemini Imagen 3
-4. **Writes** SEO meta + internal links
-5. **Pushes** to Payload as `pending_review`
-6. **Human approves** title / image / body in Payload admin
-7. **Publishes** → live + indexed in `/sitemap.xml`
-
-**Content matrix:** 8 areas × 8 topics = 64 groups, target ~20 articles each → ~1,280 articles.
-
-- **Areas:** Canggu · Kuta · Ubud · Jimbaran · Denpasar · Kintamani · Singaraja · Nusa Penida
-- **Topics:** Events · News · Featured · Dine · Health & Wellness · Nightlife · Activities · People & Culture
+Migrations under `cms/src/migrations/` — apply with `pnpm payload migrate`.
 
 ---
 
-## Local dev
+## AI agent integration (Elliot)
+
+- Lives at `gda-ai01:/opt/.openclaw-ess` ([github.com/Gaia-Digital-Agency/openclaw-ess](https://github.com/Gaia-Digital-Agency/openclaw-ess))
+- Mission Control: **https://ess.gaiada0.online**
+- Authenticates as `elliot@gaiada.com` (role `ai-agent`) via JWT login at `/api/users/login`
+- Has **CRUD** on Articles, Hero Ads, Subscribers, Newsletters
+- Two ingestion paths:
+  1. **Crawler** — research across 4 benchmark sites
+  2. **xlsx** — operator drops `Essential Bali Proofread.xlsx` into `bridge/`-synced inbox
+- All articles enter as `pending_review`. Human approves to `published`.
+
+---
+
+## Operations
 
 ```bash
-# backend
-cd backend
-cp .env.sample .env  # fill in values
-npm install
-npm run dev          # nodemon, port 7777 by default
-
-# frontend (separate terminal)
-cd frontend
-npm install
-npm run dev          # vite, port 5173
-```
-
-For SSR locally, point backend `FRONTEND_PATH` env to `../frontend`.
-
----
-
-## Operations cheatsheet
-
-```bash
-# Legacy (prod, main branch, port 8082)
+# Status
 pm2 list | grep essentialbali
-pm2 logs essentialbali --lines 100
 
-# CMS (Payload v3, dev branch, port 4008)
-pm2 list | grep essentialbali-cms
-pm2 logs essentialbali-cms --lines 100
-curl http://127.0.0.1:4008/admin              # admin UI
-curl http://127.0.0.1:4008/api/areas          # REST
-curl http://127.0.0.1:4008/api/hero-ads       # 64 placeholder slots
+# Live logs
+pm2 logs essentialbali --lines 50           # legacy Vite SSR + Express
+pm2 logs essentialbali-cms --lines 50       # Payload Next.js
 
-# Re-seed (idempotent — safe to re-run)
-ssh gda-s01
-cd /var/www/essentialbali-dev/cms && pnpm seed
+# After deploy (legacy)
+ssh gda-s01 'cd /var/www/essentialbali \
+  && git pull \
+  && cd backend && npm install --omit=dev \
+  && cd ../frontend && npm install && npm run build:ssr \
+  && pm2 restart essentialbali'
 
-# Restart after deploy (legacy)
-cd /var/www/essentialbali && git pull && cd backend && npm install --omit=dev \
-  && cd ../frontend && npm install && npm run build \
-  && pm2 restart essentialbali
+# After deploy (cms)
+ssh gda-s01 'cd /var/www/essentialbali/cms \
+  && git pull \
+  && pnpm install \
+  && pnpm payload migrate \
+  && pnpm build \
+  && pm2 restart essentialbali-cms'
 
-# Restart after deploy (CMS)
-cd /var/www/essentialbali-dev && git pull && cd cms && pnpm install \
-  && pnpm build && pm2 restart essentialbali-cms
-
-# Verify SEO endpoints
+# SEO endpoints
 curl https://essentialbali.gaiada.online/robots.txt
-curl https://essentialbali.gaiada.online/sitemap.xml | head -20
+curl https://essentialbali.gaiada.online/sitemap.xml | grep -c "<loc>"
 ```
 
-## Database (Phase D)
+---
 
-| Item | Value |
+## Credentials & access
+
+| What | Where | Purpose |
+|---|---|---|
+| `super_admin@email.com` / `Teameditor@123` | seed default | Payload admin login |
+| `elliot@gaiada.com` / (in `gda-ai01:/opt/.openclaw-ess/credentials/.env.payload`) | seed via `create-elliot-user.ts` | AI agent JWT login |
+| Postgres password | `cms/.env` | DATABASE_URI |
+| Gmail SMTP | `cms/.env` | `ai@gaiada.com` app password (mirrored from /var/www/templategen) |
+| Vertex AI service account | `/var/www/gaiadaweb/secure/gda-viceroy-...json` | Gemini for `/api/ai-chat` |
+
+---
+
+## Branch model
+
+**`main` only.** The `dev` branch was retired once Phase E cutover stabilized — Payload + Vite SSR rewire are both on main. New work commits direct to main (or a short-lived feature branch).
+
+---
+
+## Repos
+
+| Repo | URL |
 |---|---|
-| DB host | 127.0.0.1 (gda-s01 internal) |
-| DB port | 5432 |
-| Database | `essentialbali_db` |
-| User | `essentialbali_user` |
-| Password | stored in `cms/.env` (gitignored), generated at provisioning |
-| Migrations | Payload-managed (`pnpm payload migrate` if needed) |
+| essentialbali (this) | https://github.com/Gaia-Digital-Agency/essentialbali |
+| openclaw-ess (Elliot) | https://github.com/Gaia-Digital-Agency/openclaw-ess |
