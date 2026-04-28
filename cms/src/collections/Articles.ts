@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { isStaffOrAgent } from "../access";
 
 export const Articles: CollectionConfig = {
   slug: "articles",
@@ -17,7 +18,12 @@ export const Articles: CollectionConfig = {
     },
   },
   defaultSort: "-updatedAt",
-  access: { read: () => true },
+  access: {
+    read: () => true,
+    create: isStaffOrAgent,
+    update: isStaffOrAgent,
+    delete: isStaffOrAgent,
+  },
   fields: [
     {
       type: "row",

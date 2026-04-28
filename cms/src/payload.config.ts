@@ -38,10 +38,17 @@ export default buildConfig({
       // Show a discreet creds hint under the login form when
       // NEXT_PUBLIC_SHOW_LOGIN_HINT=true. Disable in real prod.
       afterLogin: ["@/components/LoginHint"],
+      // "Talk to Elliot" sidebar link (after the Collections list).
+      afterNavLinks: ["@/components/ElliotNavLink"],
       // Replace the default dashboard with the 8x8 matrix view.
       views: {
         dashboard: {
           Component: "@/components/MatrixDashboard",
+        },
+        // Talk to Elliot — custom admin route at /admin/elliot
+        elliot: {
+          Component: "@/components/TalkToElliotView",
+          path: "/elliot",
         },
       },
     },
@@ -69,6 +76,9 @@ export default buildConfig({
   email: nodemailerAdapter({
     defaultFromAddress: process.env.SMTP_FROM_ADDRESS || "noreply@gaiada.com",
     defaultFromName: process.env.SMTP_FROM_NAME || "Essential Bali",
+    // Skip startup verification — SendGrid creds may be exhausted; verifying
+    // at boot blocks the server. Send attempts will surface errors at use-time.
+    skipVerify: true,
     transport: nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT || 587),

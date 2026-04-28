@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { isStaffOrAgent } from "../access";
 
 export const Subscribers: CollectionConfig = {
   slug: "subscribers",
@@ -8,7 +9,12 @@ export const Subscribers: CollectionConfig = {
       "All newsletter sign-ups. To compose and send a newsletter, go to the Newsletters collection.",
     defaultColumns: ["email", "status", "source", "createdAt"],
   },
-  access: { read: () => true },
+  access: {
+    read: () => true,
+    create: isStaffOrAgent,
+    update: isStaffOrAgent,
+    delete: isStaffOrAgent,
+  },
   fields: [
     { name: "email", type: "email", required: true, unique: true, index: true },
     {

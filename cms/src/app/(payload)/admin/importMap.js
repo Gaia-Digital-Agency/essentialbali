@@ -24,7 +24,9 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { default as default_45fba9fbeae7746d3e4ecd94bf631201 } from '@/components/ArticlesMatrixFilter'
 import { default as default_bd54c836213c49e0bc9e5fc94bb138dc } from '@/components/NewslettersIntro'
 import { default as default_99246f3d51f053e0a26dee65783cc7f7 } from '@/components/LoginHint'
+import { default as default_1b31cfe1a161813c1d3298b7f30bb57c } from '@/components/ElliotNavLink'
 import { default as default_30a67c13fa9c9ef2d27386cf8d3f2542 } from '@/components/MatrixDashboard'
+import { default as default_a0a498f81348a2b5270d83b3b39ab783 } from '@/components/TalkToElliotView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -55,6 +57,8 @@ export const importMap = {
   "@/components/ArticlesMatrixFilter#default": default_45fba9fbeae7746d3e4ecd94bf631201,
   "@/components/NewslettersIntro#default": default_bd54c836213c49e0bc9e5fc94bb138dc,
   "@/components/LoginHint#default": default_99246f3d51f053e0a26dee65783cc7f7,
+  "@/components/ElliotNavLink#default": default_1b31cfe1a161813c1d3298b7f30bb57c,
   "@/components/MatrixDashboard#default": default_30a67c13fa9c9ef2d27386cf8d3f2542,
+  "@/components/TalkToElliotView#default": default_a0a498f81348a2b5270d83b3b39ab783,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }
