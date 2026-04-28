@@ -256,8 +256,9 @@ helpers.)
 | 6 | **Crawler** | `discover`, `analyze`, `trend-scan`, `gap-report` | 4 |
 | 7 | **Scraper** | `read-articles-xlsx`, `pull-xlsx-from-drive`, `read-google-doc`, `check-doc-access`, `process-inbox`, `fetch`, `extract-article`, `extract-listing`, `extract-jsonld`, `geocode` | 10 |
 
-**Total: 39 skills** across 7 entities. Each skill is documented in
-detail (status, invocation, what it does) below.
+**Total: 39 skills** across 7 entities — **all 39 LIVE** (after the trend-scan
++ gap-report + competitor-gap batch landed). Each skill is documented in
+detail (invocation, what it does) below.
 
 All 7 agents and what each skill does, marked **🟢 LIVE** when verified
 end-to-end or **🟡 scaffolded** when documented but not yet wired.
@@ -314,7 +315,7 @@ Single source — same `optimizeSeo()` function is used by:
 | `keyword-research` | 🟢 LIVE | same endpoint | Returns `primary_keyword` + `long_tail_keywords[]` as part of optimize-meta output. |
 | `schema-markup` | 🟢 LIVE | (auto-generated server-side from article fields) | Schema.org Article JSON-LD emitted at render time on the public page. |
 | `internal-link` | 🟢 LIVE | same endpoint | Returns `internal_link_anchors[]` (3–5 short noun phrases for inbound link bait). |
-| `competitor-gap` | 🟡 scaffolded | — | Diff what benchmarks rank for vs us. Crawler feeds the data; SEO ranks gaps. |
+| `competitor-gap` | 🟢 LIVE | `POST /api/seo-competitor-gap` (JWT) `{area, topic, missing_themes[]}` | Ranks missing themes by SEO opportunity. Returns `ranked_gaps` with primary_keyword, long_tail, search_potential, suggested_brief (ready for dispatch), angle, rank. |
 
 ### 🟢 Imager — hero + inline images
 
@@ -359,8 +360,8 @@ Manners: `EssentialBaliBot/1.0` user-agent, 1 req/s rate limit, robots.txt respe
 |---|---|---|---|
 | `discover` | 🟢 LIVE | `node workspace-crawler/scripts/crawl-benchmark.mjs --discover --site=... --area=... --topic=...` | List up to 10 candidate URLs from one of the 4 benchmark sites for a given (area, topic). |
 | `analyze` | 🟢 LIVE | `node workspace-crawler/scripts/crawl-benchmark.mjs <url>` | Fetch one URL, extract title + h1/h2/h3 + paragraphs + hero image + outbound links + word count. JSON to stdout. |
-| `trend-scan` | 🟡 scaffolded | — | Merge candidates across all 4 sources, sort by recency. Useful for "what's getting written about Bali this week." |
-| `gap-report` | 🟡 scaffolded | — | What benchmarks cover that we don't (cell-level). Pairs with SEO `competitor-gap`. |
+| `trend-scan` | 🟢 LIVE | `node workspace-crawler/scripts/trend-scan.mjs --area=<slug> [--topic=<slug>] [--site=<one>] [--limit=N]` | Discover URLs across all 4 benchmark sites, fetch each, parse pubDate from JSON-LD / og:article:published_time / `<time>` tag, sort newest first. |
+| `gap-report` | 🟢 LIVE | `node workspace-crawler/scripts/gap-report.mjs --area=<slug> --topic=<slug>` | Runs trend-scan, queries Payload for our titles, asks Vertex for theme diff. Returns missing_themes (theme + priority + example) + overlap_themes. Feeds SEO `competitor-gap`. |
 
 ### 🟢 Scraper — deterministic data extraction
 
