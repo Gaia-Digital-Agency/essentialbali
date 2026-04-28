@@ -272,7 +272,7 @@ Model: Anthropic Claude Haiku 4.5, fallback Vertex Gemini 2.5 Flash
 | `plan-wave` | 🟢 LIVE | `node workspace-main/scripts/plan-wave.mjs [--limit=N] [--execute] [--dry-run] [--gap=SECONDS]` | Reads Payload counts per (area, topic), computes deficit vs 20-per-cell target, picks persona + brief from rotating templates, emits prioritised dispatch queue. With `--execute` runs the queue at 1/min default with retry. |
 | `dispatch-article` | 🟢 LIVE | `echo '{...}' \| node workspace-main/scripts/dispatch-article.mjs` | Full chain: copywriter → seo → imager → web-manager. Hash-locked (Path B). |
 | `review-gate` | 🟡 scaffolded | (in-script in dispatch) | Pre-flight checks before submit: word count, persona match, hero present, SEO non-empty, banned-phrase scan, source.hash dedupe. Currently runs as part of `dispatch-article`; not exposed as a standalone skill. |
-| `status-report` | 🟡 scaffolded | — | Per-cell summary (published / approved / pending_review / draft). Available data via Payload `/api/articles?where[status][...]&limit=0`; no dedicated skill yet. |
+| `status-report` | 🟢 LIVE | `node workspace-main/scripts/status-report.mjs [--table] [--status=<one>]` | Per-cell snapshot of every status (published/approved/pending_review/draft/rejected). Default JSON; `--table` prints an ASCII grid. |
 | `maintenance-pass` | 🟡 scaffolded | — | Find stale Events past their date or News > 30 days old, queue refreshes. Not built yet. |
 
 ### 🟢 Copywriter — drafts article bodies
@@ -283,8 +283,8 @@ Model: Vertex Gemini 2.5 Flash (response bound to JSON schema)
 | Skill | Status | Invocation | What it does |
 |---|---|---|---|
 | `draft-article` | 🟢 LIVE | `echo '{"area":"...","topic":"...","persona":"...","brief":"..."}' \| node workspace-copywriter/scripts/draft-article.mjs` | Drafts title + body_markdown + sub_title + meta + sources, in the chosen persona's voice. |
-| `rewrite-article` | 🟡 scaffolded | — | Pass `{article, instruction}` and re-prompt. Today: re-run `draft-article` with brief = original + instruction. |
-| `regenerate-title` | 🟡 scaffolded | — | Produce 5 alternative titles. Today: re-prompt with low temperature for title-only JSON. |
+| `rewrite-article` | 🟢 LIVE | `node workspace-copywriter/scripts/rewrite-article.mjs --id=N --instruction="..."` | Take existing article + instruction, produce fresh draft. `source.hash` gets `_v2` / `_v3` / … suffix to replace, not duplicate. |
+| `regenerate-title` | 🟢 LIVE | `node workspace-copywriter/scripts/regenerate-title.mjs --id=N` | 5 alternative titles (≤60 chars), each with an editorial angle (numbered list / question hook / lead-with-dish, etc.). Vertex Gemini, schema-bound, temp 0.7. |
 | `persona-check` | 🟡 scaffolded | — | Score voice match 0–10 against persona guidelines. Owned by Elliot post-draft. |
 
 **Personas (voice presets):**
