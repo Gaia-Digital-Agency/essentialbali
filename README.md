@@ -184,6 +184,79 @@ Migrations under `cms/src/migrations/` — apply with `pnpm payload migrate`.
   2. **xlsx** — operator drops `Essential Bali Proofread.xlsx` into `bridge/`-synced inbox
 - All articles enter as `pending_review`. Human approves to `published`.
 
+### How to fire Elliot for a new article
+
+The orchestrator script lives on `gda-ai01` at
+`/opt/.openclaw-ess/workspace-main/scripts/dispatch-article.mjs`. It runs the
+full chain (copywriter → SEO → Imager → Web Manager) and submits the result
+to Payload as `pending_review` so you can review before publishing.
+
+```bash
+# JSON on stdin
+ssh gda-ai01 'echo "{\"area\":\"ubud\",\"topic\":\"health-wellness\",\
+\"persona\":\"komang\",\"brief\":\"five quiet yoga studios in Ubud worth the walk\",\
+\"target_words\":600}" | node /opt/.openclaw-ess/workspace-main/scripts/dispatch-article.mjs'
+
+# or with --flags
+ssh gda-ai01 'node /opt/.openclaw-ess/workspace-main/scripts/dispatch-article.mjs \
+  --area=canggu --topic=dine --persona=maya \
+  --brief="three honest warungs in Canggu" --target_words=350'
+```
+
+Required input keys:
+
+| key | required | what it does |
+|---|---|---|
+| `area` | ✓ | slug — `canggu` / `kuta` / `ubud` / `jimbaran` / `denpasar` / `kintamani` / `singaraja` / `nusa-penida` |
+| `topic` | ✓ | slug — `events` / `news` / `featured` / `dine` / `health-wellness` / `nightlife` / `activities` / `people-culture` |
+| `persona` | ✓ | `maya` (foodie) / `komang` (activities/wellness) / `putu` (cultural) / `sari` (nightlife/events) |
+| `brief` | ✓ | one-sentence prose seed — Elliot translates this into a full article |
+| `target_words` | optional | default 700 (News=300, Events=400) |
+| `research_url` | optional | seed crawler benchmark URL — feeds research_block to Copywriter |
+| `skip_imager` | optional | `true` to skip hero image generation (faster smoke tests) |
+
+What you'll get:
+
+```jsonc
+{
+  "status": "pending_review",
+  "article_id": 67,
+  "article_url": "https://essentialbali.gaiada.online/admin/collections/articles/67",
+  "public_path": "/canggu/dine/canggus-best-lunchtime-warungs-worth-the-queue",
+  "hash": "4b87ccebb5175d5f",
+  "word_count": 285,
+  "banned_phrases_found": [],
+  "copywriter": { "title": "...", "persona": "maya", "words": 285 },
+  "seo":        { "primary_keyword": "...", "meta_title": "..." },
+  "imager":     { "hero_media_id": 2, "skipped": false }
+}
+```
+
+Then open `/admin/collections/articles/{article_id}` to review.
+
+### Hash lock — what happens on a re-run
+
+`source.hash = sha256(area | topic | brief | research_url)` truncated to 16 chars.
+
+| Existing article matching the hash | Re-dispatch behavior |
+|---|---|
+| `pending_review` / `approved` / `published` | **BLOCKED** — exits with `status: skipped_hash_locked`. Prevents accidental duplicates. |
+| `rejected` | Allowed — produces a fresh draft. |
+| Article was deleted | Allowed — produces a fresh draft (this is **Path B**). |
+
+So the human review loop is:
+
+```
+Elliot dispatches → article in pending_review
+      │
+      ▼
+You review at /admin/collections/articles/{id}
+      │
+      ├── ✅ status → approved   (web-manager promotes to published)
+      ├── ✏ edit, save           (stays pending_review, hash-locked)
+      └── 🗑 delete               (Path B — clears the hash, next dispatch creates fresh)
+```
+
 ---
 
 ## Operations
