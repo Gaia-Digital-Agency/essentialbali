@@ -1,10 +1,15 @@
 "use client";
 
 /**
- * /admin/hero-images — visual editor for the 65 hero image slots.
+ * /admin/hero-images — visual editor for the hero image slots.
  *
- *   Row 0: the homepage default (NULL area, NULL topic) — full-width banner
- *   Rows 1–8: 8 areas × 8 topics = 64 cell-specific heroes
+ *   Row 0:    the homepage default (NULL area, NULL topic) — full-width banner
+ *   Rows 1-N: cell-specific heroes for every (area × topic) where
+ *             topic.showsHero = true.
+ *
+ * Topics with showsHero=false (e.g. Events, whose template handles its
+ * own date/time/venue layout) are hidden — the column doesn't render
+ * even if rows exist for it in the database.
  *
  * Click anywhere on a cell to toggle active / inactive. Cell shows the
  * client name (if any) + creative thumbnail when populated. Click "edit"
@@ -24,17 +29,6 @@ const AREAS_ORDER = [
   "kintamani",
   "singaraja",
   "nusa-penida",
-];
-
-const TOPICS_ORDER = [
-  "events",
-  "news",
-  "featured",
-  "dine",
-  "health-wellness",
-  "nightlife",
-  "activities",
-  "people-culture",
 ];
 
 type Tax = { id: number | string; slug: string; name: string };
@@ -70,8 +64,11 @@ const creativeUrl = (c: HeroAd["creative"]): string | null => {
   return m.sizes?.thumbnail?.url || m.url || null;
 };
 
+type Topic = { id: number | string; slug: string; name: string; showsHero?: boolean };
+
 export default function HeroGridView() {
   const [docs, setDocs] = useState<HeroAd[]>([]);
+  const [topicsList, setTopicsList] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
@@ -80,12 +77,18 @@ export default function HeroGridView() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/hero-ads?limit=100&depth=1", {
-          credentials: "include",
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        if (!cancelled) setDocs(data.docs || []);
+        const [heroRes, topicsRes] = await Promise.all([
+          fetch("/api/hero-ads?limit=100&depth=1", { credentials: "include" }),
+          fetch("/api/topics?limit=100&depth=0&sort=id", { credentials: "include" }),
+        ]);
+        if (!heroRes.ok) throw new Error(`hero-ads HTTP ${heroRes.status}`);
+        if (!topicsRes.ok) throw new Error(`topics HTTP ${topicsRes.status}`);
+        const heroData = await heroRes.json();
+        const topicsData = await topicsRes.json();
+        if (!cancelled) {
+          setDocs(heroData.docs || []);
+          setTopicsList(topicsData.docs || []);
+        }
       } catch (e: any) {
         if (!cancelled) setError(e.message || "load failed");
       } finally {
@@ -96,6 +99,13 @@ export default function HeroGridView() {
       cancelled = true;
     };
   }, []);
+
+  // Only render columns for topics where showsHero=true. Topics without
+  // a hero (e.g. Events) are hidden — the rows may still exist in the
+  // database but they are never reachable from this UI.
+  const TOPICS_ORDER = topicsList
+    .filter((t) => t.showsHero !== false)
+    .map((t) => t.slug);
 
   const cellMap = new Map<string, HeroAd>();
   let homepageCell: HeroAd | null = null;
@@ -159,7 +169,8 @@ export default function HeroGridView() {
         <div>
           <div style={title}>Hero image grid</div>
           <div style={sub}>
-            65 slots = 1 homepage default + 8 areas × 8 topics ·{" "}
+            {1 + AREAS_ORDER.length * TOPICS_ORDER.length} slots = 1 homepage default +{" "}
+            {AREAS_ORDER.length} areas × {TOPICS_ORDER.length} topics with showsHero ·{" "}
             <strong>{activeCount}</strong> active · click any cell to flip
           </div>
         </div>
@@ -173,7 +184,7 @@ export default function HeroGridView() {
       {error && <div style={errBar}>{error}</div>}
 
       {loading ? (
-        <div style={{ padding: "1rem", opacity: 0.6 }}>Loading 65 slots…</div>
+        <div style={{ padding: "1rem", opacity: 0.6 }}>Loading slots…</div>
       ) : (
         <>
           {/* Row 0 — homepage default hero (full-width banner) */}
@@ -244,7 +255,13 @@ export default function HeroGridView() {
           </div>
 
         <div style={gridWrap}>
-          <div style={gridStyle}>
+          <div
+            style={{
+              ...gridStyle,
+              gridTemplateColumns: `minmax(120px, 1fr) repeat(${TOPICS_ORDER.length}, minmax(110px, 1fr))`,
+              minWidth: `${250 + TOPICS_ORDER.length * 120}px`,
+            }}
+          >
             {/* corner */}
             <div style={cornerCell}>area / topic</div>
             {/* top header — topics */}

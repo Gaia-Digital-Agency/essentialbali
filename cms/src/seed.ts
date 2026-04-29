@@ -14,7 +14,10 @@ const AREAS = [
 ];
 
 const TOPICS = [
-  { slug: "events", name: "Events" },
+  // showsHero=false on Events because the events listing template
+  // (EventsV3.tsx) renders its own date/time/venue header instead of
+  // a generic hero image. Hero rows for events cells are skipped.
+  { slug: "events", name: "Events", showsHero: false },
   { slug: "news", name: "News" },
   { slug: "featured", name: "Featured" },
   { slug: "dine", name: "Dine" },
@@ -134,12 +137,16 @@ async function main() {
     console.log(`  ✓ created persona/${p.slug}`);
   }
 
-  // 5. 64 hero-ad placeholders
-  console.log("\n5. Hero ad placeholders (64)");
+  // 5. Hero-ad placeholders for cells whose topic has showsHero=true.
+  //    Topics with showsHero=false (e.g. Events) are skipped — their
+  //    listing template handles its own header layout. Default count
+  //    today: 8 areas × 7 topics = 56 cell rows + 1 homepage = 57.
+  const heroTopics = TOPICS.filter((t) => t.showsHero !== false);
+  console.log(`\n5. Hero ad placeholders (${AREAS.length} × ${heroTopics.length} = ${AREAS.length * heroTopics.length} cells)`);
   let created = 0,
     existed = 0;
   for (const area of AREAS) {
-    for (const topic of TOPICS) {
+    for (const topic of heroTopics) {
       const existing = await payload.find({
         collection: "hero-ads",
         where: {
