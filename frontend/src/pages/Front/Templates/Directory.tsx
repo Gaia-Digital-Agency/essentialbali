@@ -4,11 +4,12 @@ import { useRoute } from "../../../context/RouteContext"
 import { getArticleByFields } from "../../../services/article.service"
 import { useTaxonomies } from "../../../context/TaxonomyContext"
 import { useSearchParams, Link } from "react-router"
-// import Advertisement from "../../../components/front/Advertisement"
+import HeroBanner from "../../../components/front/HeroBanner"
 import Image from "../../../components/front/Image"
 import { generatePagination } from "../../../lib/utils/pagination"
 import { formatPublished } from "../../../lib/utils/format"
 import Newsletter from "../../../components/front/Newsletter"
+import { LISTING_PAGE_SIZE } from "../../../lib/constants"
 import { useContent } from "../../../context/ContentContext"
 import { Category } from "../../../types/category.type"
 import { Tag } from "../../../types/tags.type"
@@ -162,7 +163,9 @@ const Directory: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
         id_country: actualRoute.country?.id,
         id_city: actualRoute.city?.id,
         id_region: actualRoute.region?.id,
-        limit: 12,
+        // Single source of truth — see frontend/src/lib/constants.ts.
+        // Was 12 before, drifted from SSR's 9; both now align on 20.
+        limit: LISTING_PAGE_SIZE,
         page: currentPage,
         ...isTrendingParams
     }
@@ -395,11 +398,17 @@ const Directory: React.FC<{isTrending?: boolean}> = ({isTrending = false}) => {
                 <title>{isTrending ? 'Trending' : ''}{actualRoute.category?.title ?? ''} - Essential Bali</title>
                 <meta name="description" content="essentialbali is the ultimate Bali area guide for travelers, expats, and locals, featuring the best dining, events, schools, wellness, and travel in Bali" />
             </Helmet>
+            {/* Cell-specific hero (sourced from hero-ads where area = current
+                area AND topic = current topic). Falls back to homepage default
+                if the cell's slot is empty/inactive. Resolves Issue A from
+                docs/full_test.md §6 — the previous `ads-wrapper` div had a
+                commented-out <Advertisement /> and rendered nothing. */}
+            <HeroBanner
+                area={actualRoute.country?.slug}
+                topic={actualRoute.category?.slug_title}
+            />
             <section className="py-12 bg-front-icewhite">
                 <div className="container">
-                    <div className="mb-12 ads-wrapper">
-                        {/* <Advertisement /> */}
-                    </div>
                     <div className="grid grid-cols-12 mb-12">
                         <div className="col-span-12 md:col-span-10 md:col-start-2">
                             <div className="mb-4 text-center title-wrapper">

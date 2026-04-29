@@ -8,6 +8,11 @@ import { fetchTemplateRoute } from "./templates.fetch.js";
 // import redis from "../../redisClient.js";
 import { pino } from "pino";
 
+// Single source of truth for the listing per-page size. Mirrors
+// frontend/src/lib/constants.ts — kept in sync by hand. Was 9 here
+// and 12 client-side before unification (Issue C from full_test.md).
+const LISTING_PAGE_SIZE = 20;
+
 const logger = pino(pino.destination("./logs/pino-content-fetch.log"));
 
 const HomeTemplate = {
@@ -317,7 +322,7 @@ const fetchContentData = async (route, taxonomy, search = undefined) => {
       ...baseQuery,
       category: route?.listingParams?.category?.id,
       page: page,
-      limit: 9,
+      limit: LISTING_PAGE_SIZE,
     });
     return getArticle;
   }
@@ -334,7 +339,7 @@ const fetchContentData = async (route, taxonomy, search = undefined) => {
       ...baseQuery,
       category: route?.listingParams?.category?.id,
       page: page,
-      limit: 4,
+      limit: LISTING_PAGE_SIZE,
     });
     return getArticle;
   }
