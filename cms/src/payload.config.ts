@@ -23,7 +23,9 @@ import { Tags } from "./collections/Tags";
 import { HeroAds } from "./collections/HeroAds";
 import { Subscribers } from "./collections/Subscribers";
 import { Newsletters } from "./collections/Newsletters";
+import { HomeDailyFeed } from "./collections/HomeDailyFeed";
 import { Users } from "./collections/Users";
+import { NewsletterNotice } from "./globals/NewsletterNotice";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -67,6 +69,10 @@ export default buildConfig({
     HeroAds,
     Subscribers,
     Newsletters,
+    HomeDailyFeed,
+  ],
+  globals: [
+    NewsletterNotice,
   ],
   secret: process.env.PAYLOAD_SECRET || "dev-secret-change-me",
   serverURL: process.env.PAYLOAD_PUBLIC_SERVER_URL,
