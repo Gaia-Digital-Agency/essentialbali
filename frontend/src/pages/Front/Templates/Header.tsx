@@ -15,6 +15,7 @@ import { SearchIcon, X, MapPin, ChevronDown } from "lucide-react";
 import AreaMenuToggleButton from "../../../components/front/AreaMenuToggleButton";
 import AreaMenuPanel from "../../../components/front/AreaMenuPanel";
 import { getTemplateByUrl } from "../../../services/template.service";
+import { useHeaderContent } from "../../../context/HeaderContext";
 import { isBaliAreaSlug } from "../../../utils/baliAreas";
 
 
@@ -65,7 +66,7 @@ const MenuNav: React.FC<{
 };
 
 const Header: React.FC = () => {
-  // const { initialData } = useHeaderContent();
+  const { initialData } = useHeaderContent();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isAreaOpen, setIsAreaOpen] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
@@ -81,32 +82,39 @@ const Header: React.FC = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (!taxonomies.categories) return;
+    const ssrHeader = Array.isArray(initialData?.header) ? initialData.header : null;
+    if (ssrHeader && ssrHeader.length > 0) {
+      const linkCategoryIds = ssrHeader.map(
+        (item: { linkCategory: number }) => item.linkCategory,
+      );
+      setHeaderMenus(
+        taxonomies.categories.filter((c) => linkCategoryIds.includes(c.id)),
+      );
+      return;
+    }
     (async () => {
       try {
         const getTemplate = await getTemplateByUrl("/header");
         if (getTemplate?.data && getTemplate.status_code == 200) {
-          const vaTemplateHeader = getTemplate?.data?.content;
-          const jsonData = JSON.parse(vaTemplateHeader);
+          const jsonData = JSON.parse(getTemplate.data.content);
           const linkCategoryIds = jsonData.map(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (item: any) => item.linkCategory,
           );
-
-          const filteredMenus =
-            taxonomies.categories?.filter((category) =>
-              linkCategoryIds.includes(category.id),
-            ) ?? [];
-
-          setHeaderMenus(filteredMenus);
+          setHeaderMenus(
+            taxonomies.categories?.filter((c) =>
+              linkCategoryIds.includes(c.id),
+            ) ?? [],
+          );
         } else {
-          const fallbackMenus = taxonomies.categories ?? [];
-          setHeaderMenus(fallbackMenus);
+          setHeaderMenus(taxonomies.categories ?? []);
         }
       } catch (e) {
         console.error("Error fetching header template:", e);
       }
     })();
-  }, [taxonomies.categories]);
+  }, [taxonomies.categories, initialData?.header]);
 
   useEffect(() => {
     if (actualRoute.country && isBaliAreaSlug(actualRoute.country.slug)) {

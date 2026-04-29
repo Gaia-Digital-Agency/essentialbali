@@ -104,38 +104,39 @@ const About: React.FC = () => {
   const { taxonomies } = useTaxonomies();
 
   useEffect(() => {
-    // if (!headerMenus || headerMenus.length === 0) {
+    if (!taxonomies.categories) return;
+    const ssrHeader = Array.isArray(initialData?.header) ? initialData.header : null;
+    if (ssrHeader && ssrHeader.length > 0) {
+      const linkCategoryIds = ssrHeader.map(
+        (item: { linkCategory: number }) => item.linkCategory,
+      );
+      setMenuList(
+        taxonomies.categories.filter((c) => linkCategoryIds.includes(c.id)),
+      );
+      return;
+    }
     (async () => {
       try {
         const getTemplate = await getTemplateByUrl("/header");
         if (getTemplate?.data && getTemplate.status_code == 200) {
-          const vaTemplateHeader = getTemplate?.data?.content;
-          const jsonData = JSON.parse(vaTemplateHeader);
+          const jsonData = JSON.parse(getTemplate.data.content);
           const linkCategoryIds = jsonData.map(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (item: any) => item.linkCategory,
           );
-
-          // const filteredMenus = taxonomies.categories?.filter((category: any) =>
-          //   linkCategoryIds.includes(category.id),
-          // );
-
-          const filteredMenus =
-            taxonomies.categories?.filter((category) =>
-              linkCategoryIds.includes(category.id),
-            ) ?? [];
-
-          setMenuList(filteredMenus);
+          setMenuList(
+            taxonomies.categories?.filter((c) =>
+              linkCategoryIds.includes(c.id),
+            ) ?? [],
+          );
         } else {
-          const fallbackMenus = taxonomies.categories ?? [];
-          setMenuList(fallbackMenus);
+          setMenuList(taxonomies.categories ?? []);
         }
       } catch (e) {
         console.error("Error fetching header template:", e);
       }
     })();
-    // }
-  }, [taxonomies.categories]);
+  }, [taxonomies.categories, initialData?.header]);
 
   return (
     <>
