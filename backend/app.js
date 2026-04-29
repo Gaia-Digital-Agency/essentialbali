@@ -25,7 +25,6 @@ import {
   getInitialArticleHeroImage,
 } from "./src/ssr/articles.fetch.js";
 import redis from "./redisClient.js";
-import penthouse from "penthouse";
 
 const logger = pino(pino.destination('./logs/pino.log'));
 
@@ -309,15 +308,9 @@ const clientDist = frontendPath
 // })
 
 if (frontendPath) {
-  app.use("/generate-css", (req, res, next) => {
-    penthouse({
-      url: process.env.FULL_SITE_URL,
-      css: path.join(frontendPath, "src", "index.css"),
-    }).then((css) => {
-      res.send(css);
-    });
-  });
-
+  // /generate-css endpoint (penthouse critical-CSS extractor) removed —
+  // it had zero callers, manual test hung 15s (Chromium not installed),
+  // and Vite already inlines critical CSS into index.html at build time.
   app.use(
     ["/assets", pathWithBase("/assets")],
     express.static(path.join(clientDist, "assets"), {
