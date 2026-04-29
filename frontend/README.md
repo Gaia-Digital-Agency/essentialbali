@@ -1,24 +1,124 @@
-# essentialbali - Frontend
+# Essential Bali — Frontend
 
-This is the frontend for the essentialbali application. It is a React application built with Vite and TypeScript.
+Public-facing site. Vite 7 + React 19 + Tailwind v4 + TypeScript 5.7. Built artifacts are served by the SSR shell in `../backend/` on `:8082` (which proxies to nginx in production).
 
-## Getting Started
+Live: `https://essentialbali.com`, `https://www.essentialbali.com`, `https://essentialbali.gaiada.online`.
 
-1.  Install dependencies:
-    ```bash
-    npm install
-    ```
-2.  Set up your environment variables by copying `.env.sample` to `.env` and filling in the required values.
-3.  Start the development server:
-    ```bash
-    npm run dev
-    ```
-4.  The application is dependant on the backend, access it on backend port:
-   ```bash
-   http://127.0.0.1:8080
-   ```
+---
 
-5.  Build with:
-    ```bash
-    npm run build:ssr
-    ```
+## Public capability surface (UAT-verified 2026-04-29)
+
+The following user-facing features are validated end-to-end against production. Detailed test evidence in `../docs/full_test.md`.
+
+### Routing — 64 area × topic combinations
+
+8 areas × 8 topics = 64 cells, all return **HTTP 200** with the listing template. Empty cells render a clean "No article for this category" message + paginator.
+
+| Areas | canggu, kuta, ubud, jimbaran, denpasar, kintamani, singaraja, nusa-penida |
+|---|---|
+| Topics | events, news, featured, dine, health-wellness, nightlife, activities, people-culture |
+| URL pattern | `/{area-slug}/{topic-slug}` and `/{area-slug}/{topic-slug}/{article-slug}` for single articles |
+
+Path resolution lives in `src/pages/Front/PathResolver.tsx`.
+
+### Homepage CTAs
+
+| Component | File | Wires to | Status |
+|---|---|---|---|
+| Newsletter subscribe | `src/components/front/Newsletter.tsx` | `POST /api/subscribers/subscribe` (public, idempotent) | working |
+| Advertise modal | `src/components/front/AdvertiseModal.tsx` | `POST /api/advertise` (sends via Gmail OAuth from `ai@gaiada.com`) | working |
+| Ask Elliot popup | `src/components/front/AIChatPopup.tsx` | `POST /api/ai-chat` (Vertex Gemini, scope-grounded to Essential Bali) | working |
+| Social — top nav | `src/components/front/About.tsx` | facebook.com/essentialbali · instagram.com/essentialbali · twitter.com/essentialbali | working |
+| Social — footer | (footer block) | + linkedin.com/company/essentialbali (4th channel only in footer) | working |
+
+### Subscribe endpoint contract
+
+Public `POST /api/subscribers/subscribe` (added during the 2026-04-29 UAT — replaces the legacy `/api/newsletter/subscribe` path that 404'd). Idempotent — repeat sign-ups return success without duplicating, and reactivate `unsubscribed`/`bounced` rows.
+
+Request:
+```json
+{ "email": "alice@example.com", "source": "homepage" }
+```
+
+Response:
+```json
+{
+  "success": true,
+  "data": {
+    "email": "alice@example.com",
+    "subscribed_at": "2026-04-29T17:03:15.439Z",
+    "message": "Thanks for subscribing to our newsletter!"
+  }
+}
+```
+
+The handler lives in `cms/src/app/(frontend)/api/subscribers/subscribe/route.ts`. The `source` field defaults to `"homepage"` when omitted.
+
+---
+
+## Local development
+
+```bash
+pnpm install
+pnpm dev                  # Vite on :5173 — needs the SSR shell + Payload running
+```
+
+`pnpm dev` runs Vite in standalone mode for component work. For full-stack local dev (CMS + SSR), run `../backend` and `../cms` in parallel — see the root `README.md` "Operations" section.
+
+### Build
+
+```bash
+pnpm build                # client bundle into dist/client/
+pnpm build:ssr            # client + SSR entry into dist/
+```
+
+The SSR shell at `../backend/app.js` reads `dist/client/index.html` and the SSR entry from `dist/server/`, then serves the result on :8082. After a frontend code change in production, **rebuild + restart the backend** (the SSR shell holds a reference to the index template):
+
+```bash
+cd /var/www/essentialbali/frontend && pnpm build
+pm2 restart essentialbali
+```
+
+### Environment
+
+`.env.production` carries:
+
+| key | example | what for |
+|---|---|---|
+| `VITE_BASE_PATH` | `/` | router base path |
+| `VITE_SITE_URL` | `https://essentialbali.com` | canonical/OG tags |
+| `VITE_IMAGE_URL` | `https://storage.googleapis.com/gda-essentialbali-media` | media host (Payload + GCS) |
+| `VITE_WHATSNEW_BACKEND_URL` | empty (defaults to `window.location.origin`) | API base — leave blank in prod for same-origin calls |
+
+---
+
+## API client
+
+`src/api.ts` is a singleton axios instance with `withCredentials: true` (Payload session cookies) and a 491-refresh interceptor for token rotation. All service modules in `src/services/` go through it:
+
+| Service | Endpoints called | Notes |
+|---|---|---|
+| `newsletter.service.ts` | `subscribers/subscribe`, `newsletter/admin/count-subscribers` | subscribe verified working in UAT |
+| (others as added) | | |
+
+> **Note for external/scripted REST clients** (not browser): Payload v3's session cookies are not honoured when sent via the `Cookie:` header on `/api/*` REST calls — the admin UI works because Next/Payload manages the session internally, but curl/server-side clients must use `Authorization: JWT <token>` instead. Surfaced during the 2026-04-29 UAT.
+
+---
+
+## Console hygiene
+
+Recent commits already shipped:
+
+- NavLogo aspect-ratio lock (eliminated logo-load CLS) — `e0e313c6`
+- Fontaine font-metric matching for CSS fallbacks — `e5dc38b`
+
+Open console items (non-blocking, see `../docs/full_test.md` §6):
+
+1. `PathResolver.js` logs 2 caught `Error` entries on listing pages — investigate fetch shape for empty-result sets.
+2. `Directory.js` fires one `AxiosError 404` on listing pages — likely an articles-by-area+topic call returning 404 instead of `[]`.
+
+---
+
+## Architecture pointer
+
+This README only covers the frontend. Whole-system architecture (nginx routing, Payload, the Elliot agent pipeline, Postgres schema) is in `../README.md`. The most recent end-to-end smoke + functional test report is in `../docs/full_test.md`.
