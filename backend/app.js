@@ -331,6 +331,12 @@ if (frontendPath) {
     ["/favicon.png", pathWithBase("/favicon.png")],
     express.static(path.join(clientDist, "favicon.png"), { index: false }),
   );
+  // Site logo — single root-level asset shown in header. Without this mount
+  // the file at dist/client/logo.png is not reachable as /logo.png (404).
+  app.use(
+    ["/logo.png", pathWithBase("/logo.png")],
+    express.static(path.join(clientDist, "logo.png"), { index: false }),
+  );
 }
 app.use("*", async (req, res, next) => {
   if (req.originalUrl.startsWith("/api")) {
