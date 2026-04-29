@@ -7,12 +7,6 @@
     "dev": "NODE_ENV=development nodemon app.js",
     "ssr": "NODE_ENV=production nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "db:migrate": "sequelize-cli db:migrate",
-    "db:migrate:undo": "sequelize-cli db:migrate:undo",
-    "db:migrate:undo:all": "sequelize-cli db:migrate:undo:all",
-    "db:seed": "sequelize-cli db:seed:all",
-    "db:seed:undo": "sequelize-cli db:seed:undo",
-    "db:seed:undo:all": "sequelize-cli db:seed:undo:all",
     "db:bali-bootstrap": "node scripts/bootstrap-bali-content.mjs"
   },
   "author": "RFB",
