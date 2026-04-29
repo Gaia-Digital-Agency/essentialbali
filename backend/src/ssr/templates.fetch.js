@@ -2,10 +2,8 @@ import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import templateService from "../services/article_templating.service.js";
 import redis from "../../redisClient.js";
 
-const usePayload = process.env.USE_PAYLOAD_DATA === "true";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STATIC_DIR = resolve(__dirname, "static-templates");
 
@@ -47,20 +45,11 @@ export const fetchTemplateRoute = async (url) => {
       /* fall through */
     }
   }
-  if (usePayload) {
-    const val = await readStatic(url);
-    if (val !== null) {
-      try { await redis.set(url, JSON.stringify(val), "EX", 3600); } catch {}
-    }
-    return val;
+  const val = await readStatic(url);
+  if (val !== null) {
+    try { await redis.set(url, JSON.stringify(val), "EX", 3600); } catch {}
   }
-  // legacy MySQL path
-  const get = await templateService.getTemplateByQuery({ query: { url } });
-  if (get?.dataValues?.content) {
-    redis.set(url, get.dataValues.content, "EX", 3600);
-    return JSON.parse(get.dataValues.content);
-  }
-  return null;
+  return val;
 };
 
 const determineLogo = (route) => {

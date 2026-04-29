@@ -1,7 +1,4 @@
-import articleService from "../services/article.service.js";
 import payload from "../lib/payload.client.js";
-
-const usePayload = process.env.USE_PAYLOAD_DATA === "true";
 
 /**
  * Map a Payload article doc → legacy SSR article shape.
@@ -63,87 +60,70 @@ const mapPayloadArticle = (a) => {
   };
 };
 
-export const fetchArticleData = async (slug, ip) => {
-  if (usePayload) {
-    try {
-      const res = await payload.find("articles", {
-        "where[slug][equals]": slug,
-        "where[status][equals]": "published",
-        depth: 2,
-        limit: 1,
-      });
-      const articles = (res?.docs || []).map(mapPayloadArticle).filter(Boolean);
-      return { articles };
-    } catch (e) {
-      console.error("[ssr/articles.fetch:fetchArticleData] Payload error:", e.message);
-      return { articles: [] };
-    }
+export const fetchArticleData = async (slug, _ip) => {
+  try {
+    const res = await payload.find("articles", {
+      "where[slug][equals]": slug,
+      "where[status][equals]": "published",
+      depth: 2,
+      limit: 1,
+    });
+    const articles = (res?.docs || []).map(mapPayloadArticle).filter(Boolean);
+    return { articles };
+  } catch (e) {
+    console.error("[ssr/articles.fetch:fetchArticleData] Payload error:", e.message);
+    return { articles: [] };
   }
-  return articleService.getArticlesNew({
-    query: { slug },
-    headers: { "x-forwarded-for": ip },
-  });
 };
 
 export const fetchArticlesData = async (query = {}) => {
-  if (usePayload) {
-    try {
-      const params = {
-        depth: 2,
-        limit: query.limit && query.limit > 0 ? query.limit : 50,
-        page: query.page || 1,
-        sort: "-publishedAt",
-        "where[status][equals]": "published",
-      };
-      // Translate legacy query.country/category slugs to Payload area/topic id filters.
-      // For simplicity, we filter post-hoc when slugs are passed (low article count).
-      const res = await payload.find("articles", params);
-      let articles = (res?.docs || []).map(mapPayloadArticle).filter(Boolean);
-      if (query.country) {
-        articles = articles.filter((a) => a.slug_country === query.country);
-      }
-      if (query.category) {
-        articles = articles.filter((a) => a.slug_category === query.category);
-      }
-      return {
-        articles,
-        pagination: {
-          page: res?.page || 1,
-          limit: res?.limit || 50,
-          totalData: res?.totalDocs || articles.length,
-          totalPages: res?.totalPages || 1,
-        },
-      };
-    } catch (e) {
-      console.error("[ssr/articles.fetch:fetchArticlesData] Payload error:", e.message);
-      return { articles: [], pagination: { page: 1, limit: 50, totalData: 0, totalPages: 0 } };
+  try {
+    const params = {
+      depth: 2,
+      limit: query.limit && query.limit > 0 ? query.limit : 50,
+      page: query.page || 1,
+      sort: "-publishedAt",
+      "where[status][equals]": "published",
+    };
+    // Translate legacy query.country/category slugs to Payload area/topic id filters.
+    // For simplicity, we filter post-hoc when slugs are passed (low article count).
+    const res = await payload.find("articles", params);
+    let articles = (res?.docs || []).map(mapPayloadArticle).filter(Boolean);
+    if (query.country) {
+      articles = articles.filter((a) => a.slug_country === query.country);
     }
+    if (query.category) {
+      articles = articles.filter((a) => a.slug_category === query.category);
+    }
+    return {
+      articles,
+      pagination: {
+        page: res?.page || 1,
+        limit: res?.limit || 50,
+        totalData: res?.totalDocs || articles.length,
+        totalPages: res?.totalPages || 1,
+      },
+    };
+  } catch (e) {
+    console.error("[ssr/articles.fetch:fetchArticlesData] Payload error:", e.message);
+    return { articles: [], pagination: { page: 1, limit: 50, totalData: 0, totalPages: 0 } };
   }
-  return articleService.getArticlesNew({
-    query: { ...query, status: "published" },
-    headers: { "x-forwarded-for": "system" },
-  });
 };
 
 export const fetchArticleDataByKeyword = async (q) => {
-  if (usePayload) {
-    try {
-      const res = await payload.find("articles", {
-        "where[status][equals]": "published",
-        "where[title][like]": q,
-        depth: 1,
-        limit: 7,
-      });
-      const articles = (res?.docs || []).map(mapPayloadArticle).filter(Boolean);
-      return { articles };
-    } catch (e) {
-      console.error("[ssr/articles.fetch:fetchArticleDataByKeyword] Payload error:", e.message);
-      return { articles: [] };
-    }
+  try {
+    const res = await payload.find("articles", {
+      "where[status][equals]": "published",
+      "where[title][like]": q,
+      depth: 1,
+      limit: 7,
+    });
+    const articles = (res?.docs || []).map(mapPayloadArticle).filter(Boolean);
+    return { articles };
+  } catch (e) {
+    console.error("[ssr/articles.fetch:fetchArticleDataByKeyword] Payload error:", e.message);
+    return { articles: [] };
   }
-  return articleService.searchArticles({
-    query: { keyword: q, limit: 7, page: 1 },
-  });
 };
 
 export const getInitialArticleHeroImage = () => false;

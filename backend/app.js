@@ -1,7 +1,6 @@
 import "dotenv/config";
 import express from "express";
 import bodyParser from "body-parser";
-import db from "./src/models/index.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -46,24 +45,10 @@ const templatePath = frontendPath
 
 dotenv.config();
 
-const usePayload = process.env.USE_PAYLOAD_DATA === "true";
-
-if (usePayload) {
-  console.log("⏭  Skipping Sequelize/MySQL connect (USE_PAYLOAD_DATA=true) — SSR uses Payload REST");
-} else {
-  console.log("🔥 Loaded models:");
-  console.table(Object.keys(db));
-  db.sequelize
-    .authenticate()
-    .then(() => {
-      console.log("✅ Database connected");
-      // Sync database schema - creates tables if they don't exist
-      // return db.sequelize.sync({ alter: true });
-      return Promise.resolve();
-    })
-    .then(() => console.log("✅ Database ready (migration mode)"))
-    .catch((err) => console.error("❌ Error DB:", err));
-}
+// (cleanup-C) Sequelize/MySQL boot path was removed entirely.
+// MySQL was dropped 2026-04-28 and SSR fetchers go to Payload REST only.
+// USE_PAYLOAD_DATA env var is no longer read — there is no fallback path
+// to switch into.
 
 const port = process.env.PORT || 7777;
 const url = process.env.URL || "";
