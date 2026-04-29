@@ -1,5 +1,6 @@
 import * as migration_20260427_082903_initial from './20260427_082903_initial';
 import * as migration_20260427_105750_newsletters from './20260427_105750_newsletters';
+import * as migration_20260429_040000_n2_media_naming_schema from './20260429_040000_n2_media_naming_schema';
 
 export const migrations = [
   {
@@ -10,6 +11,11 @@ export const migrations = [
   {
     up: migration_20260427_105750_newsletters.up,
     down: migration_20260427_105750_newsletters.down,
-    name: '20260427_105750_newsletters'
+    name: '20260427_105750_newsletters',
+  },
+  {
+    up: migration_20260429_040000_n2_media_naming_schema.up,
+    down: migration_20260429_040000_n2_media_naming_schema.down,
+    name: '20260429_040000_n2_media_naming_schema',
   },
 ];
