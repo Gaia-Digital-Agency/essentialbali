@@ -55,10 +55,12 @@ const log = (...a) => console.error("[migrate-hero-65]", ...a);
 
 // Tiny psql wrapper — avoids needing the `pg` npm package as a dep of
 // the cms workspace. Returns trimmed stdout; throws on non-zero exit.
+// -q (quiet) suppresses command-completion footers like "INSERT 0 1"
+// that would otherwise contaminate captured stdout for RETURNING.
 function psql(sql) {
   const r = spawnSync(
     "psql",
-    [DATABASE_URI, "-At", "-v", "ON_ERROR_STOP=1", "-c", sql],
+    [DATABASE_URI, "-At", "-q", "-v", "ON_ERROR_STOP=1", "-c", sql],
     { encoding: "utf-8" },
   );
   if (r.status !== 0) {
