@@ -173,6 +173,122 @@ export const Articles: CollectionConfig = {
       ],
     },
     {
+      // Event-only metadata. Only consumed when topic = Events; the
+      // generic article templates ignore these fields. Editors writing
+      // an event piece fill the date/time/venue here and the
+      // EventsV3.tsx + SingleEventV2.tsx templates render them as
+      // structured event headers + filterable date/time chips.
+      //
+      // Replaces the legacy meta_data.{start_date, end_date, start_time,
+      // end_time} JSON blob from the retired MySQL schema.
+      name: "eventDetails",
+      type: "group",
+      admin: {
+        description:
+          "Used only when Topic = Events. Date / time / venue render in the events listing and single-event page. Ignored for the other 7 topics.",
+      },
+      fields: [
+        {
+          type: "row",
+          fields: [
+            {
+              name: "startDate",
+              type: "date",
+              index: true,
+              admin: {
+                date: { pickerAppearance: "dayOnly" },
+                description: "Event start date (or single-day date).",
+              },
+            },
+            {
+              name: "endDate",
+              type: "date",
+              admin: {
+                date: { pickerAppearance: "dayOnly" },
+                description: "Optional. Leave empty for a single-day event.",
+              },
+            },
+          ],
+        },
+        {
+          type: "row",
+          fields: [
+            {
+              name: "startTime",
+              type: "text",
+              maxLength: 5,
+              admin: {
+                placeholder: "18:00",
+                description: "24-hour HH:MM. Used by the morning/afternoon/night filter.",
+              },
+            },
+            {
+              name: "endTime",
+              type: "text",
+              maxLength: 5,
+              admin: { placeholder: "23:00" },
+            },
+            {
+              name: "timeOfDay",
+              type: "select",
+              options: [
+                { label: "Morning (01:00-12:00)", value: "morning" },
+                { label: "Afternoon (12:00-18:00)", value: "afternoon" },
+                { label: "Night (18:00-24:00)", value: "night" },
+                { label: "All-day", value: "all-day" },
+              ],
+              admin: {
+                description:
+                  "Auto-derived from startTime when blank. Set explicitly for all-day events or to override.",
+              },
+            },
+          ],
+        },
+        { name: "venueName", type: "text", admin: { placeholder: "e.g. Potato Head Beach Club" } },
+        { name: "venueAddress", type: "textarea" },
+        {
+          type: "row",
+          fields: [
+            { name: "venueLat", type: "number" },
+            { name: "venueLng", type: "number" },
+          ],
+        },
+        { name: "ticketUrl", type: "text", admin: { description: "Booking / ticket page (optional)." } },
+        {
+          name: "recurrence",
+          type: "select",
+          defaultValue: "one-off",
+          options: [
+            { label: "One-off", value: "one-off" },
+            { label: "Weekly", value: "weekly" },
+            { label: "Monthly", value: "monthly" },
+            { label: "Annual", value: "annual" },
+          ],
+        },
+      ],
+      hooks: {
+        beforeChange: [
+          // Auto-derive timeOfDay from startTime when not explicitly set.
+          // Only runs when an event has a startTime (HH:MM) and no
+          // timeOfDay was chosen. Doesn't overwrite an editor's pick.
+          ({ value, siblingData }) => {
+            if (!value) return value;
+            const v = value as Record<string, unknown>;
+            if (v.timeOfDay) return v;
+            const st = typeof v.startTime === "string" ? v.startTime : "";
+            const m = st.match(/^(\d{1,2}):(\d{2})$/);
+            if (!m) return v;
+            const h = Number(m[1]);
+            if (Number.isNaN(h)) return v;
+            if (h >= 1 && h < 12) v.timeOfDay = "morning";
+            else if (h >= 12 && h < 18) v.timeOfDay = "afternoon";
+            else if (h >= 18 && h < 24) v.timeOfDay = "night";
+            return v;
+          },
+        ],
+      },
+    },
+    {
       name: "tags",
       type: "relationship",
       relationTo: "tags",
