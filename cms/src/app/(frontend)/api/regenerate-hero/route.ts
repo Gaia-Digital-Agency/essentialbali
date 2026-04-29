@@ -84,15 +84,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 3. Create a Payload media doc — Payload's GCS storage adapter
-  //    handles upload + sized variants automatically.
-  const slugBase = String(article.title)
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-")
-    .slice(0, 60);
-  const filename = `${slugBase}-hero-${Date.now()}.png`;
+  // 3. Create a Payload media doc.
+  //    The N3 beforeOperation hook on Media derives the canonical filename
+  //    ({source}_{kind}_{area}_{topic}_{slug}-{nano}.webp) from the metadata
+  //    below + the linkedArticle slug; storage-gcs uploads original + sized
+  //    variants under that name. The req.file.name we pass here is just a
+  //    placeholder; the hook overwrites it before generateFileData runs.
   const altText = `${article.title} — ${areaSlug} ${topicSlug} editorial photograph`;
   let mediaDoc: any;
   try {
@@ -100,13 +97,17 @@ export async function POST(req: NextRequest) {
       collection: "media",
       data: {
         alt: altText,
-        generatedBy: "imager",
+        source: "imager",
+        kind: "hero",
+        area: areaSlug,
+        topic: topicSlug,
+        linkedArticle: article.id,
         prompt: result.prompt,
       },
       file: {
         data: result.png,
         mimetype: "image/png",
-        name: filename,
+        name: "regenerate-hero-input.png",
         size: result.png.length,
       },
     });
