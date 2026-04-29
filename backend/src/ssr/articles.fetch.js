@@ -31,6 +31,35 @@ const mapPayloadArticle = (a) => {
     bodyHtml = lexicalToHtml(a.body);
   }
 
+  // Event metadata is surfaced at TWO keys:
+  //   eventDetails — the modern shape (matches the Payload field group)
+  //   meta_data    — back-compat shape for the legacy templates that
+  //                  still read meta_data.start_date etc. Mapped from
+  //                  eventDetails so EventsV3 + SingleEventV2 keep
+  //                  working both before and after their rewrite.
+  // (We also fold the SEO group into meta_data so the existing SEO
+  // helmets aren't broken — the legacy code reads meta_data.metaTitle
+  // etc.)
+  const ed = a.eventDetails || null;
+  const metaData = {
+    ...(a.seo || {}),
+    ...(ed
+      ? {
+          start_date: ed.startDate || null,
+          end_date: ed.endDate || null,
+          start_time: ed.startTime || null,
+          end_time: ed.endTime || null,
+          time_of_day: ed.timeOfDay || null,
+          venue_name: ed.venueName || null,
+          venue_address: ed.venueAddress || null,
+          venue_lat: ed.venueLat ?? null,
+          venue_lng: ed.venueLng ?? null,
+          ticket_url: ed.ticketUrl || null,
+          recurrence: ed.recurrence || null,
+        }
+      : {}),
+  };
+
   return {
     id: a.id,
     slug_title: a.slug,
@@ -53,7 +82,8 @@ const mapPayloadArticle = (a) => {
     featured_image_url: hero?.url || null,
     featured_image_4_3: null,
     featured_image_16_9: null,
-    meta_data: a.seo || null,
+    eventDetails: ed,
+    meta_data: metaData,
     publishedAt: a.publishedAt || null,
     createdAt: a.createdAt,
     updatedAt: a.updatedAt,
@@ -107,6 +137,31 @@ export const fetchArticlesData = async (query = {}) => {
         /^\d+$/.test(String(query.category));
       params[numeric ? "where[topic][equals]" : "where[topic.slug][equals]"] =
         query.category;
+    }
+
+    // Event-only filters used by the EventsV3 listing template.
+    // Passed through as legacy keys (metaData_start_date / _end_date /
+    // _start_time / _end_time) by the frontend service layer; here we
+    // translate them to the new eventDetails.* Payload where-clauses.
+    if (query.metaData_start_date) {
+      params["where[eventDetails.startDate][greater_than_equal]"] =
+        query.metaData_start_date;
+    }
+    if (query.metaData_end_date) {
+      params["where[eventDetails.startDate][less_than_equal]"] =
+        query.metaData_end_date;
+    }
+    if (query.metaData_start_time) {
+      params["where[eventDetails.startTime][greater_than_equal]"] =
+        query.metaData_start_time;
+    }
+    if (query.metaData_end_time) {
+      params["where[eventDetails.startTime][less_than_equal]"] =
+        query.metaData_end_time;
+    }
+    if (query.metaData_time_of_day) {
+      params["where[eventDetails.timeOfDay][equals]"] =
+        query.metaData_time_of_day;
     }
 
     const res = await payload.find("articles", params);

@@ -289,6 +289,21 @@ const articleListHandler = async (req, res) => {
         : cat != null && cat !== ""
           ? (toNumOrUndef(cat) ?? cat)
           : undefined,
+      // Event-only filters used by the Events listing template
+      // (frontend/src/pages/Front/Templates/EventsV3.tsx). Keys mirror
+      // the legacy MySQL meta_data column naming so EventsV3 doesn't
+      // need to change. fetchArticlesData maps them to the new
+      // eventDetails.* Payload where-clauses.
+      metaData_start_date:
+        typeof q.metaData_start_date === "string" ? q.metaData_start_date : undefined,
+      metaData_end_date:
+        typeof q.metaData_end_date === "string" ? q.metaData_end_date : undefined,
+      metaData_start_time:
+        typeof q.metaData_start_time === "string" ? q.metaData_start_time : undefined,
+      metaData_end_time:
+        typeof q.metaData_end_time === "string" ? q.metaData_end_time : undefined,
+      metaData_time_of_day:
+        typeof q.metaData_time_of_day === "string" ? q.metaData_time_of_day : undefined,
     };
     const result = await fetchArticlesData(params);
     res.json({ status_code: 200, status: "OK", data: result });
