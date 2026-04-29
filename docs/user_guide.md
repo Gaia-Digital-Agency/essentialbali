@@ -165,6 +165,12 @@ error bar).
 
 ## Media & images
 
+> **Live since 2026-04-29.** Naming convention, upload dock, gallery,
+> and canonical-filename hook all in production. New uploads (manual
+> via dock, AI-generated via Imager pipeline, regenerate-hero button)
+> all land in GCS under the `{source}_{kind}_{area}_{topic}_{slug}-
+> {nano}.webp` convention automatically.
+
 Every image on the site lives in **Collections → Media**. There are only
 three ways an image gets in:
 
@@ -240,10 +246,13 @@ The convention exists so you can:
 
 ### Imager gallery
 
-Tab next to the Upload Dock in `/admin/elliot`. Shows the 24 most recent
+Right next to the Upload Dock in `/admin/elliot` (same Media Workshop
+section, two-up grid on wide screens). Shows the 24 most recent
 `source = imager` images, newest first. Click a thumbnail for full-size
 preview + a **Copy URL** button. Use this when you want to reuse an AI
 hero in a newsletter or as a manual replacement on another article.
+Includes a **↻ refresh** button — useful right after triggering a
+regenerate so you don't have to hard-reload the page.
 
 ### Deleting images
 
