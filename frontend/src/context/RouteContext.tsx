@@ -37,8 +37,18 @@ export const RouteProvider: React.FC<RouteProviderProps> = ({children, initialDa
     // Set to true by default since SSR is disabled - allows components to fetch content on initial load
     const [clientChange, setStateClientChange] = useState<boolean>(false)
     const setActualRoute = (params: RouteProps) => {
-        setStateActualRoute(prev => ({...prev, ...params}));
-        // setClientChange(true)
+        // Full replace, not shallow merge. The previous behaviour
+        // (`{...prev, ...params}`) preserved `prev.article` whenever
+        // the new params didn't include an `article` key — which is
+        // every non-article route. Net effect: navigating away from a
+        // published article into a listing URL kept the old article
+        // in state, so SingleV2 kept rendering on top of LISTING_*
+        // routes (the "Nusa Penida article shown on Canggu/People-
+        // Culture" bug surfaced 2026-04-29).
+        //
+        // PathResolver — the only external caller — always passes the
+        // fully resolved route object, so a full replace is safe.
+        setStateActualRoute(params);
     }
     const setRouteType = (type: string) => {
         setStateRouteType(type)
