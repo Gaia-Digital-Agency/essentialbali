@@ -1,7 +1,6 @@
 import "dotenv/config";
 import express from "express";
 import bodyParser from "body-parser";
-import routers from "./src/routers/index.js";
 import db from "./src/models/index.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -275,7 +274,6 @@ app.use(
 );
 
 // API routes MUST be registered before Vite/SSR middleware to avoid blocking
-app.use(["/api", pathWithBase("/api")], routers);
 
 app.get("/debug/uploads/:name", (req, res) => {
   const filePath = path.join(uploadsAbsolute, req.params.name);
