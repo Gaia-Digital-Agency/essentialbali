@@ -17,13 +17,12 @@ export interface SubscribeNewsletterData {
 export const subscribeNewsletter = async (email: string) => {
   try {
     const response = await apiClient.post<
-      ApiResponse<SubscribeNewsletterData> 
-    >("newsletter/subscribe", { email: email });
+      ApiResponse<SubscribeNewsletterData>
+    >("subscribers/subscribe", { email, source: "homepage" });
 
     return response.data;
-
   } catch (error) {
-    console.error("BIBRAH => ", error);
+    console.error("subscribeNewsletter error:", error);
     throw error;
   }
 };

@@ -315,6 +315,7 @@ const fetchContentData = async (route, taxonomy, search = undefined) => {
     }
     const getArticle = await fetchArticlesData({
       ...baseQuery,
+      category: route?.listingParams?.category?.id,
       page: page,
       limit: 9,
     });
@@ -331,6 +332,7 @@ const fetchContentData = async (route, taxonomy, search = undefined) => {
     }
     const getArticle = await fetchArticlesData({
       ...baseQuery,
+      category: route?.listingParams?.category?.id,
       page: page,
       limit: 4,
     });

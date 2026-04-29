@@ -1,5 +1,4 @@
 import React from "react";
-import Link from "next/link";
 import { getPayload } from "payload";
 import config from "@payload-config";
 
@@ -45,15 +44,15 @@ export default async function NewslettersIntro() {
         <div>
           <h2 style={title}>Newsletter broadcasts</h2>
           <p style={sub}>
-            Each entry is one email broadcast. Compose, then set Status to{" "}
-            <b style={{ color: "var(--theme-text)" }}>“Ready to send”</b> and save — it
-            dispatches via SMTP to all <b style={{ color: "var(--theme-text)" }}>{activeCount}</b>{" "}
-            active subscriber{activeCount === 1 ? "" : "s"}.
+            Each entry is one email broadcast. Use the{" "}
+            <b style={{ color: "var(--theme-text)" }}>Create New</b> button (top
+            right) to compose, then set Status to{" "}
+            <b style={{ color: "var(--theme-text)" }}>“Ready to send”</b> and
+            save — it dispatches via SMTP to all{" "}
+            <b style={{ color: "var(--theme-text)" }}>{activeCount}</b> active
+            subscriber{activeCount === 1 ? "" : "s"}.
           </p>
         </div>
-        <Link href="/admin/collections/newsletters/create" style={ctaBtn}>
-          + Compose newsletter
-        </Link>
       </div>
 
       <div style={statsRow}>
@@ -76,7 +75,7 @@ export default async function NewslettersIntro() {
       <details style={howto}>
         <summary style={howtoSummary}>How to send a newsletter →</summary>
         <ol style={howtoList}>
-          <li>Click <b>Compose newsletter</b> (or “Create New”).</li>
+          <li>Click <b>Create New</b> in the top right.</li>
           <li>
             Fill in <b>Subject</b> and <b>Body</b>. Optionally a <b>Preheader</b> (preview text).
           </li>
@@ -124,18 +123,6 @@ const sub: React.CSSProperties = {
   maxWidth: 540,
   lineHeight: 1.55,
 };
-const ctaBtn: React.CSSProperties = {
-  padding: "0.55rem 1.1rem",
-  borderRadius: "var(--style-radius-s, 4px)",
-  background: "var(--theme-success-500, #16a34a)",
-  color: "#fff",
-  textDecoration: "none",
-  fontSize: "0.82rem",
-  fontWeight: 500,
-  whiteSpace: "nowrap",
-  border: "none",
-};
-
 const statsRow: React.CSSProperties = {
   display: "flex",
   gap: "1.5rem",
