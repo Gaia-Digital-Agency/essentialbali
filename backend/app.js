@@ -22,6 +22,7 @@ import {
 import { fetchAuth } from "./src/ssr/auth.fetch.js";
 import {
   fetchArticlesData,
+  fetchArticleDataByKeyword,
   getInitialArticleHeroImage,
 } from "./src/ssr/articles.fetch.js";
 import redis from "./redisClient.js";
@@ -263,6 +264,66 @@ app.get("/debug/uploads/:name", (req, res) => {
   const filePath = path.join(uploadsAbsolute, req.params.name);
   return res.json({ exists: fs.existsSync(filePath), path: filePath });
 });
+
+// Legacy public-API adapter: /api/article — used by frontend service layer
+// (article.service.ts) for related/listing fetches on Single/Events/Housing
+// templates. Translates the legacy query shape (category[]=, id_country=,
+// limit=, page=) into Payload via fetchArticlesData and returns the legacy
+// {status_code, data: {articles, pagination}} envelope the frontend expects.
+const toNumOrUndef = (v) => {
+  if (v == null || v === "") return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+};
+const articleListHandler = async (req, res) => {
+  try {
+    const q = req.query || {};
+    const cat = q.category;
+    const params = {
+      limit: toNumOrUndef(q.limit),
+      page: toNumOrUndef(q.page),
+      id_country: toNumOrUndef(q.id_country),
+      country: typeof q.country === "string" ? q.country : undefined,
+      category: Array.isArray(cat)
+        ? cat.map((v) => toNumOrUndef(v) ?? v).filter((v) => v != null)
+        : cat != null && cat !== ""
+          ? (toNumOrUndef(cat) ?? cat)
+          : undefined,
+    };
+    const result = await fetchArticlesData(params);
+    res.json({ status_code: 200, status: "OK", data: result });
+  } catch (e) {
+    console.error("[/api/article] error:", e?.message || e);
+    res
+      .status(500)
+      .json({ status_code: 500, status: "ERROR", data: null, message: String(e?.message || e) });
+  }
+};
+app.get(["/api/article", pathWithBase("/api/article")], articleListHandler);
+
+// Legacy public-API adapter: /api/article/search?keyword=…
+app.get(
+  ["/api/article/search", pathWithBase("/api/article/search")],
+  async (req, res) => {
+    try {
+      const keyword = String(req.query?.keyword || "").trim();
+      if (!keyword) {
+        return res.json({
+          status_code: 200,
+          status: "OK",
+          data: { articles: [] },
+        });
+      }
+      const result = await fetchArticleDataByKeyword(keyword);
+      res.json({ status_code: 200, status: "OK", data: result });
+    } catch (e) {
+      console.error("[/api/article/search] error:", e?.message || e);
+      res
+        .status(500)
+        .json({ status_code: 500, status: "ERROR", data: null, message: String(e?.message || e) });
+    }
+  },
+);
 
 // Vite/static middleware AFTER API routes so they don't intercept API requests
 if (!isProd && vite) {
