@@ -87,16 +87,30 @@ export const fetchArticlesData = async (query = {}) => {
       sort: "-publishedAt",
       "where[status][equals]": "published",
     };
-    // Translate legacy query.country/category slugs to Payload area/topic id filters.
-    // For simplicity, we filter post-hoc when slugs are passed (low article count).
+    // Translate legacy query keys → Payload `where[…]` filters so the
+    // database does the work and `limit` returns the right N. The legacy
+    // SSR (content.fetch.js) passes either:
+    //   - query.id_country = <numeric area id>  (from baseQuery)
+    //   - query.category   = <numeric topic id>  (single match)
+    //   - query.category   = [<id>, <id>, …]    (exclude-slugs → include set)
+    //   - query.country / query.category = <slug string>  (other call sites)
+    if (query.id_country != null) {
+      params["where[area][equals]"] = query.id_country;
+    } else if (typeof query.country === "string" && query.country) {
+      params["where[area.slug][equals]"] = query.country;
+    }
+    if (Array.isArray(query.category) && query.category.length > 0) {
+      params["where[topic][in]"] = query.category.join(",");
+    } else if (query.category != null && query.category !== "") {
+      const numeric =
+        typeof query.category === "number" ||
+        /^\d+$/.test(String(query.category));
+      params[numeric ? "where[topic][equals]" : "where[topic.slug][equals]"] =
+        query.category;
+    }
+
     const res = await payload.find("articles", params);
-    let articles = (res?.docs || []).map(mapPayloadArticle).filter(Boolean);
-    if (query.country) {
-      articles = articles.filter((a) => a.slug_country === query.country);
-    }
-    if (query.category) {
-      articles = articles.filter((a) => a.slug_category === query.category);
-    }
+    const articles = (res?.docs || []).map(mapPayloadArticle).filter(Boolean);
     return {
       articles,
       pagination: {
