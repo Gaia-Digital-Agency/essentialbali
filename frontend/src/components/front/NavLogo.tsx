@@ -52,6 +52,8 @@ const NavLogo: React.FC<NavLogoProps> = ({ url, to = "/" }) => {
       <Link to={to}>
         <img
           src={logoSrc}
+          width={80}
+          height={80}
           className="w-auto h-[80px] md:h-[150px]"
           alt="essentialbali logo"
         />
