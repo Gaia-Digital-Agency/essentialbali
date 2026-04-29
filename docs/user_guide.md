@@ -163,6 +163,99 @@ error bar).
 
 ---
 
+## Media & images
+
+Every image on the site lives in **Collections → Media**. There are only
+three ways an image gets in:
+
+1. **Imager (the AI)** — when Elliot drafts an article, the Imager
+   sub-agent generates a hero image and uploads it for you. You don't
+   touch anything; the Media row appears with `source = imager`.
+2. **You upload** — drop a JPG/PNG/WebP into the **Media Upload Dock** at
+   the top of `/admin/elliot`. Used for: site logo, manual hero
+   replacements, persona avatars, anything you want to bring in by hand.
+3. **External import** — when a content workflow pulls an image from a
+   benchmark source (rare). Stored with `source = external`.
+
+### What you'll see in the dock
+
+Top-right of the Elliot chat panel:
+
+* **Drag-drop zone** — drop one or more images.
+* **Kind** dropdown: `hero · hero_ads · inline · newsletter · avatar ·
+  banner · other`.
+* **Area** dropdown (optional): the 8 Bali areas, or "—".
+* **Topic** dropdown (optional): the 8 site topics, or "—".
+* **Alt text** input (required — accessibility + SEO).
+* **Upload** button.
+
+### Hard limits (server enforced)
+
+| Rule | Limit |
+|---|---|
+| Max upload size | **10 MB** |
+| Accepted MIME types | `image/jpeg`, `image/png`, `image/webp` |
+| Videos | **rejected** — pictures only |
+| Output format | **always WebP** (jpeg/png are converted automatically) |
+
+If a file is too large or wrong type, the dock shows a red bar and
+nothing uploads. No partial saves.
+
+### File naming convention
+
+Every image stored on GCP follows one canonical pattern:
+
+```
+{source}_{kind}[_{area}][_{topic}]_{slug}-{nano}.webp
+```
+
+| Token | What | Examples |
+|---|---|---|
+| `source` | who created it | `imager` (AI) · `external` (you / imports) |
+| `kind` | how it's used | `hero` · `hero_ads` · `inline` · `newsletter` · `avatar` · `banner` · `other` |
+| `area` | optional | `canggu` · `kuta` · `ubud` · `jimbaran` · `denpasar` · `kintamani` · `singaraja` · `nusa-penida` |
+| `topic` | optional | `events` · `news` · `featured` · `dine` · `health-wellness` · `nightlife` · `activities` · `people-culture` |
+| `slug` | the article/asset slug | `sunset-surf-spots` |
+| `nano` | 6-char random suffix | `3k7q9p` (lets you re-roll without overwriting) |
+
+**Real examples** from the bucket:
+
+```
+imager_hero_canggu_activities_sunset-surf-spots-3k7q9p.webp
+imager_hero_ads_kuta_nightlife_friday-block-9z2x1m.webp
+imager_newsletter_weekly-april-29-7n4b8r.webp
+external_avatar_persona-zara-bali-1f8e0c.webp
+external_other_essentialbali-logo-x0logo.webp
+```
+
+You don't construct these names by hand. The dock + Elliot's pipelines
+build them automatically from the metadata you (or the AI) supplies.
+The convention exists so you can:
+
+* See at a glance which images belong to which article without opening
+  Payload.
+* Bulk-clean stale Imager output (everything starting `imager_`) without
+  touching uploads.
+* Search the GCS bucket by area or topic in one regex.
+
+### Imager gallery
+
+Tab next to the Upload Dock in `/admin/elliot`. Shows the 24 most recent
+`source = imager` images, newest first. Click a thumbnail for full-size
+preview + a **Copy URL** button. Use this when you want to reuse an AI
+hero in a newsletter or as a manual replacement on another article.
+
+### Deleting images
+
+Open the Media row → **Delete**. The GCS object is removed in the same
+transaction. There is no recycle bin — be deliberate.
+
+If a Media row is referenced by an Article (`hero` field) or a Hero Ad
+(`creative` field), Payload blocks the delete and shows you the linked
+docs. Re-point those first, then delete.
+
+---
+
 ## Newsletters
 
 Sidebar → **Collections → Newsletters**.
