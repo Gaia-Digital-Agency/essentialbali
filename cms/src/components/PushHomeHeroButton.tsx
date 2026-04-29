@@ -43,6 +43,7 @@ function getHeroDocId(): string | null {
 
 export default function PushHomeHeroButton() {
   const [isHomepageRow, setIsHomepageRow] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
 
@@ -73,11 +74,17 @@ export default function PushHomeHeroButton() {
 
   if (!isHomepageRow) return null;
 
-  const onClick = async () => {
-    const ok = window.confirm(
-      "Push this homepage hero's image, copy, link, and CTA to every cell-specific hero (8 areas × topics with showsHero), and activate them all?\n\nCell-level area/topic, client, and schedule are preserved. The cell rows for topics with showsHero=false (e.g. Events) are skipped.",
-    );
-    if (!ok) return;
+  // Two-step confirm: click "Push to all" → reveals an inline
+  // "Confirm push" / "Cancel" pair. Avoids blocking window.confirm()
+  // (which the Chrome extension's automation flow can't dismiss).
+  const startConfirm = () => {
+    setConfirming(true);
+    setResult(null);
+  };
+  const cancelConfirm = () => setConfirming(false);
+
+  const doPush = async () => {
+    setConfirming(false);
     setBusy(true);
     setResult(null);
     try {
@@ -108,18 +115,40 @@ export default function PushHomeHeroButton() {
             and <code>schedule</code> are preserved.
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onClick}
-          disabled={busy}
-          style={{
-            ...btn,
-            opacity: busy ? 0.55 : 1,
-            cursor: busy ? "wait" : "pointer",
-          }}
-        >
-          {busy ? "Pushing…" : "Push to all"}
-        </button>
+        {!confirming ? (
+          <button
+            type="button"
+            onClick={startConfirm}
+            disabled={busy}
+            style={{
+              ...btn,
+              opacity: busy ? 0.55 : 1,
+              cursor: busy ? "wait" : "pointer",
+            }}
+          >
+            {busy ? "Pushing…" : "Push to all"}
+          </button>
+        ) : (
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <span style={{ fontSize: "0.78rem", opacity: 0.85 }}>
+              Are you sure?
+            </span>
+            <button
+              type="button"
+              onClick={doPush}
+              style={{ ...btn, background: "#dc2626" }}
+            >
+              Yes, push to all
+            </button>
+            <button
+              type="button"
+              onClick={cancelConfirm}
+              style={{ ...btn, background: "transparent", color: "var(--theme-text)", border: "1px solid var(--theme-elevation-150)" }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
       {result && (
         <div
