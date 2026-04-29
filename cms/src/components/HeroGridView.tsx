@@ -1,11 +1,14 @@
 "use client";
 
 /**
- * /admin/hero-grid — 8×8 visual editor for the 64 fixed hero-ad slots.
+ * /admin/hero-images — visual editor for the 65 hero image slots.
  *
- * One cell per (area × topic). Click anywhere on the cell to toggle
- * active / inactive. Cell shows the client name + creative thumbnail
- * when populated, otherwise the "Ads space > {area} > {topic}" placeholder.
+ *   Row 0: the homepage default (NULL area, NULL topic) — full-width banner
+ *   Rows 1–8: 8 areas × 8 topics = 64 cell-specific heroes
+ *
+ * Click anywhere on a cell to toggle active / inactive. Cell shows the
+ * client name (if any) + creative thumbnail when populated. Click "edit"
+ * to open the full edit page (set image, copy, CTA, schedule).
  *
  * Pure client component. Uses fetch() against the same-origin Payload
  * REST API. Auth is the Payload admin session cookie.
@@ -40,13 +43,17 @@ type Media = { id: number | string; url?: string | null; sizes?: Record<string, 
 
 type HeroAd = {
   id: number | string;
-  area: Tax | number | string;
-  topic: Tax | number | string;
+  // Both nullable now — (null, null) is the homepage default slot
+  area: Tax | number | string | null;
+  topic: Tax | number | string | null;
   label?: string | null;
   active?: boolean;
   client?: string | null;
   creative?: Media | number | string | null;
   linkUrl?: string | null;
+  headline?: string | null;
+  ctaActive?: boolean;
+  ctaText?: string | null;
   startAt?: string | null;
   endAt?: string | null;
 };
@@ -91,9 +98,15 @@ export default function HeroGridView() {
   }, []);
 
   const cellMap = new Map<string, HeroAd>();
+  let homepageCell: HeroAd | null = null;
   for (const d of docs) {
-    const k = `${slugOf(d.area)}:${slugOf(d.topic)}`;
-    cellMap.set(k, d);
+    const aSlug = slugOf(d.area);
+    const tSlug = slugOf(d.topic);
+    if (!aSlug && !tSlug) {
+      homepageCell = d;
+      continue;
+    }
+    cellMap.set(`${aSlug}:${tSlug}`, d);
   }
 
   const toggle = async (cell: HeroAd) => {
@@ -144,24 +157,92 @@ export default function HeroGridView() {
       </a>
       <header style={head}>
         <div>
-          <div style={title}>Hero ad grid</div>
+          <div style={title}>Hero image grid</div>
           <div style={sub}>
-            8 areas × 8 topics = 64 fixed slots ·{" "}
+            65 slots = 1 homepage default + 8 areas × 8 topics ·{" "}
             <strong>{activeCount}</strong> active · click any cell to flip
           </div>
         </div>
         <div style={legendRow}>
           <span style={{ ...legendChip, background: "#16a34a" }} /> active
           <span style={{ ...legendChip, background: "var(--theme-elevation-150)", marginLeft: "0.7rem" }} />{" "}
-          inactive (placeholder)
+          inactive
         </div>
       </header>
 
       {error && <div style={errBar}>{error}</div>}
 
       {loading ? (
-        <div style={{ padding: "1rem", opacity: 0.6 }}>Loading 64 cells…</div>
+        <div style={{ padding: "1rem", opacity: 0.6 }}>Loading 65 slots…</div>
       ) : (
+        <>
+          {/* Row 0 — homepage default hero (full-width banner) */}
+          <div style={homepageBannerWrap}>
+            <div style={homepageBannerLabel}>HOMEPAGE DEFAULT</div>
+            {homepageCell ? (
+              <button
+                type="button"
+                onClick={() => toggle(homepageCell as HeroAd)}
+                disabled={!!pending[String(homepageCell.id)]}
+                style={{
+                  ...homepageBanner,
+                  background: homepageCell.active
+                    ? "rgba(22,163,74,0.18)"
+                    : "var(--theme-elevation-50)",
+                  borderColor: homepageCell.active
+                    ? "rgba(22,163,74,0.55)"
+                    : "var(--theme-elevation-150)",
+                  opacity: pending[String(homepageCell.id)] ? 0.5 : 1,
+                }}
+                title={homepageCell.label || "Homepage default hero"}
+              >
+                <div style={cellTop}>
+                  <span
+                    style={{
+                      ...statusDot,
+                      background: homepageCell.active ? "#16a34a" : "#9ca3af",
+                    }}
+                  />
+                  <span style={cellState}>
+                    {homepageCell.active ? "ACTIVE" : "Inactive"}
+                  </span>
+                  <a
+                    href={`/admin/collections/hero-ads/${homepageCell.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    style={editLink}
+                  >
+                    edit
+                  </a>
+                </div>
+                <div style={homepageBannerBody}>
+                  {creativeUrl(homepageCell.creative) && (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={creativeUrl(homepageCell.creative)!}
+                      alt=""
+                      style={homepageBannerThumb}
+                    />
+                  )}
+                  <div style={homepageBannerText}>
+                    <div style={homepageBannerHeadline}>
+                      {homepageCell.headline || "(no headline set)"}
+                    </div>
+                    {homepageCell.client && (
+                      <div style={cellClient}>{homepageCell.client}</div>
+                    )}
+                    {homepageCell.ctaActive && homepageCell.ctaText && (
+                      <div style={ctaPill}>CTA: {homepageCell.ctaText}</div>
+                    )}
+                  </div>
+                </div>
+              </button>
+            ) : (
+              <div style={homepageBannerMissing}>
+                — homepage default slot not found — run the seed migration
+              </div>
+            )}
+          </div>
+
         <div style={gridWrap}>
           <div style={gridStyle}>
             {/* corner */}
@@ -253,6 +334,7 @@ export default function HeroGridView() {
             ))}
           </div>
         </div>
+        </>
       )}
     </div>
   );
@@ -431,4 +513,80 @@ const cellClientMuted: React.CSSProperties = {
   opacity: 0.5,
   marginTop: "0.25rem",
   fontStyle: "italic",
+};
+
+// ── homepage banner (row 0) ─────────────────────────────────────────
+
+const homepageBannerWrap: React.CSSProperties = {
+  marginBottom: "1.2rem",
+};
+
+const homepageBannerLabel: React.CSSProperties = {
+  fontSize: "0.7rem",
+  opacity: 0.5,
+  textTransform: "uppercase",
+  letterSpacing: "0.06em",
+  marginBottom: "0.4rem",
+  paddingLeft: "0.2rem",
+};
+
+const homepageBanner: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  width: "100%",
+  textAlign: "left",
+  padding: "0.7rem 0.9rem",
+  border: "1px solid",
+  borderRadius: "8px",
+  cursor: "pointer",
+  fontFamily: "inherit",
+  color: "var(--theme-text)",
+  fontSize: "0.85rem",
+  background: "var(--theme-elevation-50)",
+};
+
+const homepageBannerBody: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "0.9rem",
+  marginTop: "0.5rem",
+};
+
+const homepageBannerThumb: React.CSSProperties = {
+  width: "120px",
+  height: "62px",
+  objectFit: "cover",
+  borderRadius: "6px",
+  flexShrink: 0,
+};
+
+const homepageBannerText: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.2rem",
+  flex: 1,
+};
+
+const homepageBannerHeadline: React.CSSProperties = {
+  fontSize: "1rem",
+  fontWeight: 600,
+};
+
+const homepageBannerMissing: React.CSSProperties = {
+  padding: "1.5rem",
+  border: "1px dashed var(--theme-elevation-150)",
+  borderRadius: "8px",
+  textAlign: "center",
+  opacity: 0.55,
+  fontSize: "0.85rem",
+};
+
+const ctaPill: React.CSSProperties = {
+  display: "inline-block",
+  padding: "0.15rem 0.5rem",
+  fontSize: "0.7rem",
+  background: "var(--theme-elevation-100)",
+  borderRadius: "999px",
+  marginTop: "0.2rem",
+  alignSelf: "flex-start",
 };
