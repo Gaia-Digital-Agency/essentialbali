@@ -219,8 +219,15 @@
   --z-index-99999: 99999;
   --z-index-999999: 999999;
 
-  --font-sans: "Inter";
-  --font-serif: "Playfair Display", serif;
+  /* Fontaine (vite plugin) generates "Inter fallback" / "Playfair Display
+     fallback" @font-face entries with size-adjust + ascent-override metrics
+     matched to the real fonts. Listing them here in the font-family chain is
+     what makes them actually take effect — Tailwind v4's `font-sans` utility
+     resolves to var(--font-sans), so the chain has to include the fallback
+     family name, otherwise the browser jumps from a generic system font
+     (different metrics) to Inter on swap and reflows the entire body. */
+  --font-sans: "Inter", "Inter fallback", BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Playfair Display", "Playfair Display fallback", Georgia, "Times New Roman", serif;
 }
 .container,
 .md\:container {

@@ -1,6 +1,7 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import svgr from "vite-plugin-svgr"
+import { FontaineTransform } from "fontaine"
 
 export default defineConfig({
   plugins: [
@@ -11,7 +12,13 @@ export default defineConfig({
         exportType: "named",
         namedExport: "ReactComponent"
       }
-    })
+    }),
+    // Match the client config so SSR-emitted CSS includes the same font
+    // fallback metrics-overrides (CLS-prevention).
+    FontaineTransform.vite({
+      fallbacks: ["BlinkMacSystemFont", "Segoe UI", "Helvetica Neue", "Arial", "sans-serif"],
+      resolvePath: (id) => new URL("./public" + id, import.meta.url),
+    }),
   ],
   build: {
     ssr: true,

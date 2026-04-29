@@ -23,6 +23,7 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
 import tailwindcss from '@tailwindcss/vite'
+import { FontaineTransform } from 'fontaine'
 import path, {resolve} from "path";
 
 export default defineConfig((args) => {
@@ -41,6 +42,14 @@ export default defineConfig((args) => {
           exportType: "named",
           namedExport: "ReactComponent",
         },
+      }),
+      // Generate fallback @font-face metrics-overrides so the system font
+      // used while Inter/Playfair load matches their metrics — eliminates
+      // the body/footer text reflow on web-font swap that was driving CLS
+      // ≈ 1.4 even with logo dimensions locked.
+      FontaineTransform.vite({
+        fallbacks: ['BlinkMacSystemFont', 'Segoe UI', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        resolvePath: (id) => new URL('./public' + id, import.meta.url),
       }),
     ],
     optimizeDeps: {
