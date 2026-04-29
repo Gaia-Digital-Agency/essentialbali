@@ -399,6 +399,40 @@ if (frontendPath) {
     express.static(path.join(clientDist, "logo.png"), { index: false }),
   );
 }
+
+// Content fetcher for client-side SPA navigation. Mirrors what SSR runs on the
+// initial request (taxonomies + route + content + template content) so the
+// article/event/listing templates can refresh related/discover/listing data
+// after intra-SPA route changes without a full reload.
+app.get(["/api/content", pathWithBase("/api/content")], async (req, res) => {
+  try {
+    const rawPath = String(req.query?.path || "/");
+    const search = req.query?.search ? String(req.query.search) : undefined;
+    const url = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
+    const initialTaxonomies = await fetchTaxonomyData();
+    const initialRoute = await fetchRouteData(url, initialTaxonomies, req.ip);
+    const initialContent = await fetchContentData(
+      initialRoute,
+      initialTaxonomies,
+      search,
+    );
+    const initialTemplateContent = await fetchTemplateContent(initialRoute);
+    res.json({
+      status_code: 200,
+      status: "OK",
+      data: { initialRoute, initialContent, initialTemplateContent },
+    });
+  } catch (e) {
+    console.error("[/api/content] error:", e?.message || e);
+    res.status(500).json({
+      status_code: 500,
+      status: "ERROR",
+      data: null,
+      message: String(e?.message || e),
+    });
+  }
+});
+
 app.use("*", async (req, res, next) => {
   if (req.originalUrl.startsWith("/api")) {
     return next();

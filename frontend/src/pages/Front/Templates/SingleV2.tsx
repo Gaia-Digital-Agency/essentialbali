@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { getArticleByFields } from "../../../services/article.service";
 import {
   ArticleApiResponseProps,
   ArticleProps,
@@ -148,7 +147,7 @@ const EditButton: React.FC<{
 
 const SingleV2: React.FC = () => {
   const { initialData } = useContent();
-  const { actualRoute, clientChange } = useRoute();
+  const { actualRoute } = useRoute();
   const { getDeepestLocation, getFeaturedImageUrl } = useArticle();
   const [content, setContent] = useState<ArticleApiResponseProps | undefined>(
     initialData?.article ?? undefined,
@@ -177,24 +176,11 @@ const SingleV2: React.FC = () => {
     }
   }, [actualRoute]);
 
+  // related comes from SSR (content.fetch.js). PathResolver refreshes
+  // initialData via /api/content on intra-SPA nav, so we just sync.
   useEffect(() => {
-    //     if(!content) return;
-    if (!clientChange) return;
-    (async () => {
-      try {
-        const getArticle = await getArticleByFields({
-          category: actualRoute?.category?.id,
-          limit: 11,
-        });
-        if (getArticle?.articles) {
-          // const setArticle = getArticle.articles.map(article => ({...article, featured_image_full_url: getFeaturedImageUrl(article), url: getPermalink(article), category: getCategoryById(article.category_id)}))
-          setRelated(getArticle.articles);
-        }
-      } catch (e) {
-        console.log(e);
-      }
-    })();
-  }, [content]);
+    setRelated(initialData?.related ?? []);
+  }, [initialData]);
 
   const renderEditButton = () => {
     if (!isClient) return;

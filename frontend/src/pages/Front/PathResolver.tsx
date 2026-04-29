@@ -20,6 +20,8 @@ import { useRoute } from "../../context/RouteContext"
 import { useParams } from "react-router"
 import { getArticleBySlug } from "../../services/article.service"
 import { useAuth, UserDetailsProps } from "../../context/AuthContext"
+import { useContent } from "../../context/ContentContext"
+import apiClient from "../../api"
 import { BALI_AREA_OPTIONS } from "../../utils/baliAreas"
 
 export type ParamsProps = {
@@ -108,6 +110,7 @@ const PathResolver: React.FC = () => {
     const path = params["*"]
     const { taxonomies } = useTaxonomies()
     const {userDetails} = useAuth()
+    const { setInitialData } = useContent()
 
     useEffect(() => {
         setClientChange(true)
@@ -121,6 +124,24 @@ const PathResolver: React.FC = () => {
             setActualRoute(r.listingParams)
         })()
     }, [path, taxonomies, userDetails, clientChange])
+
+    useEffect(() => {
+        if (!clientChange) return
+        ;(async () => {
+            try {
+                const search = typeof window !== "undefined" ? window.location.search.replace(/^\?/, "") : ""
+                const qs = new URLSearchParams({ path: `/${path ?? ""}` })
+                if (search) qs.set("search", search)
+                const res = await apiClient.get(`content?${qs.toString()}`)
+                if (res?.data?.status_code === 200 && res.data.data?.initialContent) {
+                    setInitialData(res.data.data.initialContent)
+                }
+            } catch (e) {
+                console.warn("content refresh failed", e)
+            }
+        })()
+    }, [path, clientChange])
+
 
     switch (routeType) {
         case "ARTICLE_JOB":
