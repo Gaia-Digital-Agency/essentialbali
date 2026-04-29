@@ -32,7 +32,9 @@ const HomeTemplate = {
     query: {
       useRoute: true,
       category: {
-        exclude_slugs: ["most-popular", "ultimate-guide", "events"],
+        // Exclude topics that have their own dedicated section below so
+        // a "trending across everything else" feed doesn't double-up.
+        exclude_slugs: ["featured", "news", "events"],
       },
     },
   },
@@ -44,7 +46,10 @@ const HomeTemplate = {
     query: {
       useRoute: true,
       category: {
-        slug: "most-popular",
+        // "Most Popular" was a legacy MySQL curation bucket that no longer
+        // exists. Closest match in the Payload topic set is "Featured"
+        // (editorial picks). Revisit when product confirms section intent.
+        slug: "featured",
       },
     },
   },
@@ -68,7 +73,10 @@ const HomeTemplate = {
     query: {
       useRoute: true,
       category: {
-        slug: "ultimate-guide",
+        // "Ultimate Guide" was a legacy long-form bucket. Mapping to "News"
+        // as the closest Payload topic for depth/journalism content.
+        // Revisit when product confirms section intent.
+        slug: "news",
       },
     },
   },
