@@ -16,6 +16,11 @@ export const Articles: CollectionConfig = {
     components: {
       // 8×8 matrix filter + status chips, rendered above the standard list table.
       beforeListTable: ["@/components/ArticlesMatrixFilter"],
+      // Edit page: the "🔁 Regenerate hero" button + feedback input.
+      // Renders below the document fields. Hidden on the create form.
+      edit: {
+        beforeDocumentControls: ["@/components/RegenerateHeroButton"],
+      },
     },
   },
   defaultSort: "-updatedAt",
@@ -91,6 +96,26 @@ export const Articles: CollectionConfig = {
             `[seo-autofill] SEO agent failed for "${String(data.title).slice(0, 60)}": ${String(e)}`,
           );
         }
+        return data;
+      },
+
+      // Auto-promote on approve. When the operator flips status from
+      // anything-not-approved to "approved" (e.g. via the admin
+      // Status dropdown), we promote it straight to "published" and
+      // stamp publishedAt — saves them an extra click.
+      //
+      // We do this in beforeChange (mutating `data` in place) rather
+      // than afterChange + an inner payload.update(), because the
+      // inner-update path deadlocks Payload's transaction. beforeChange
+      // is single-pass and never recurses.
+      async ({ data, originalDoc, operation }) => {
+        if (operation !== "update") return data;
+        if (data.status !== "approved") return data;
+        // Don't re-promote if already approved (would clobber a manual
+        // edit that left status=approved while changing other fields).
+        if (originalDoc?.status === "approved" || originalDoc?.status === "published") return data;
+        data.status = "published";
+        if (!data.publishedAt) data.publishedAt = new Date().toISOString();
         return data;
       },
     ],

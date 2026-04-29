@@ -27,6 +27,7 @@ import { default as default_99246f3d51f053e0a26dee65783cc7f7 } from '@/component
 import { default as default_1b31cfe1a161813c1d3298b7f30bb57c } from '@/components/ElliotNavLink'
 import { default as default_30a67c13fa9c9ef2d27386cf8d3f2542 } from '@/components/MatrixDashboard'
 import { default as default_HeroGridView } from '@/components/HeroGridView'
+import { default as default_RegenerateHeroButton } from '@/components/RegenerateHeroButton'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { GcsClientUploadHandler as GcsClientUploadHandler_storage_gcs } from '@payloadcms/storage-gcs/client'
 
@@ -61,6 +62,7 @@ export const importMap = {
   "@/components/ElliotNavLink#default": default_1b31cfe1a161813c1d3298b7f30bb57c,
   "@/components/MatrixDashboard#default": default_30a67c13fa9c9ef2d27386cf8d3f2542,
   "@/components/HeroGridView#default": default_HeroGridView,
+  "@/components/RegenerateHeroButton#default": default_RegenerateHeroButton,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-gcs/client#GcsClientUploadHandler": GcsClientUploadHandler_storage_gcs
 }
