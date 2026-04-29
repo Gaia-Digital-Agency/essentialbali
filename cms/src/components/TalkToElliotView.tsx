@@ -1,5 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
+import MediaUploadDock from "./MediaUploadDock";
+import ImagerGallery from "./ImagerGallery";
 
 type Msg = { role: "user" | "elliot"; text: string; ts: number };
 
@@ -322,6 +324,12 @@ export default function TalkToElliotView() {
         </section>
       </div>
 
+      {/* Media workshop — Upload Dock + Imager Gallery */}
+      <div style={mediaWorkshopGrid}>
+        <MediaUploadDock />
+        <ImagerGallery />
+      </div>
+
       {/* Chat */}
       <div style={chatLabel}>Chat with Elliot</div>
       <div ref={scrollRef} style={msgs}>
@@ -478,6 +486,12 @@ const statusPill = (status: Agent["status"]): React.CSSProperties => {
   };
 };
 
+const mediaWorkshopGrid: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "0.85rem",
+  marginTop: "1rem",
+};
 const chatLabel: React.CSSProperties = { ...listLabel, marginTop: "0.5rem", marginBottom: "0.6rem" };
 const msgs: React.CSSProperties = {
   maxHeight: "40vh",
