@@ -19,8 +19,7 @@ export default defineConfig({
     outDir: "dist/server",
     rollupOptions: {
       input: {
-        front: "src/entry-server.tsx",
-        admin: "src/entry-server-admin.tsx"
+        front: "src/entry-server.tsx"
       }
     }
   },
