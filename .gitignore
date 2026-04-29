@@ -123,3 +123,8 @@ google-cloud-key.json
 *.log
 
 backend/config/gcs-key.json
+# Phase E cleanup — legacy uploads moved out of backend/.
+# Keep MANIFEST.md tracked, ignore the binary files + the backend symlink.
+old_assets/legacy-uploads/*
+!old_assets/legacy-uploads/MANIFEST.md
+backend/uploads
