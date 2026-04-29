@@ -1,13 +1,18 @@
 import payload from "../lib/payload.client.js";
+import { lexicalToHtml } from "../lib/lexical-to-html.js";
 
 /**
  * Map a Payload article doc → legacy SSR article shape.
  *
  * Frontend expects fields like: id, slug_title, title, slug_country,
- * slug_category, body (HTML), featured_image_url, publishedAt, etc.
+ * slug_category, article_post (HTML), featured_image_url, publishedAt, etc.
  *
  * Payload provides: id, slug, title, area: {slug,name,id}, topic: {slug,name,id},
  * body (Lexical), hero (media ref or expanded), publishedAt, etc.
+ *
+ * Body conversion: Payload v3 stores rich-text as a Lexical JSON tree.
+ * The legacy frontend renders article_post via dangerouslySetInnerHTML
+ * expecting an HTML string, so we serialise the tree on the server.
  */
 const mapPayloadArticle = (a) => {
   if (!a) return null;
@@ -16,17 +21,14 @@ const mapPayloadArticle = (a) => {
   const persona = typeof a.persona === "object" ? a.persona : null;
   const hero = typeof a.hero === "object" ? a.hero : null;
 
-  // Lexical → string fallback (legacy expects HTML/text). Production-grade
-  // serialization should run a Lexical-to-HTML converter; for Phase E we
-  // surface a plain-text approximation if body is structured.
-  let bodyText = "";
-  if (typeof a.body === "string") bodyText = a.body;
-  else if (a.body?.root) {
-    try {
-      bodyText = JSON.stringify(a.body); // frontend renderer can detect Lexical
-    } catch {
-      bodyText = "";
-    }
+  // Lexical → HTML for the legacy article_post field.
+  // (a.body is the structured tree, kept on the wire for any future
+  // client-side renderer that wants the original.)
+  let bodyHtml = "";
+  if (typeof a.body === "string") {
+    bodyHtml = lexicalToHtml(a.body); // handles JSON-string + plain-string
+  } else if (a.body) {
+    bodyHtml = lexicalToHtml(a.body);
   }
 
   return {
@@ -35,7 +37,7 @@ const mapPayloadArticle = (a) => {
     slug: a.slug,
     title: a.title,
     sub_title: a.subTitle || null,
-    article_post: bodyText,
+    article_post: bodyHtml,
     body: a.body,
     status: a.status,
     slug_country: area?.slug || null,
