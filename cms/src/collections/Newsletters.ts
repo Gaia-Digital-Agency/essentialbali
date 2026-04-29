@@ -13,6 +13,14 @@ import type { CollectionConfig } from "payload";
  */
 export const Newsletters: CollectionConfig = {
   slug: "newsletters",
+  // Sidebar label is "Subscriber Communication" — disambiguates from the
+  // Newsletter Notice global (which manages the on-page subscribe-form copy).
+  // Slug stays "newsletters" so URLs and the existing nginx allowlist
+  // entry don't move.
+  labels: {
+    singular: "Subscriber Communication",
+    plural: "Subscriber Communication",
+  },
   admin: {
     useAsTitle: "subject",
     description:

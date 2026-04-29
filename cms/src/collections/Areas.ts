@@ -3,10 +3,12 @@ import type { CollectionConfig } from "payload";
 export const Areas: CollectionConfig = {
   slug: "areas",
   admin: {
-    hidden: () => true,
     useAsTitle: "name",
-    description: "8 fixed Bali areas: Canggu, Kuta, Ubud, Jimbaran, Denpasar, Kintamani, Singaraja, Nusa Penida.",
-    defaultColumns: ["name", "slug"],
+    group: "Taxonomy",
+    description:
+      "Bali areas. Editable name / slug / intro / hero. Adding a new area also adds 8 new hero-image slots (one per topic). Removing an area cascades to its articles and hero slots — be careful.",
+    defaultColumns: ["name", "slug", "lat", "lng"],
+    listSearchableFields: ["name", "slug"],
   },
   access: { read: () => true },
   fields: [

@@ -179,9 +179,29 @@ export const Articles: CollectionConfig = {
       hasMany: true,
     },
     { name: "publishedAt", type: "date", admin: { date: { pickerAppearance: "dayAndTime" } } },
+
+    // Homepage daily-feed rotation tracking. Hidden in admin UI — only the
+    // pick-daily-feed.mjs cron writes these. Used by the picker to give
+    // newer / less-shown articles priority and avoid repeats until the
+    // pool is exhausted (cycle length = ceil(published / 16) days).
+    {
+      name: "homeFeaturedCount",
+      type: "number",
+      defaultValue: 0,
+      admin: { hidden: true },
+      index: true,
+    },
+    {
+      name: "homeLastFeaturedAt",
+      type: "date",
+      admin: { hidden: true, date: { pickerAppearance: "dayAndTime" } },
+      index: true,
+    },
   ],
   indexes: [
     { fields: ["area", "topic", "status"] },
     { fields: ["publishedAt"] },
+    // Compound index for the daily picker's sort key.
+    { fields: ["homeFeaturedCount", "homeLastFeaturedAt"] },
   ],
 };

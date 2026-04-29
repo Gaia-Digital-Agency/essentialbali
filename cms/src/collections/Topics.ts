@@ -3,10 +3,12 @@ import type { CollectionConfig } from "payload";
 export const Topics: CollectionConfig = {
   slug: "topics",
   admin: {
-    hidden: () => true,
     useAsTitle: "name",
-    description: "8 fixed topics: Events, News, Featured, Dine, Health & Wellness, Nightlife, Activities, People & Culture.",
-    defaultColumns: ["name", "slug"],
+    group: "Taxonomy",
+    description:
+      "Editorial topics that appear in the site nav. Adding a new topic adds 8 new hero-image slots (one per area). Removing a topic cascades to its articles and hero slots — be careful.",
+    defaultColumns: ["name", "slug", "icon"],
+    listSearchableFields: ["name", "slug"],
   },
   access: { read: () => true },
   fields: [
