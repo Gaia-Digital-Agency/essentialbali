@@ -1,5 +1,6 @@
 import type { CollectionConfig } from "payload";
 import { VALID_AREAS, VALID_KINDS, VALID_TOPICS } from "../lib/media-naming";
+import { setCanonicalFilename } from "../hooks/media-canonical-filename";
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
 
@@ -64,11 +65,14 @@ export const Media: CollectionConfig = {
     ],
   },
   hooks: {
+    // Rewrite req.file.name to the canonical form BEFORE Payload's
+    // generateFileData() derives the persisted filename and per-size
+    // variant filenames. Has to be beforeOperation — beforeValidate
+    // fires after generateFileData and would only rename the original.
+    beforeOperation: [setCanonicalFilename],
     beforeValidate: [
+      // Reject oversize uploads early so we never spend Sharp CPU on them.
       async ({ data, req }) => {
-        // Reject oversize uploads early so we never spend Sharp CPU on them.
-        // req.file is set by Payload during multipart upload; data.filesize
-        // is set after Sharp processing on later updates. Check both.
         const incomingSize =
           (req as unknown as { file?: { size?: number } }).file?.size ??
           (data as { filesize?: number } | undefined)?.filesize ??
