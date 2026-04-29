@@ -2,7 +2,11 @@
 
 Bali, by area. Events, dine, wellness, nightlife, activities, news, culture, featured.
 
-Live: **https://essentialbali.gaiada.online** · `essentialbali.com` cutover pending Damian's DNS finish (apex moved, `www` + AAAA cleanup remaining).
+Live on three domains, all HTTPS, all serving identical content:
+
+- **https://essentialbali.gaiada.online** (subdomain)
+- **https://essentialbali.com** (apex)
+- **https://www.essentialbali.com** (www)
 
 ---
 
@@ -47,9 +51,11 @@ Live: **https://essentialbali.gaiada.online** · `essentialbali.com` cutover pen
 └──────────────────┘    └──────────────────┘
 ```
 
-**Stack:** PostgreSQL · Python (Elliot's scraper) · Payload v3.84 · Vite · React 18 · TailwindCSS v4 · Node 20
+**Stack:** PostgreSQL · Python (Elliot's scraper) · Payload v3.84 · Next.js 15 · Vite 7 · React 19 · TailwindCSS v4 · Node 20
 
 **Hosting:** GCP `gda-s01.asia-southeast1-b` (`34.124.244.233`)
+
+**Stack alignment** — frontend, backend SSR shell, and cms all share React 19 / Vite 7 / TypeScript 5.7. The legacy Sequelize/MySQL stack and the legacy custom admin (Master/, Quill, AuthPages) were retired in the 2026-04-29 cleanup; backend now talks to Postgres only via Payload REST.
 
 ---
 
@@ -58,100 +64,136 @@ Live: **https://essentialbali.gaiada.online** · `essentialbali.com` cutover pen
 ```
 essentialbali/
 ├── README.md                     ← you are here
-├── backend/                      Express + Vite SSR (port 8082)
-│   ├── app.js                    bootstrap, sitemap+robots, SSR wiring
+├── docs/                         operator docs
+│   ├── user_guide.md             how-to-use guide (review flow, Elliot dispatch, etc.)
+│   ├── code_inventory.md         living source-line audit (excludes node_modules + dead-stack)
+│   ├── essentialbali_actions.md  79-item action backlog
+│   └── essentialbali_elliot_project.md   Elliot project brief
+├── shared/
+│   └── allowed-origins.json      single CORS allowlist read by both Express + Payload
+│                                  (mtime-aware 30s TTL cache, hardcoded fallback)
+├── backend/                      Express + Vite 7 SSR (port 8082)
+│   ├── app.js                    bootstrap, sitemap+robots, SSR wiring,
+│   │                              CORS with hot-reload + asset bypass
 │   ├── src/
-│   │   ├── routers/              /api/* legacy routes (still used by SSR)
-│   │   ├── services/             Sequelize-backed services (legacy)
-│   │   ├── ssr/                  ★ Phase E rewire — reads from Payload
-│   │   │   ├── articles.fetch.js     fetchArticleData / fetchArticlesData
-│   │   │   ├── locations.fetch.js    areas → legacy "country" shape
-│   │   │   ├── categories.fetch.js   topics → legacy "category" shape
-│   │   │   └── route.fetch.js        URL → article|area|topic resolver
-│   │   ├── lib/payload.client.js     thin HTTP client (USE_PAYLOAD_DATA=true)
-│   │   └── workers/                  background jobs
-│   └── .env                      DATABASE_*, FRONTEND_URL, USE_PAYLOAD_DATA=true,
-│                                  PAYLOAD_BASE_URL=http://127.0.0.1:4008
-├── cms/                          Payload v3 + Next.js 15 (port 4008)
+│   │   ├── ssr/                  the SSR data layer (Payload-only, post-cleanup-C)
+│   │   │   ├── articles.fetch.js   uses lib/lexical-to-html for body rendering
+│   │   │   ├── locations.fetch.js  areas → legacy "country" shape
+│   │   │   ├── categories.fetch.js topics → legacy "category" shape
+│   │   │   ├── tags.fetch.js
+│   │   │   ├── route.fetch.js      URL → article|area|topic resolver
+│   │   │   ├── content.fetch.js    template content (header/footer/about)
+│   │   │   ├── templates.fetch.js  reads static-templates/*.json (post-MySQL drop)
+│   │   │   ├── auth.fetch.js       stub (returns undefined; legacy admin gone)
+│   │   │   └── static-templates/   header.json, footer.json, logo-header.json, about.json
+│   │   ├── lib/
+│   │   │   ├── payload.client.js   thin Payload REST client
+│   │   │   └── lexical-to-html.js  Lexical JSON tree → HTML serializer
+│   │   ├── helpers/
+│   │   │   ├── response.js         JSON-envelope helper used by app.js
+│   │   │   └── logger.js           pino wrapper
+│   │   ├── middlewares/
+│   │   │   └── request_timer.js    request latency logger
+│   │   └── workers/                background jobs
+│   ├── uploads -> ../old_assets/legacy-uploads   (symlink — 73 pre-Payload images, served via /uploads/* for back-compat)
+│   ├── redisClient.js
+│   └── .env                      PAYLOAD_BASE_URL, PAYLOAD_AI_API_KEY,
+│                                  GOOGLE_APPLICATION_CREDENTIALS
+├── cms/                          Payload v3 + Next.js 15 + React 19 (port 4008)
 │   ├── ecosystem.config.cjs      pm2 entry
-│   ├── package.json              Payload + Postgres adapter + Lexical + Tailwind
-│   ├── postcss.config.mjs
+│   ├── package.json              Payload + Postgres adapter + Lexical + Tailwind +
+│   │                              @payloadcms/storage-gcs (media → GCS)
 │   ├── next.config.mjs
-│   ├── .env                      DATABASE_URI, PAYLOAD_SECRET, SMTP_* (Gmail),
+│   ├── .env                      DATABASE_URI, PAYLOAD_SECRET,
+│   │                              GCS_BUCKET=gda-essentialbali-media,
+│   │                              GOOGLE_CLIENT_ID/SECRET/REFRESH_TOKEN (Gmail API),
 │   │                              GCP_VERTEX_*, GOOGLE_APPLICATION_CREDENTIALS
 │   └── src/
-│       ├── payload.config.ts     central config (collections, email, admin views)
-│       ├── access.ts             isStaffOrAgent helper for CRUD policies
-│       ├── seed.ts               idempotent: 8 areas, 8 topics, 4 personas, 64 hero_ads, admin
-│       ├── seed-articles-placeholders.ts  64 article placeholders (1 per cell, draft)
-│       ├── create-elliot-user.ts          create the ai-agent service account
-│       ├── admin-update.ts                rotate super_admin user
+│       ├── payload.config.ts     central config; reads shared/allowed-origins.json
+│       │                          for cors[]/csrf[]
+│       ├── access.ts             isStaffOrAgent helper
+│       ├── seed.ts, seed-articles-placeholders.ts, create-elliot-user.ts
 │       ├── collections/
-│       │   ├── Users.ts          auth + API key support
-│       │   ├── Areas.ts          8 fixed (hidden in admin nav)
-│       │   ├── Topics.ts         8 fixed (hidden)
-│       │   ├── Personas.ts       4 writer voices (hidden)
-│       │   ├── Articles.ts       ★ matrix filter UI + status chips
-│       │   ├── Media.ts          local upload + 3 sizes (hidden)
-│       │   ├── Comments.ts       (hidden)
-│       │   ├── Tags.ts           (hidden)
-│       │   ├── HeroAds.ts        64 fixed slots, beforeChange auto-label
-│       │   ├── Subscribers.ts    pure list
-│       │   └── Newsletters.ts    compose + send workflow (beforeChange dispatch)
+│       │   ├── Users, Areas, Topics, Personas, Tags, Comments, Media (all hidden)
+│       │   ├── Articles.ts         beforeChange hooks: SEO meta auto-fill (Vertex)
+│       │   │                       + auto-promote on approve (no recursion)
+│       │   ├── HeroAds.ts          admin.components.views.list = HeroGridView
+│       │   │                       (8×8 visual grid is THE list view)
+│       │   ├── Subscribers.ts      newsletter list
+│       │   └── Newsletters.ts      compose + send (Gmail API)
 │       ├── components/
-│       │   ├── LoginHint.tsx                  creds card on /admin/login
-│       │   ├── MatrixDashboard.tsx            8×8 grid as admin home
-│       │   ├── ArticlesMatrixFilter.tsx       8×8 grid + status chips above Articles list
-│       │   ├── NewslettersIntro.tsx           stats + compose CTA + how-to walkthrough
-│       │   ├── TalkToElliotView.tsx           full-page chat panel (uses /api/ai-chat)
-│       │   └── ElliotNavLink.tsx              sidebar entry under "Channels"
-│       ├── app/
-│       │   ├── globals.css       Tailwind + Essential Bali brand tokens
-│       │   ├── icon.png          /admin tab favicon (Next.js convention)
-│       │   ├── (frontend)/api/
-│       │   │   ├── ai-chat/route.ts          Vertex Gemini, Elliot persona, Redis rate limit
-│       │   │   └── subscribers/broadcast/route.ts   one-shot bulk email (legacy)
-│       │   └── (payload)/        Payload admin + REST + GraphQL routes
-│       └── migrations/           Postgres migrations (Drizzle)
-├── frontend/                     Vite + React 18 + Tailwind v4 (legacy, served by Express)
+│       │   ├── MatrixDashboard.tsx        8×8 grid as admin home
+│       │   ├── ArticlesMatrixFilter.tsx   matrix above Articles list
+│       │   ├── HeroGridView.tsx           the 8×8 hero-ad grid (replaces default list)
+│       │   ├── NewslettersIntro.tsx       compose CTA + walkthrough
+│       │   ├── TalkToElliotView.tsx       /admin/elliot — agent skill cards + chat
+│       │   ├── ElliotNavLink.tsx          sidebar "AI agent → Talk to Elliot"
+│       │   ├── RegenerateHeroButton.tsx   article edit page button (Imager re-roll)
+│       │   ├── LoginHint.tsx              dev-only creds card
+│       │   └── (other admin chrome)
+│       ├── lib/
+│       │   ├── seo-agent.ts              Vertex Gemini SEO helper (used by hook + endpoint)
+│       │   ├── competitor-gap.ts         SEO gap-ranker (used by endpoint)
+│       │   ├── imager-regenerate.ts      Vertex Imagen helper (used by hero button)
+│       │   ├── gmail-api.ts              OAuth-refresh Gmail send helper
+│       │   └── payload.ts                getPayload helper
+│       ├── app/(payload)/admin/elliot/   /admin/elliot route (Talk to Elliot)
+│       └── app/(frontend)/api/
+│           ├── ai-chat/route.ts          Vertex Gemini Elliot chat
+│           ├── advertise/route.ts        public Advertise modal target
+│           ├── seo-optimize/route.ts     POST — used by Elliot dispatch + Articles hook
+│           ├── seo-competitor-gap/route.ts  POST — ranks crawler gap-report
+│           ├── regenerate-hero/route.ts  POST — used by RegenerateHeroButton
+│           └── subscribers/broadcast/route.ts
+├── frontend/                     Vite 7 + React 19 + Tailwind v4 (the public site)
 │   ├── src/
 │   │   ├── components/front/
-│   │   │   ├── AreaMenuPanel.tsx              one-line area nav
-│   │   │   ├── AIChatPopup.tsx                Ask Elliot popup (calls /api/ai-chat)
-│   │   │   └── FloatingActions.tsx            Back to Top + Ask Elliot launcher
-│   │   ├── pages/Front/Templates/
-│   │   │   ├── Header.tsx
-│   │   │   └── Footer.tsx                     "Advertise With Us" mailto button
-│   │   ├── layout/FrontLayout.tsx             mounts FloatingActions
-│   │   └── routes/                            React Router config
+│   │   │   ├── AreaMenuPanel.tsx
+│   │   │   ├── AIChatPopup.tsx           Ask Elliot popup
+│   │   │   ├── FloatingActions.tsx
+│   │   │   └── AdvertiseModal.tsx        Advertise With Us form (POST /api/advertise)
+│   │   ├── pages/Front/                  PathResolver + Templates/* — all public
+│   │   ├── pages/OtherPage/              NotFound
+│   │   ├── routes/FrontApp.tsx           browser router (public-only)
+│   │   ├── router-config.tsx             route table — public-only
+│   │   ├── main.tsx                      hydration entry
+│   │   └── entry-server.tsx              SSR entry
 │   └── .env.production           VITE_BASE_PATH=/, VITE_SITE_URL, VITE_IMAGE_URL
-└── old_assets/                   archived legacy uploads (132 files + manifest.tsv)
+└── old_assets/
+    ├── mysql-archive/            MySQL essentialbali dump from 2026-04-28
+    └── legacy-uploads/           pre-Payload images (13 MB, served via backend symlink)
 ```
 
 ---
 
-## URL routing (single domain `essentialbali.gaiada.online`)
+## URL routing (path-aware, identical for all 3 domains)
 
 | Path | Backend |
 |---|---|
 | `/admin*` | Payload Next.js (`:4008`) |
 | `/_next/*` | Payload (Next.js asset chunks) |
-| `/api/users` `/api/areas` `/api/topics` `/api/articles` `/api/personas` `/api/media` `/api/comments` `/api/hero-ads` `/api/subscribers` `/api/newsletters` `/api/payload-preferences` `/api/access` `/api/graphql*` `/api/ai-chat` `/api/_internal*` | Payload |
+| `/api/(users\|areas\|topics\|articles\|personas\|media\|comments\|hero-ads\|subscribers\|payload-preferences\|access\|graphql\|graphql-playground\|ai-chat\|advertise\|seo-optimize\|seo-competitor-gap\|regenerate-hero)` | Payload |
 | `/signin` `/signup` | **410 Gone** (legacy admin retired) |
-| `/sitemap.xml` `/robots.txt` | Express SSR (Payload-backed via fetchers) |
+| `/sitemap.xml` `/sitemap-areas.xml` `/sitemap-topics.xml` `/sitemap-articles.xml` `/robots.txt` | Payload Next.js |
+| `/uploads/*` | Express (symlinked to old_assets/legacy-uploads/ for back-compat) |
 | Everything else (`/`, `/canggu`, `/canggu/dine/...`) | Vite SSR via Express |
 
 ---
 
 ## Admin features
 
-- **`/admin`** — Payload v3 admin (login: `super_admin@email.com` / `Teameditor@123`)
-- **`/admin/elliot`** — Talk to Elliot full-page chat (sidebar: Channels)
-- **MatrixDashboard** as admin home — 8×8 article grid, ad activate dots
+- **`/admin`** — Payload v3 admin
+- **MatrixDashboard** as admin home — 8×8 article grid, click any cell to filter
 - **Articles list** — matrix filter + status chips + per-cell counts (`n / 20` color-coded vs target)
-- **Newsletters** — compose + Save with status=Sending → BCC dispatch via Gmail SMTP, history kept
+  - SEO meta auto-fill on save (Vertex Gemini, in-process via `cms/src/lib/seo-agent.ts`)
+  - Auto-promote on approve: setting status=`approved` → publishes (sets `publishedAt`, flips to `published`) in a single beforeChange hook
+  - "🔁 Regenerate hero" button on the edit page (Vertex Imagen via `cms/src/lib/imager-regenerate.ts`)
+- **Hero Ads → 8×8 visual grid** — `admin.components.views.list = HeroGridView` makes the grid THE list view (one click toggles `active`)
+- **Newsletters** — compose + Save with status=Sending → BCC dispatch via Gmail API, history kept
 - **Subscribers** — pure list
-- **Hero Ads** — 64 slots, toggle `active` + assign creative
+- **`/admin/elliot`** — Talk to Elliot full-page chat (sidebar: AI agent)
+  - Live agent skill cards for all 7 entities (Elliot, Copywriter, SEO, Imager, Web Manager, Crawler, Scraper)
+  - Per-skill 🟢 LIVE / 🟡 scaffolded pills — currently 39/39 LIVE
 - **Hidden collections** (still functional via API): Users, Media, Personas, Comments, Tags, Areas, Topics
 
 ---
@@ -266,27 +308,28 @@ You review at /admin/collections/articles/{id}
 pm2 list | grep essentialbali
 
 # Live logs
-pm2 logs essentialbali --lines 50           # legacy Vite SSR + Express
+pm2 logs essentialbali --lines 50           # Vite SSR + Express
 pm2 logs essentialbali-cms --lines 50       # Payload Next.js
 
-# After deploy (legacy)
+# After deploy (frontend or backend SSR change)
 ssh gda-s01 'cd /var/www/essentialbali \
   && git pull \
-  && cd backend && npm install --omit=dev \
-  && cd ../frontend && npm install && npm run build:ssr \
+  && cd frontend && pnpm install && pnpm build \
+  && cd ../backend && pnpm install \
   && pm2 restart essentialbali'
 
-# After deploy (cms)
+# After deploy (cms — Payload / admin / API change)
 ssh gda-s01 'cd /var/www/essentialbali/cms \
   && git pull \
   && pnpm install \
-  && pnpm payload migrate \
-  && pnpm build \
+  && NODE_OPTIONS="--max-old-space-size=2560" pnpm build \
   && pm2 restart essentialbali-cms'
 
-# SEO endpoints
-curl https://essentialbali.gaiada.online/robots.txt
-curl https://essentialbali.gaiada.online/sitemap.xml | grep -c "<loc>"
+# Smoke
+curl -sI https://essentialbali.gaiada.online/                            # 200
+curl -sI https://essentialbali.com/                                      # 200
+curl -sI https://www.essentialbali.com/                                  # 200
+curl https://essentialbali.gaiada.online/sitemap-articles.xml            # full XML
 ```
 
 ---
@@ -295,11 +338,45 @@ curl https://essentialbali.gaiada.online/sitemap.xml | grep -c "<loc>"
 
 | What | Where | Purpose |
 |---|---|---|
-| `super_admin@email.com` / `Teameditor@123` | seed default | Payload admin login |
-| `elliot@gaiada.com` / (in `gda-ai01:/opt/.openclaw-ess/credentials/.env.payload`) | seed via `create-elliot-user.ts` | AI agent JWT login |
+| Payload super admin | seed default in `cms/seed.ts` | login at `/admin` |
+| `elliot@gaiada.com` (ai-agent role) | password in `gda-ai01:/opt/.openclaw-ess/credentials/.env.payload` | JWT login at `/api/users/login` for the dispatch chain |
 | Postgres password | `cms/.env` | DATABASE_URI |
-| Gmail SMTP | `cms/.env` | `ai@gaiada.com` app password (mirrored from /var/www/templategen) |
-| Vertex AI service account | `/var/www/gaiadaweb/secure/gda-viceroy-...json` | Gemini for `/api/ai-chat` |
+| Gmail OAuth refresh token | `cms/.env` (`GOOGLE_CLIENT_ID/SECRET/REFRESH_TOKEN`) | sends from `ai@gaiada.com` for /api/advertise + Newsletters |
+| Vertex AI service account | `/var/www/gaiadaweb/secure/gda-viceroy-…json` | Gemini for /api/ai-chat, /api/seo-optimize, Imagen 3 |
+| GCS bucket for media | `cms/.env` (`GCS_BUCKET=gda-essentialbali-media`) | Payload media adapter writes here |
+
+---
+
+## Stack alignment & decisions log
+
+Single source of truth for "why is X this way" — append-only.
+
+### Aligned (2026-04-29)
+
+- **React 19** across both frontend and cms. Frontend bumped from 18 to 19 (peer deps were already permitting it; @types/react had been on 19 ahead of runtime).
+- **Vite 7** across both frontend and backend SSR. Frontend bumped 6.1 → 7.3.
+- **TypeScript 5.7** across all three workspaces.
+- **CORS allowlist** in `shared/allowed-origins.json`, hot-reloaded with 30 s TTL by both Express and Payload.
+- **SEO logic** single source: `cms/src/lib/seo-agent.ts`, called both in-process by the Articles beforeChange hook and over HTTP from the Elliot dispatch chain.
+- **Imager regenerate logic** single source: `cms/src/lib/imager-regenerate.ts`, called by both the admin "🔁 Regenerate hero" button and (via a small adapter) by Elliot's orchestrator script.
+- **Lexical → HTML serialization** for the legacy SSR `article_post` field via `backend/src/lib/lexical-to-html.js` (was emitting JSON-as-text into `dangerouslySetInnerHTML` pre-2026-04-29).
+
+### Permanently dropped
+
+- **pnpm workspace migration** (formerly old-audit item 4). Considered and rejected for this project. Reasons:
+  1. Three live PM2 services (`essentialbali` ← `backend/`, `essentialbali-cms` ← `cms/`) have hard cwd assumptions; workspace hoisting changes node_modules layout and a botched migration would black out production.
+  2. Payload v3 has known monorepo quirks — `payload generate:types` and `payload generate:importmap` already failed once on this stack and had to be patched by hand. Adding a workspace-resolution layer increases that surface.
+  3. The headline benefit (shared `node_modules`) is mostly **already realized** by pnpm's content-addressed store, which hardlinks identical packages across projects on disk. The 906/507/759 MB sizes are the logical view, not real disk usage.
+  4. Of 14 cross-workspace overlapping deps, all but one show legitimate version drift (different consumers want different versions). Forcing alignment would break the picky one.
+  5. There's no shared component code between frontend and cms today. If that ever changes, revisit; until then it is overhead with no payoff.
+- **Sequelize / MySQL stack** (cleanup-A through C, 2026-04-28 → 2026-04-29). The MySQL `essentialbali` database was dropped and the Sequelize-based migrations / seeders / models / services / corresponding helpers + middlewares were removed from the codebase. Postgres-via-Payload-REST is the only data path now.
+- **Legacy custom admin** (cleanup-D, 2026-04-29). The tailadmin React shell + AuthPages + Master/* + Quill + mainAdmin entry chain (~10,000 LOC) was retired when /admin moved to Payload at port 4008.
+- **Penthouse runtime critical-CSS** (2026-04-29). The /generate-css endpoint had zero callers; Vite already inlines critical CSS at build time.
+
+### Open / deferred (no current pressure)
+
+- **React Compiler** — would reduce manual memoisation. Defer until React 19 settles in production.
+- **Payload v3 → v4 / next major** — wait for at least one minor after release.
 
 ---
 
