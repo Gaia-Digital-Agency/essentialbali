@@ -373,37 +373,12 @@ app.use("*", async (req, res, next) => {
     // const csrOnlyRoutes = ['/admin']
 
     let render, template;
-    let isAdmin = false;
-    // const isCsrOnly = csrOnlyRoutes.some(route => url.startsWith(route))
-    // template = fs.readFileSync(templatePath, 'utf-8');
-    // if (!isProd) {
-    //   template = await vite.transformIndexHtml(url, template);
-    // }
-    const adminPath = pathWithBase("/admin");
-    const signInPath = pathWithBase("/signin");
-    const isAdminRoute =
-      isPathMatch(url, "/admin") || (basePath && isPathMatch(url, adminPath));
-    if (isAdminRoute) {
-      if (!initialAuth) return res.redirect(signInPath);
-      if (!isProd) {
-        template = fs.readFileSync(
-          path.join(frontendPath, "src", "mainAdmin.html"),
-          "utf-8",
-        );
-        template = await vite.transformIndexHtml(url, template);
-
-        render = (await vite.ssrLoadModule("/src/entry-server-admin.tsx"))
-          .render;
-      } else {
-        template = fs.readFileSync(
-          path.join(frontendPath, "dist", "client", "src", "mainAdmin.html"),
-          "utf-8",
-        );
-        render = (await import(path.join(frontendPath, "dist/server/admin.js")))
-          .render;
-      }
-      isAdmin = true;
-    } else {
+    // (cleanup-D) The legacy admin SSR branch (mainAdmin.html / entry-server-admin.tsx
+    // / pages/Master/* / quill) was removed. /admin is now served by Payload at
+    // :4008 via nginx allowlist — Express never sees /admin requests on production.
+    // For local dev where Express might still receive /admin, we just fall through
+    // to the public Front bundle (which renders 404 cleanly via React Router).
+    {
       if (!isProd) {
         template = fs.readFileSync(
           path.join(frontendPath, "src", "main.html"),
@@ -479,10 +454,7 @@ app.use("*", async (req, res, next) => {
       `link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'"`,
     );
 
-    if (isAdmin) {
-      res.status(200).set({ "Content-Type": "text/html" }).end(html);
-      return;
-    }
+    // (cleanup-D) isAdmin early-return removed — admin SSR branch is gone.
     html = html.replace(
       "<!-- passdata -->",
       `<script>window.__INITIAL_DATA__ = ${JSON.stringify(passData)}</script>`,

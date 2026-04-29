@@ -87,12 +87,10 @@ export default defineConfig((args) => {
       rollupOptions: {
         input: {
           front: resolve(__dirname, 'src', 'main.html'),
-          admin: resolve(__dirname, 'src', 'mainAdmin.html'),
-          // css: resolve(__dirname, 'src', 'index.css')
-          // critical: resolve(__dirname, 'src', 'index.css'),
-          // noncritical: resolve(__dirname, 'src', 'non-critical.css')
-          // front: 'main.html',
-          // admin: 'mainAdmin.html'
+          // admin entry removed in cleanup-D — mainAdmin.html, mainAdmin.tsx,
+          // entry-server-admin.tsx, AdminApp.tsx, and pages/Master/* deleted.
+          // /admin is served by Payload at :4008 via nginx allowlist; the
+          // legacy admin bundle is no longer built.
         },
       }
     }

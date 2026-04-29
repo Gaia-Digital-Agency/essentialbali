@@ -1,44 +1,22 @@
-import { createBrowserRouter, RouteObject, RouterProvider } from "react-router"
-import { lazy, Suspense } from "react"
-import { adminRoutes } from "./AdminApp"
+/**
+ * FrontApp — browser router for the public site.
+ *
+ * The legacy admin routes import (`./AdminApp`) was removed in cleanup-D
+ * along with the admin pages themselves. The live route table now lives
+ * entirely in router-config.tsx and is consumed by main.tsx + entry-server.tsx.
+ *
+ * This wrapper is kept for callers that import { default as FrontApp }.
+ */
+import { createBrowserRouter, RouterProvider } from "react-router";
+import { routes } from "../router-config";
 
-const FrontLayout = lazy(() => import("../layout/FrontLayout"))
-// const LocationAdminLayout = lazy(() => import("../layout/LocationAdminLayout"))
-
-// Auth
-const SignIn = lazy(() => import("../pages/AuthPages/SignIn"))
-// const SignUp = lazy(() => import("../pages/AuthPages/SignUp"))
-
-
-// Frontend
-const PathResolver = lazy(() => import("../pages/Front/PathResolver"))
-
-export const frontRoutes: RouteObject[] = [
-    { path: "/signin", element: <Suspense fallback={<></>}><SignIn /></Suspense> },
-    // { path: "/signup", element: <Suspense fallback={<></>}><SignUp /></Suspense> },
-
-    {
-        path: "/",
-        element: (
-            <Suspense fallback={<></>}>
-                <FrontLayout />
-            </Suspense>
-        ),
-        children: [
-            { index: true, element: <PathResolver /> },
-            { path: "*", element: <PathResolver /> },
-        ],
-    },
-]
-
-export const routes: RouteObject[] = [
-    ...adminRoutes,
-    ...frontRoutes.filter((route) => route.path !== "/signin"),
-]
+export { routes };
 
 const FrontApp = () => {
-    const router = createBrowserRouter(routes, { basename: import.meta.env.VITE_BASE_PATH || "/" })
-    return <RouterProvider router={router} />
-}
+  const router = createBrowserRouter(routes, {
+    basename: import.meta.env.VITE_BASE_PATH || "/",
+  });
+  return <RouterProvider router={router} />;
+};
 
-export default FrontApp
+export default FrontApp;
