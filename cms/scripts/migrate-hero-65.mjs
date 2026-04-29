@@ -32,6 +32,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import process from "node:process";
+import { spawnSync } from "node:child_process";
 
 // Load .env from cms root if not already in env.
 const envPath = resolve(process.cwd(), ".env");
@@ -50,73 +51,79 @@ if (!DATABASE_URI) {
   process.exit(1);
 }
 
-const { default: pg } = await import("pg");
-const { Client } = pg;
-const client = new Client({ connectionString: DATABASE_URI });
-await client.connect();
-
 const log = (...a) => console.error("[migrate-hero-65]", ...a);
 
+// Tiny psql wrapper — avoids needing the `pg` npm package as a dep of
+// the cms workspace. Returns trimmed stdout; throws on non-zero exit.
+function psql(sql) {
+  const r = spawnSync(
+    "psql",
+    [DATABASE_URI, "-At", "-v", "ON_ERROR_STOP=1", "-c", sql],
+    { encoding: "utf-8" },
+  );
+  if (r.status !== 0) {
+    throw new Error(
+      `psql exit ${r.status}: ${(r.stderr || "").slice(0, 400).trim()}`,
+    );
+  }
+  return (r.stdout || "").trim();
+}
+
 try {
-  log("connected");
+  log("connected via psql");
 
-  // 1. Drop the old non-partial unique index, if present.
-  const dropOld = await client.query(`
-    DROP INDEX IF EXISTS public.area_topic_idx
-  `);
-  log("step 1 — dropped area_topic_idx (if existed):", dropOld.command);
+  // 1. Drop the old non-partial unique index, if present. Drizzle push
+  //    usually drops it when the index is removed from the Payload config,
+  //    but DROP IF EXISTS keeps this script idempotent + safe.
+  psql(`DROP INDEX IF EXISTS public.area_topic_idx`);
+  log("step 1 — dropped area_topic_idx (if existed)");
 
-  // 2. Make area_id, topic_id nullable. ALTER … DROP NOT NULL is idempotent
-  //    in Postgres (no error if already nullable).
-  await client.query(`ALTER TABLE hero_ads ALTER COLUMN area_id DROP NOT NULL`);
-  await client.query(`ALTER TABLE hero_ads ALTER COLUMN topic_id DROP NOT NULL`);
+  // 2. Make area_id, topic_id nullable. Idempotent.
+  psql(`ALTER TABLE hero_ads ALTER COLUMN area_id DROP NOT NULL`);
+  psql(`ALTER TABLE hero_ads ALTER COLUMN topic_id DROP NOT NULL`);
   log("step 2 — area_id, topic_id are now NULLABLE");
 
   // 3. Partial unique index for 65-slot uniqueness, including exactly one
   //    (NULL, NULL) homepage row.
-  await client.query(`
+  psql(`
     CREATE UNIQUE INDEX IF NOT EXISTS hero_ads_slot_idx
     ON hero_ads (COALESCE(area_id, 0), COALESCE(topic_id, 0))
   `);
   log("step 3 — hero_ads_slot_idx created (or already present)");
 
-  // 4. Seed the homepage default row if missing. We can't ON CONFLICT
-  //    against the partial index expression directly in INSERT…ON CONFLICT
-  //    without specifying the index name in newer Postgres; easier to do
-  //    a SELECT-then-INSERT.
-  const existing = await client.query(`
-    SELECT id FROM hero_ads WHERE area_id IS NULL AND topic_id IS NULL LIMIT 1
-  `);
-  if (existing.rows.length === 0) {
-    const ins = await client.query(`
-      INSERT INTO hero_ads (label, active, created_at, updated_at)
-      VALUES ('Hero > Homepage default', false, NOW(), NOW())
-      RETURNING id
-    `);
-    log(`step 4 — inserted homepage default row id=${ins.rows[0].id}`);
+  // 4. Seed the homepage default row if missing.
+  const existing = psql(
+    `SELECT id FROM hero_ads WHERE area_id IS NULL AND topic_id IS NULL LIMIT 1`,
+  );
+  if (!existing) {
+    const newId = psql(
+      `INSERT INTO hero_ads (label, active, created_at, updated_at)
+       VALUES ('Hero > Homepage default', false, NOW(), NOW())
+       RETURNING id`,
+    );
+    log(`step 4 — inserted homepage default row id=${newId}`);
   } else {
-    log(`step 4 — homepage default row already exists id=${existing.rows[0].id}`);
+    log(`step 4 — homepage default row already exists id=${existing}`);
   }
 
   // Final verification
-  const counts = await client.query(`
+  const counts = psql(`
     SELECT
-      COUNT(*) AS total,
-      COUNT(*) FILTER (WHERE area_id IS NULL AND topic_id IS NULL) AS homepage,
-      COUNT(*) FILTER (WHERE area_id IS NOT NULL AND topic_id IS NOT NULL) AS cells
+      COUNT(*)::text || '|' ||
+      COUNT(*) FILTER (WHERE area_id IS NULL AND topic_id IS NULL)::text || '|' ||
+      COUNT(*) FILTER (WHERE area_id IS NOT NULL AND topic_id IS NOT NULL)::text
     FROM hero_ads
   `);
-  log("final state:", counts.rows[0]);
-  if (counts.rows[0].total !== "65") {
+  const [total, homepage, cells] = counts.split("|");
+  log(`final state: total=${total} homepage=${homepage} cells=${cells}`);
+  if (total !== "65") {
     log(
-      `WARNING: expected 65 total rows, got ${counts.rows[0].total}. ` +
-        `Cell-specific rows: ${counts.rows[0].cells} (expected 64).`,
+      `WARNING: expected 65 total rows, got ${total}. ` +
+        `Cell-specific rows: ${cells} (expected 64).`,
     );
   }
   log("OK");
 } catch (err) {
   console.error("[migrate-hero-65] FAILED:", err?.message || err);
-  process.exitCode = 2;
-} finally {
-  await client.end();
+  process.exit(2);
 }
