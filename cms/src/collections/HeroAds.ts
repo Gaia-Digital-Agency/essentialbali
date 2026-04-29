@@ -30,15 +30,21 @@ export const HeroAds: CollectionConfig = {
   admin: {
     useAsTitle: "label",
     description:
-      "65 hero image slots: the homepage default + 8 areas × 8 topics. Editorial copy and an optional CTA button can be set per slot. Empty client = editorial; populated client = paid placement.",
+      "Hero image slots: the homepage default + (8 areas × topics where showsHero=true). Editorial copy and an optional CTA button can be set per slot. Empty client = editorial; populated client = paid placement.",
     defaultColumns: ["label", "active", "client", "startAt", "endAt"],
-    // The default Payload list view is replaced with the 9-row visual grid
+    // The default Payload list view is replaced with the visual grid
     // (HeroGridView). Detail edit pages remain at /admin/collections/hero-ads/{id}.
     components: {
       views: {
         list: {
           Component: "@/components/HeroGridView",
         },
+      },
+      // Edit page: shows the "Push to all cell heroes" button on the
+      // homepage default row (the (NULL, NULL) slot). The component
+      // itself filters — it returns null on cell-specific edit pages.
+      edit: {
+        beforeDocumentControls: ["@/components/PushHomeHeroButton"],
       },
     },
   },
