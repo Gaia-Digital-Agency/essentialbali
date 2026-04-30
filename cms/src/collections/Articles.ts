@@ -15,7 +15,10 @@ export const Articles: CollectionConfig = {
     },
     components: {
       // 8×8 matrix filter + status chips, rendered above the standard list table.
-      beforeListTable: ["@/components/ArticlesMatrixFilter"],
+      beforeListTable: [
+        "@/components/ArticlesMatrixFilter",
+        "@/components/BulkActionsArticles",
+      ],
       // Edit page: the "🔁 Regenerate hero" button + feedback input.
       // Renders below the document fields. Hidden on the create form.
       edit: {
