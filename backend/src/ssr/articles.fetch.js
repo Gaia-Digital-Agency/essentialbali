@@ -129,6 +129,15 @@ export const fetchArticlesData = async (query = {}) => {
     } else if (typeof query.country === "string" && query.country) {
       params["where[area.slug][equals]"] = query.country;
     }
+    // Slug filter — pass through so getArticleBySlug() in the SPA
+    // PathResolver can correctly determine "is the URL last-segment
+    // an article?". Without this, the handler returned the full set
+    // and PathResolver mis-routed every listing URL to ARTICLE_PAGE
+    // once any article was published.
+    if (typeof query.slug === "string" && query.slug.trim()) {
+      params["where[slug][equals]"] = query.slug.trim();
+    }
+
     if (Array.isArray(query.category) && query.category.length > 0) {
       params["where[topic][in]"] = query.category.join(",");
     } else if (query.category != null && query.category !== "") {

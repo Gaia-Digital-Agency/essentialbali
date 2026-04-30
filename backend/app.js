@@ -284,6 +284,15 @@ const articleListHandler = async (req, res) => {
       page: toNumOrUndef(q.page),
       id_country: toNumOrUndef(q.id_country),
       country: typeof q.country === "string" ? q.country : undefined,
+      // Slug filter — required by frontend's getArticleBySlug() in
+      // services/article.service.ts. Without this, the handler returned
+      // ALL published articles regardless of slug, and PathResolver
+      // would then treat the first article as if it matched the URL's
+      // last segment — leading to the wrong article rendering on every
+      // listing URL once published articles existed (route-state leak,
+      // surfaced 2026-04-30 once the first 10 test articles were
+      // approved to published).
+      slug: typeof q.slug === "string" ? q.slug : undefined,
       category: Array.isArray(cat)
         ? cat.map((v) => toNumOrUndef(v) ?? v).filter((v) => v != null)
         : cat != null && cat !== ""
