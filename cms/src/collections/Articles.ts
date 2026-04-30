@@ -22,7 +22,10 @@ export const Articles: CollectionConfig = {
       // Edit page: the "🔁 Regenerate hero" button + feedback input.
       // Renders below the document fields. Hidden on the create form.
       edit: {
-        beforeDocumentControls: ["@/components/RegenerateHeroButton"],
+        beforeDocumentControls: [
+          "@/components/RegenerateHeroButton",
+          "@/components/HeroImagePicker",
+        ],
       },
     },
   },

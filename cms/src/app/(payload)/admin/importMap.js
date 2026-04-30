@@ -31,6 +31,7 @@ import { default as default_RegenerateHeroButton } from '@/components/Regenerate
 import { default as default_PushHomeHeroButton } from '@/components/PushHomeHeroButton'
 import { default as default_BulkActionsArticles } from '@/components/BulkActionsArticles'
 import { default as default_BulkActionsHeroAds } from '@/components/BulkActionsHeroAds'
+import { default as default_HeroImagePicker } from '@/components/HeroImagePicker'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { GcsClientUploadHandler as GcsClientUploadHandler_storage_gcs } from '@payloadcms/storage-gcs/client'
 
@@ -69,6 +70,7 @@ export const importMap = {
   "@/components/PushHomeHeroButton#default": default_PushHomeHeroButton,
   "@/components/BulkActionsArticles#default": default_BulkActionsArticles,
   "@/components/BulkActionsHeroAds#default": default_BulkActionsHeroAds,
+  "@/components/HeroImagePicker#default": default_HeroImagePicker,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-gcs/client#GcsClientUploadHandler": GcsClientUploadHandler_storage_gcs
 }
