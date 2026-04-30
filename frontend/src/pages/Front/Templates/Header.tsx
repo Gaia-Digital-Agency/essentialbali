@@ -48,15 +48,23 @@ const MenuNav: React.FC<{
     return false;
   };
 
+  // Visual states:
+  //   active   — red text + semibold + 2px red underline (you-are-here)
+  //   default  — light icewhite, hover icewhite/70
+  // The "is-active" class is kept for any legacy CSS hooks.
   return (
     <>
       <NavLink
         key={menu.id}
         relative={"route"}
-        className={`menu-link text-front-small text-nowrap capitalize 
-                align-items-center justify-center
-                ${isActive() ? "is-active" : ""}
-                `}
+        className={`menu-link text-front-small text-nowrap capitalize
+                align-items-center justify-center transition-colors duration-150
+                pb-1 border-b-2
+                ${
+                  isActive()
+                    ? "is-active text-front-red font-semibold border-front-red"
+                    : "text-front-icewhite hover:text-front-icewhite/70 border-transparent"
+                }`}
         to={generateTo(menu.slug_title, actualRoute)}
       >
         {menu.title}
@@ -223,6 +231,7 @@ const Header: React.FC = () => {
             <AreaMenuToggleButton
               label={selectedAreaLabel}
               open={isAreaOpen}
+              active={selectedAreaLabel !== "All Area"}
               onToggle={() => setIsAreaOpen((prev) => !prev)}
             />
           </div>
