@@ -1,6 +1,7 @@
 import React from "react";
 import { useTaxonomies } from "../../context/TaxonomyContext";
 import { useNavigate } from "react-router"; // NavLink, RouteProps,
+import { useRoute } from "../../context/RouteContext";
 import { BALI_AREA_OPTIONS, isBaliAreaSlug } from "../../utils/baliAreas";
 
 interface AreaMenuPanelProps {
@@ -10,19 +11,33 @@ interface AreaMenuPanelProps {
 
 const AreaMenuPanel: React.FC<AreaMenuPanelProps> = ({ open, onSelect }) => {
   const { taxonomies } = useTaxonomies();
+  const { actualRoute } = useRoute();
   const navigate = useNavigate();
 
+  // Preserve the current topic when the visitor switches area:
+  //   /canggu/dine → pick Ubud → /ubud/dine (NOT /ubud)
+  //   /canggu      → pick Ubud → /ubud
+  //   /            → pick Canggu → /canggu
+  //   any URL      → pick All Area → /
+  // The previous code dropped the topic context, which made it
+  // tedious to compare e.g. "Dine in Canggu vs Dine in Ubud".
+  const currentTopicSlug = actualRoute?.category?.slug_title;
+
   const changeHandler = (val: string) => {
+    // "All Area" → root
+    if (!val) {
+      navigate("/");
+      return;
+    }
+    // Resolve to canonical slug from taxonomy if possible.
     const area = taxonomies?.countries?.find((country) => country.slug == val);
-    if (area) {
-      navigate(`/${area.slug}`);
-      return;
+    const slug = area?.slug ?? val;
+    // Append topic when one is currently active
+    if (currentTopicSlug) {
+      navigate(`/${slug}/${currentTopicSlug}`);
+    } else {
+      navigate(`/${slug}`);
     }
-    if (val) {
-      navigate(`/${val}`);
-      return;
-    }
-    navigate("/");
   };
 
   const taxonomyOptions = (taxonomies.countries ?? [])
