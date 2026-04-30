@@ -68,28 +68,66 @@ const HeroBanner: React.FC<Props> = ({ area, topic }) => {
     let cancelled = false;
     (async () => {
       try {
-        const params: string[] = [
-          "where[active][equals]=true",
-          "depth=1",
-          "limit=1",
-        ];
-        if (area) params.push(`where[area.slug][equals]=${encodeURIComponent(area)}`);
-        else params.push("where[area][exists]=false");
-        if (topic) params.push(`where[topic.slug][equals]=${encodeURIComponent(topic)}`);
-        else params.push("where[topic][exists]=false");
+        // STRICT AREA SEMANTICS (2026-04-30):
+        //
+        // The hero you see MUST belong to the cell you're looking at.
+        // No fall back to a different area's hero — that would lie
+        // about location context (e.g. showing a Canggu hero on
+        // a Nusa Penida page with an "Explore Canggu" CTA).
+        //
+        // Lookup order:
+        //   • area + topic        → only (area, topic) cell hero
+        //   • area only           → (area, NULL) area-level hero, then
+        //                            (area, ANY) any active cell hero
+        //                            for the same area (still on-area)
+        //   • topic only          → (NULL, topic) topic-level hero (for
+        //                            future use — currently no rows)
+        //   • neither (homepage)  → (NULL, NULL) homepage default
+        //
+        // If nothing matches at any step, render NOTHING (return null).
+        // The page just shows no hero — a blank space is honest;
+        // the wrong-area hero is misleading.
 
-        let res = await apiClient.get(`hero-ads?${params.join("&")}`);
-        let docs: HeroAdDoc[] = res?.data?.docs ?? [];
-
-        // Fallback to the homepage default if the cell-specific slot is
-        // missing or inactive and we asked for one.
-        if (docs.length === 0 && (area || topic)) {
-          res = await apiClient.get(
-            "hero-ads?where[active][equals]=true&where[area][exists]=false&where[topic][exists]=false&depth=1&limit=1",
+        const fetchOne = async (q: string): Promise<HeroAdDoc | null> => {
+          const r = await apiClient.get(
+            `hero-ads?${q}&where[active][equals]=true&depth=1&limit=1`,
           );
-          docs = res?.data?.docs ?? [];
+          return (r?.data?.docs ?? [])[0] ?? null;
+        };
+
+        let pick: HeroAdDoc | null = null;
+
+        if (area && topic) {
+          pick = await fetchOne(
+            `where[area.slug][equals]=${encodeURIComponent(area)}` +
+              `&where[topic.slug][equals]=${encodeURIComponent(topic)}`,
+          );
+        } else if (area) {
+          // Area-only hero (the dedicated one for this area page)
+          pick = await fetchOne(
+            `where[area.slug][equals]=${encodeURIComponent(area)}` +
+              `&where[topic][exists]=false`,
+          );
+          // Same-area cell hero as a fallback — still on-area, just may
+          // emphasise a particular topic. Never crosses area boundary.
+          if (!pick) {
+            pick = await fetchOne(
+              `where[area.slug][equals]=${encodeURIComponent(area)}` +
+                `&where[topic][exists]=true`,
+            );
+          }
+        } else if (topic) {
+          pick = await fetchOne(
+            `where[area][exists]=false` +
+              `&where[topic.slug][equals]=${encodeURIComponent(topic)}`,
+          );
+        } else {
+          pick = await fetchOne(
+            `where[area][exists]=false&where[topic][exists]=false`,
+          );
         }
-        if (!cancelled) setDoc(docs[0] ?? null);
+
+        if (!cancelled) setDoc(pick);
       } catch {
         if (!cancelled) setDoc(null);
       } finally {

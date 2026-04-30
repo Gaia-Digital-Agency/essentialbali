@@ -108,12 +108,17 @@ export default function HeroGridView() {
     .map((t) => t.slug);
 
   const cellMap = new Map<string, HeroAd>();
+  const areaOnlyMap = new Map<string, HeroAd>(); // (area, NULL) heroes
   let homepageCell: HeroAd | null = null;
   for (const d of docs) {
     const aSlug = slugOf(d.area);
     const tSlug = slugOf(d.topic);
     if (!aSlug && !tSlug) {
       homepageCell = d;
+      continue;
+    }
+    if (aSlug && !tSlug) {
+      areaOnlyMap.set(aSlug, d);
       continue;
     }
     cellMap.set(`${aSlug}:${tSlug}`, d);
@@ -169,8 +174,9 @@ export default function HeroGridView() {
         <div>
           <div style={title}>Hero Ads grid</div>
           <div style={sub}>
-            {1 + AREAS_ORDER.length * TOPICS_ORDER.length} slots = 1 homepage default +{" "}
-            {AREAS_ORDER.length} areas × {TOPICS_ORDER.length} topics with showsHero ·{" "}
+            {1 + AREAS_ORDER.length + AREAS_ORDER.length * TOPICS_ORDER.length} slots ={" "}
+            1 homepage default + {AREAS_ORDER.length} area-only + {AREAS_ORDER.length} areas ×{" "}
+            {TOPICS_ORDER.length} topics-with-showsHero ·{" "}
             <strong>{activeCount}</strong> active · click any cell to flip
           </div>
         </div>
@@ -252,6 +258,72 @@ export default function HeroGridView() {
                 — homepage default slot not found — run the seed migration
               </div>
             )}
+          </div>
+
+          {/* Row 0.5 — Area-only heroes (one per area, NULL topic).
+              Rendered as a tight horizontal strip of 8 tiles between the
+              homepage banner and the 8×N cell grid. Used by /{area} pages. */}
+          <div style={areaRowWrap}>
+            <div style={areaRowLabel}>AREA-ONLY HEROES</div>
+            <div style={areaRowGrid}>
+              {AREAS_ORDER.map((aslug) => {
+                const ah = areaOnlyMap.get(aslug);
+                if (!ah) {
+                  return (
+                    <div key={`a-${aslug}`} style={areaTileEmpty}>
+                      <div style={areaTileName}>{areaName(aslug)}</div>
+                      <div style={areaTileMissing}>— not generated yet —</div>
+                    </div>
+                  );
+                }
+                const isActive = !!ah.active;
+                const thumb = creativeUrl(ah.creative);
+                const isPending = !!pending[String(ah.id)];
+                return (
+                  <button
+                    key={`a-${aslug}`}
+                    type="button"
+                    onClick={() => toggle(ah)}
+                    disabled={isPending}
+                    style={{
+                      ...areaTile,
+                      background: isActive
+                        ? "rgba(22,163,74,0.18)"
+                        : "var(--theme-elevation-50)",
+                      borderColor: isActive
+                        ? "rgba(22,163,74,0.55)"
+                        : "var(--theme-elevation-150)",
+                      opacity: isPending ? 0.5 : 1,
+                    }}
+                    title={ah.label || `Hero > ${areaName(aslug)} > (any topic)`}
+                  >
+                    <div style={cellTop}>
+                      <span
+                        style={{
+                          ...statusDot,
+                          background: isActive ? "#16a34a" : "#9ca3af",
+                        }}
+                      />
+                      <span style={cellState}>
+                        {isActive ? "ACTIVE" : "Inactive"}
+                      </span>
+                      <a
+                        href={`/admin/collections/hero-ads/${ah.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        style={editLink}
+                      >
+                        edit
+                      </a>
+                    </div>
+                    <div style={areaTileName}>{areaName(aslug)}</div>
+                    {thumb && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={thumb} alt="" style={areaTileThumb} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
         <div style={gridWrap}>
@@ -596,6 +668,65 @@ const homepageBannerMissing: React.CSSProperties = {
   textAlign: "center",
   opacity: 0.55,
   fontSize: "0.85rem",
+};
+
+// ── area-only hero strip (row between homepage + cell grid) ─────────
+
+const areaRowWrap: React.CSSProperties = {
+  marginBottom: "1.2rem",
+};
+const areaRowLabel: React.CSSProperties = {
+  fontSize: "0.7rem",
+  opacity: 0.5,
+  textTransform: "uppercase",
+  letterSpacing: "0.06em",
+  marginBottom: "0.4rem",
+  paddingLeft: "0.2rem",
+};
+const areaRowGrid: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(8, minmax(110px, 1fr))",
+  gap: "0.4rem",
+  overflowX: "auto",
+};
+const areaTile: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  textAlign: "left",
+  padding: "0.45rem 0.55rem",
+  border: "1px solid",
+  borderRadius: "6px",
+  cursor: "pointer",
+  fontFamily: "inherit",
+  color: "var(--theme-text)",
+  minHeight: "78px",
+  fontSize: "0.78rem",
+};
+const areaTileEmpty: React.CSSProperties = {
+  ...areaTile,
+  cursor: "default",
+  opacity: 0.5,
+  borderColor: "var(--theme-elevation-150)",
+  borderStyle: "dashed",
+  alignItems: "center",
+  justifyContent: "center",
+};
+const areaTileName: React.CSSProperties = {
+  fontWeight: 600,
+  fontSize: "0.82rem",
+  marginTop: "0.2rem",
+};
+const areaTileMissing: React.CSSProperties = {
+  fontSize: "0.7rem",
+  opacity: 0.65,
+  marginTop: "0.2rem",
+};
+const areaTileThumb: React.CSSProperties = {
+  width: "100%",
+  height: "44px",
+  objectFit: "cover",
+  borderRadius: "4px",
+  marginTop: "0.3rem",
 };
 
 const ctaPill: React.CSSProperties = {
