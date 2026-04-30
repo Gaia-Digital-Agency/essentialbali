@@ -96,7 +96,9 @@ The `--max-old-space-size=2560` is needed for Payload's `generate:importmap` ste
 
 ## Authentication notes for external REST clients
 
-The admin UI uses Payload's session cookies via Next/Payload's built-in flow — that all works. **Scripted REST clients** (curl, server-side, CI) that hit `/api/*` should use the JWT header path, not the cookie path:
+The admin UI uses Payload's session cookies via Next/Payload's built-in flow — that all works. **Scripted REST clients** (curl, server-side, CI) have two equally valid paths.
+
+### Path A — JWT header (recommended for scripts)
 
 ```bash
 JWT=$(curl -sk -c jar -X POST https://essentialbali.com/api/users/login \
@@ -110,7 +112,48 @@ curl -sk -H "Authorization: JWT $JWT" \
   -d '{"subject":"…","body":{"root":{"type":"root","children":[…]}},"status":"draft"}'
 ```
 
-Surfaced during UAT — the `payload-token` cookie issued by `/api/users/login` is not honoured by REST endpoints when sent via the `Cookie:` header.
+### Path B — Cookie + Origin (CSRF-friendly)
+
+If you want to use the `payload-token` cookie issued by `/api/users/login`, you MUST also send an `Origin` header that matches one of the entries in `csrf` (which is `cors[]` filtered to `https://essentialbali*` in `payload.config.ts`). Without `Origin`, Payload's CSRF check silently rejects the cookie.
+
+```bash
+# login + jar
+curl -sk -c jar.txt -X POST https://essentialbali.com/api/users/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"…","password":"…"}'
+
+# subsequent calls — Origin is required
+curl -sk -b jar.txt -H 'Origin: https://essentialbali.com' \
+  https://essentialbali.com/api/users/me
+# returns {user: {...}}
+
+# without Origin — silently ignored
+curl -sk -b jar.txt https://essentialbali.com/api/users/me
+# returns {user: null}
+```
+
+Surfaced during the 2026-04-29 UAT and re-confirmed 2026-04-30 — the cookie auth path is correct but undocumented. The `Origin` requirement is a deliberate CSRF protection, not a bug.
+
+## Adding a new admin client component
+
+Payload v3 keeps an `importMap.js` at `src/app/(payload)/admin/importMap.js` that lists every client component referenced by the admin config. The official regenerate command is:
+
+```bash
+pnpm payload generate:importmap
+```
+
+**This currently fails** in this repo with `Error: This module cannot be imported from a Client Component module` because tsx loads `next/server-only` while resolving the Payload CLI. Until that's fixed, **add new client component entries to `importMap.js` by hand** — copy the pattern from existing entries:
+
+```js
+import { default as default_NewComponent } from '@/components/NewComponent'
+// ...
+export const importMap = {
+  // ...
+  "@/components/NewComponent#default": default_NewComponent,
+}
+```
+
+`next build` does include the imported entries in the admin bundle once they're in the file.
 
 ---
 

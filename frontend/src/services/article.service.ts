@@ -98,9 +98,20 @@ const getArticleBySlug = async (slug: string) => {
     ) {
       return getArticles.data.data.articles[0];
     }
-    throw Error(getArticles.statusText);
-  } catch (e) {
-    console.log(e);
+    // No article matched the slug. This is the normal case for every
+    // listing URL (the last segment is usually a topic slug like
+    // 'dine', not an article slug). Return undefined cleanly — the
+    // caller (PathResolver) already handles the falsy branch by
+    // routing to LISTING_*. The previous code threw + console.log'd
+    // every miss, polluting prod console with one Error per page load.
+    return undefined;
+  } catch (e: unknown) {
+    // Real network/server failure — keep this loud so genuine breakage
+    // is visible. 404s on /api/article are uncommon since the handler
+    // always returns 200 + empty array, but defend against transport
+    // errors regardless.
+    console.warn("[getArticleBySlug] network error:", e);
+    return undefined;
   }
 };
 

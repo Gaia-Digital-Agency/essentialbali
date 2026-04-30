@@ -177,11 +177,22 @@ export default function PushHomeHeroButton() {
 }
 
 const wrap: React.CSSProperties = {
-  margin: "0.6rem 0 1.2rem",
-  padding: "0.9rem 1.1rem",
+  // The beforeDocumentControls slot renders inside the same flex row as
+  // the Save button. A full-width div would overlap Save. We constrain
+  // to a sensible width AND drop into normal flow with width:100% only
+  // up to a max so the bar wraps cleanly.
+  width: "100%",
+  maxWidth: "100%",
+  margin: "0.5rem 0 1rem",
+  padding: "0.75rem 1rem",
   background: "var(--theme-elevation-50)",
   border: "1px solid var(--theme-elevation-150)",
   borderRadius: "8px",
+  // Force a row break above the doc-controls bar by becoming a flex
+  // basis 100% item — Payload's container is flex-wrap, so this lands
+  // us on our own row above the Save button.
+  flexBasis: "100%",
+  order: -1,
 };
 
 const head: React.CSSProperties = {

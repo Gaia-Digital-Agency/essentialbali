@@ -35,9 +35,6 @@ export const getCategoryWithFields = async (
   props: GetCategoryWithFieldsProps
 ) => {
   try {
-    // const filtered = Object.fromEntries(
-    //   Object.entries(props).filter(([_, v]) => v !== undefined)
-    // );
     const filtered = Object.entries(props).filter(prop => prop[1]).join('&').replaceAll(',','=')
     const params = new URLSearchParams(filtered).toString();
     const response = await apiClient.get<getCategoryByIDResponse>(
@@ -46,8 +43,16 @@ export const getCategoryWithFields = async (
     if (response.data) {
       return response.data.data;
     }
-  } catch (e) {
-    console.log(e);
+  } catch (e: unknown) {
+    // /api/category was a MySQL-era endpoint retired in cleanup-C
+    // (2026-04-29). The backend no longer serves it, so calls return
+    // 404. The Directory.tsx callsite already gracefully falls back
+    // to actualRoute.category for title/description, so we just
+    // silence the noise. Other axios errors still surface for debug.
+    const status = (e as { response?: { status?: number } })?.response?.status;
+    if (status !== 404) {
+      console.warn("[getCategoryWithFields]", e);
+    }
   }
 };
 

@@ -14,10 +14,11 @@ const AREAS = [
 ];
 
 const TOPICS = [
-  // showsHero=false on Events because the events listing template
-  // (EventsV3.tsx) renders its own date/time/venue header instead of
-  // a generic hero image. Hero rows for events cells are skipped.
-  { slug: "events", name: "Events", showsHero: false },
+  // showsHero defaults to true on every topic — admin keeps the full
+  // 8-column hero grid (65 visible slots = 1 home + 8x8). The flag
+  // exists so individual topics can be hidden later without a code
+  // change, but no topic ships hidden by default.
+  { slug: "events", name: "Events" },
   { slug: "news", name: "News" },
   { slug: "featured", name: "Featured" },
   { slug: "dine", name: "Dine" },
