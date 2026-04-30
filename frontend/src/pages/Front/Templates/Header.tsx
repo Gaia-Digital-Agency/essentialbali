@@ -151,9 +151,12 @@ const Header: React.FC = () => {
     };
   }, [isSearchOpen]);
 
-  const toNav = () => {
-    return `/${actualRoute?.country ? actualRoute.country.slug : ""}${actualRoute?.city ? `/${actualRoute.city.slug}` : ""}${actualRoute?.region ? `/${actualRoute.region.slug}` : ""}`;
-  };
+  // Logo always navigates to the homepage. The previous behaviour
+  // (stay-in-area: `/canggu/dine` → click logo → `/canggu`) confused
+  // users — most sites treat the logo as the universal "back to home"
+  // anchor. If we ever want a "back to area page" affordance, that
+  // belongs on the breadcrumb, not the logo.
+  const toNav = () => "/";
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
