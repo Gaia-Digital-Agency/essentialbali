@@ -3,6 +3,7 @@ import 'react-loading-skeleton/dist/skeleton.css'
 import Header from '../pages/Front/Templates/Header'
 import Footer from '../pages/Front/Templates/Footer'
 import FloatingActions from '../components/front/FloatingActions'
+import BreadcrumbStrip from '../components/front/BreadcrumbStrip'
 // import "../index.css"
 import { NotificationProvider } from '../context/NotificationContext'
 import { Outlet } from 'react-router'
@@ -20,7 +21,11 @@ const FrontLayout: React.FC = () => {
     return (
         <>
                 {/* <ProtectedRoute> */}
-                    <Header /> 
+                    <Header />
+                    {/* Always-visible "you-are-here" strip below the header.
+                        Visible mobile + desktop. Hidden on the bare homepage
+                        by the component itself. */}
+                    <BreadcrumbStrip />
                         <NotificationProvider>
                             <Outlet />
                         </NotificationProvider>

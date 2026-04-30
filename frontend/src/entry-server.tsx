@@ -96,6 +96,15 @@ export function render(url: string, initialData: InitialDataProps) {
     // const router = createStaticRouter(routes)
 
     const { initialTaxonomies, initialRoute, initialContent, initialTemplateContent, initialAuth, initialTime } = initialData
+    // initialNewsletterNotice is bundled by backend SSR; merge it INTO
+    // initialContent so useContent().initialData.initialNewsletterNotice
+    // is available to the Newsletter component without changing the
+    // ContentProvider contract.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const initialNewsletterNotice = (initialData as any)?.initialNewsletterNotice;
+    const enrichedContent = initialNewsletterNotice
+      ? { ...(initialContent || {}), initialNewsletterNotice }
+      : initialContent;
     const helmetContext: { helmet?: any } = {}
 
     return new Promise<{ appHtml: string; helmet: any }>((resolve, reject) => {
@@ -107,7 +116,7 @@ export function render(url: string, initialData: InitialDataProps) {
             <TimeProvider initialData={initialTime}>
                 <TaxonomyProvider initialData={initialTaxonomies}>
                     <RouteProvider initialData={initialRoute}>
-                        <ContentProvider initialData={initialContent}>
+                        <ContentProvider initialData={enrichedContent}>
                             <HeaderContentProvider initialData={initialTemplateContent}>
                                 <AuthProvider initialData={initialAuth}>
                                     <HelmetProvider context={helmetContext}>

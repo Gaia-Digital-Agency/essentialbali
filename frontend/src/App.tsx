@@ -18,7 +18,11 @@ const App: React.FC<MainAppProps> = ({children, initialData}) => {
           <TimeProvider initialData={initialData?.initialTime}>
               <TaxonomyProvider initialData={initialData?.initialTaxonomies}>
                   <RouteProvider initialData={initialData?.initialRoute}>
-                      <ContentProvider initialData={initialData?.initialContent}>
+                      <ContentProvider initialData={
+                        initialData?.initialNewsletterNotice
+                          ? { ...(initialData?.initialContent || {}), initialNewsletterNotice: initialData.initialNewsletterNotice }
+                          : initialData?.initialContent
+                      }>
                           <HeaderContentProvider initialData={initialData?.initialTemplateContent}>
                               <AuthProvider initialData={initialData?.initialAuth ? initialData.initialAuth[0] : null}>
                                   <HelmetProvider>

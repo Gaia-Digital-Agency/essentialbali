@@ -15,6 +15,7 @@ import { fileURLToPath } from "url";
 import { fetchTaxonomyData } from "./src/ssr/utils/taxonomy.js";
 import { fetchRouteData } from "./src/ssr/route.fetch.js";
 import { fetchContentData } from "./src/ssr/content.fetch.js";
+import { fetchNewsletterNotice } from "./src/ssr/newsletter-notice.fetch.js";
 import {
   fetchTemplateContent,
   fetchTemplateRoute,
@@ -441,10 +442,16 @@ app.get(["/api/content", pathWithBase("/api/content")], async (req, res) => {
       search,
     );
     const initialTemplateContent = await fetchTemplateContent(initialRoute);
+    const initialNewsletterNotice = await fetchNewsletterNotice();
     res.json({
       status_code: 200,
       status: "OK",
-      data: { initialRoute, initialContent, initialTemplateContent },
+      data: {
+        initialRoute,
+        initialContent,
+        initialTemplateContent,
+        initialNewsletterNotice,
+      },
     });
   } catch (e) {
     console.error("[/api/content] error:", e?.message || e);
@@ -542,11 +549,13 @@ app.use("*", async (req, res, next) => {
     const initialPreBodyScript = await fetchTemplateRoute("/script/prebody");
     const initialPostBodyScript = await fetchTemplateRoute("/script/postbody");
 
+    const initialNewsletterNotice = await fetchNewsletterNotice();
     const initialData = {
       initialTaxonomies,
       initialRoute,
       initialContent,
       initialTemplateContent,
+      initialNewsletterNotice,
       initialAuth,
       initialTime,
     };

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Button from "./Button";
 import { subscribeNewsletter } from "../../services/newsletter.service";
 import { useNotification } from "../../context/NotificationContext";
+import { useContent } from "../../context/ContentContext";
 import apiClient from "../../api";
 
 /**
@@ -48,8 +49,21 @@ const FALLBACK: Required<Omit<NoticeData, "backgroundImage">> & { backgroundImag
 
 const Newsletter: React.FC = () => {
   const [email, setEmail] = useState<string>("");
-  const [notice, setNotice] = useState<NoticeData>(FALLBACK);
+  const { initialData } = useContent();
   const { setNotification } = useNotification();
+
+  // Hydration order:
+  //   1. Server-rendered initialData.initialNewsletterNotice (if present
+  //      — backend SSR fetched the global before rendering, so the very
+  //      first paint shows the live editor copy, not FALLBACK).
+  //   2. Otherwise FALLBACK (offline / SSR fetch failure).
+  // Then useEffect refreshes from /api/globals/newsletter-notice in
+  // case the editor changed it between SSR cache and the visit.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ssrNotice = (initialData as any)?.initialNewsletterNotice as NoticeData | undefined;
+  const [notice, setNotice] = useState<NoticeData>(
+    ssrNotice ? { ...FALLBACK, ...ssrNotice } : FALLBACK,
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -60,7 +74,7 @@ const Newsletter: React.FC = () => {
           setNotice({ ...FALLBACK, ...res.data });
         }
       } catch {
-        /* keep FALLBACK on network failure */
+        /* keep current state on network failure */
       }
     })();
     return () => {
