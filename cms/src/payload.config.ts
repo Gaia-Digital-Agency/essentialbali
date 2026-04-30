@@ -21,6 +21,7 @@ import { Media } from "./collections/Media";
 import { Comments } from "./collections/Comments";
 import { Tags } from "./collections/Tags";
 import { HeroAds } from "./collections/HeroAds";
+import { HeroAdVersions } from "./collections/HeroAdVersions";
 import { Subscribers } from "./collections/Subscribers";
 import { Newsletters } from "./collections/Newsletters";
 import { HomeDailyFeed } from "./collections/HomeDailyFeed";
@@ -67,6 +68,7 @@ export default buildConfig({
     Comments,
     Tags,
     HeroAds,
+    HeroAdVersions,
     Subscribers,
     Newsletters,
     HomeDailyFeed,

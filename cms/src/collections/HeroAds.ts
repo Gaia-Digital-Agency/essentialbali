@@ -40,11 +40,15 @@ export const HeroAds: CollectionConfig = {
           Component: "@/components/HeroGridView",
         },
       },
-      // Edit page: shows the "Push to all cell heroes" button on the
-      // homepage default row (the (NULL, NULL) slot). The component
-      // itself filters — it returns null on cell-specific edit pages.
+      // Edit page:
+      //   • Push-to-all (homepage row only)
+      //   • History timeline (every slot)
+      // Both components self-filter on the URL doc id.
       edit: {
-        beforeDocumentControls: ["@/components/PushHomeHeroButton"],
+        beforeDocumentControls: [
+          "@/components/PushHomeHeroButton",
+          "@/components/HeroAdHistory",
+        ],
       },
     },
   },
@@ -182,6 +186,90 @@ export const HeroAds: CollectionConfig = {
           }
         }
         return data;
+      },
+    ],
+    afterChange: [
+      // Audit-trail snapshot — see cms/src/collections/HeroAdVersions.ts.
+      // Best-effort: we never let a failed audit insert prevent the user's
+      // own write from succeeding. Catches + logs and moves on.
+      async ({ doc, operation, req }) => {
+        try {
+          const userId = (req.user as any)?.id ?? null;
+          await req.payload.create({
+            collection: "hero-ad-versions",
+            data: {
+              slot: doc.id,
+              event: operation,
+              changedAt: new Date().toISOString(),
+              changedBy: userId,
+              label: `${operation} · ${doc.label || `slot#${doc.id}`}`,
+              snapshot: {
+                area: typeof doc.area === "object" ? doc.area?.id : doc.area,
+                topic: typeof doc.topic === "object" ? doc.topic?.id : doc.topic,
+                active: !!doc.active,
+                client: doc.client ?? null,
+                creative:
+                  typeof doc.creative === "object" ? doc.creative?.id : doc.creative,
+                linkUrl: doc.linkUrl ?? null,
+                headline: doc.headline ?? null,
+                subline: doc.subline ?? null,
+                ctaActive: !!doc.ctaActive,
+                ctaText: doc.ctaText ?? null,
+                ctaUrl: doc.ctaUrl ?? null,
+                startAt: doc.startAt ?? null,
+                endAt: doc.endAt ?? null,
+              },
+            } as any,
+          });
+        } catch (e: any) {
+          req.payload.logger?.warn?.(
+            `[hero-ads/audit] snapshot insert failed: ${e?.message || e}`,
+          );
+        }
+      },
+    ],
+    beforeDelete: [
+      // Snapshot the row's last state BEFORE Payload removes it. Without
+      // this we'd lose the audit trail at the moment we most need it.
+      async ({ id, req }) => {
+        try {
+          const doc: any = await req.payload.findByID({
+            collection: "hero-ads",
+            id,
+            depth: 0,
+          });
+          if (!doc) return;
+          const userId = (req.user as any)?.id ?? null;
+          await req.payload.create({
+            collection: "hero-ad-versions",
+            data: {
+              slot: doc.id,
+              event: "delete",
+              changedAt: new Date().toISOString(),
+              changedBy: userId,
+              label: `delete · ${doc.label || `slot#${doc.id}`}`,
+              snapshot: {
+                area: doc.area,
+                topic: doc.topic,
+                active: !!doc.active,
+                client: doc.client ?? null,
+                creative: doc.creative,
+                linkUrl: doc.linkUrl ?? null,
+                headline: doc.headline ?? null,
+                subline: doc.subline ?? null,
+                ctaActive: !!doc.ctaActive,
+                ctaText: doc.ctaText ?? null,
+                ctaUrl: doc.ctaUrl ?? null,
+                startAt: doc.startAt ?? null,
+                endAt: doc.endAt ?? null,
+              },
+            } as any,
+          });
+        } catch (e: any) {
+          req.payload.logger?.warn?.(
+            `[hero-ads/audit] delete snapshot failed: ${e?.message || e}`,
+          );
+        }
       },
     ],
   },
