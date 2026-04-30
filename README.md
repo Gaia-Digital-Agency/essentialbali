@@ -172,7 +172,7 @@ essentialbali/
 |---|---|
 | `/admin*` | Payload Next.js (`:4008`) |
 | `/_next/*` | Payload (Next.js asset chunks) |
-| `/api/(users\|areas\|topics\|articles\|personas\|media\|comments\|hero-ads\|newsletters\|home-daily-feed\|globals\|subscribers\|payload-preferences\|access\|graphql\|graphql-playground\|ai-chat\|advertise\|seo-optimize\|seo-competitor-gap\|regenerate-hero)` | Payload |
+| `/api/(users\|areas\|topics\|articles\|personas\|media\|comments\|hero-ads\|hero-ad-versions\|newsletters\|home-daily-feed\|globals\|subscribers\|payload-preferences\|access\|graphql\|graphql-playground\|ai-chat\|advertise\|seo-optimize\|seo-competitor-gap\|regenerate-hero)` | Payload |
 | `/signin` `/signup` | **410 Gone** (legacy admin retired) |
 | `/sitemap.xml` `/sitemap-areas.xml` `/sitemap-topics.xml` `/sitemap-articles.xml` `/robots.txt` | Payload Next.js |
 | `/uploads/*` | Express (symlinked to old_assets/legacy-uploads/ for back-compat) |
@@ -189,14 +189,20 @@ essentialbali/
   - Auto-promote on approve: setting status=`approved` → publishes (sets `publishedAt`, flips to `published`) in a single beforeChange hook
   - "🔁 Regenerate hero" button on the edit page (Vertex Imagen via `cms/src/lib/imager-regenerate.ts`)
   - **`eventDetails` group** (added 2026-04-30) — `startDate / endDate / startTime / endTime / timeOfDay / venueName / venueAddress / venueLat / venueLng / ticketUrl / recurrence`. Used by EventsV3 + SingleEventV2 templates when `topic = events`. `timeOfDay` auto-derives from `startTime` hour via beforeChange hook (1-12 morning, 12-18 afternoon, 18-24 night). Replaces the legacy MySQL `meta_data` JSON blob retired in cleanup-C.
-- **Hero Images → 9-row visual grid** (renamed from "Hero Ads" 2026-04-29 — collection slug stays `hero-ads`)
-  - 1 homepage default banner (NULL area, NULL topic) at the top + 8 areas × N topics-with-`showsHero=true` cells below
-  - 65 total slots when all topics have `showsHero=true`
+- **Hero Ads — 73-slot visual grid** (briefly relabelled "Hero Image" 2026-04-29 → reverted 2026-04-30; collection slug stays `hero-ads`)
+  - Three slot kinds rendered as three rows in `HeroGridView`:
+    - **Row 0** — 1 homepage default banner (NULL area, NULL topic), full-width tile at the top
+    - **Row 0.5** — 8 area-only tiles (one per area, NULL topic). Used by `/{area}` pages. Generated 2026-04-30 via Imager with area-anchored prompts.
+    - **Rows 1-8** — 8 areas × N topics-with-`showsHero=true` cells (default 8 = 64 cells)
+    - **73 total slots** when all topics have `showsHero=true`
   - Cell content: image, headline, subline, optional CTA button (text + url, only shown when `ctaActive=true`), optional `client` (empty = editorial, populated = paid placement), schedule (`startAt / endAt`)
   - Partial unique index on `COALESCE(area_id,0), COALESCE(topic_id,0)` enforces single (NULL,NULL) homepage row + uniqueness per cell
   - **"Push to all cell heroes" button** on the homepage hero edit page — copies image / headline / subline / link / CTA to every cell hero where `topic.showsHero=true`, activates them. Useful for site-wide campaigns.
+  - **History panel** on every hero ad edit page (new 2026-04-30) — collapsible audit timeline showing every snapshot of this slot from the `hero-ad-versions` collection. Displays event badge (create/update/delete), timestamp, user, and key field pills.
+  - **Generate area-only hero** endpoint: `POST /api/hero-ads/generate-area-hero {areaSlug}` runs Vertex Imagen with an area-anchored prompt, uploads the PNG, upserts the `(area, NULL)` slot.
 - **Subscriber Communication** (renamed from "Newsletters" 2026-04-29 — collection slug stays `newsletters`)
   - Compose + save with status="Ready to send" → BCC dispatch via SMTP (`SMTP_*` env vars). beforeChange hook flips status `draft → sending → sent | failed` and stamps `recipientCount`, `sentAt`, `lastError`.
+  - **Quick-filter chips** (added 2026-04-30) above the list — `All / Drafts / In flight / Sent / Failed`, each chip is a one-click `?where[status][equals]=...` link with live counts inlined. Empty buckets fade out.
 - **Subscribers** — list of email signups. Public signup goes via `POST /api/subscribers/subscribe` (idempotent, reactivates `unsubscribed`/`bounced`).
 - **Newsletter Notice** (Global, new 2026-04-30) — admin sidebar group "Site sections"
   - Edits the on-page subscribe-form copy that appears at the bottom of every public page (homepage, all listing pages, every article)
@@ -209,7 +215,9 @@ essentialbali/
   - Cycle math at full population (1280 published): 80 days before any article repeats.
 - **Areas + Topics** (admin sidebar group "Taxonomy" — surfaced 2026-04-29; previously hidden)
   - Editable `name / slug / intro / hero / lat / lng` for areas, `name / slug / icon / intro / showsHero` for topics
-  - `topics.showsHero` (default `true`) — when `false`, the admin Hero Image grid hides that topic's column AND the "Push to all" button skips it. Use for topics whose listing template handles its own header instead of a generic hero (today: nobody — Events used to be `false`, flipped back to `true` 2026-04-30 because the column should remain visible even though `EventsV3.tsx` doesn't render heroes on the public side).
+  - `topics.showsHero` (default `true`) — when `false`, the admin Hero Ads grid hides that topic's column AND the "Push to all" button skips it. Use for topics whose listing template handles its own header instead of a generic hero (today: nobody — Events used to be `false`, flipped back to `true` 2026-04-30 because the column should remain visible even though `EventsV3.tsx` doesn't render heroes on the public side).
+- **Bulk actions** on Articles list (added 2026-04-30) — toolbar above the table with 5 verbs: Approve, Publish, Unpublish, Reject, Delete. Tick rows, click action, inline two-step confirm. POST `/api/articles/bulk` (admin/editor). Reject is mark-only — no automatic Elliot redispatch (human decides next step). Cap 500 ids/request. Same endpoint pattern exists for hero-ads at `/api/hero-ads/bulk` (no UI hookup since the grid view replaces the standard list).
+- **Browse Imager Gallery** (added 2026-04-30) — "🖼 Browse Imager Gallery" button on every article edit page opens a modal showing only `source=imager, kind=hero` media (filtered, area+topic-tagged tiles). Click any tile → assigns it as that article's hero in one PATCH. Avoids paging through the unfiltered media library to find the right Imager-generated image.
 - **`/admin/elliot`** — Talk to Elliot full-page chat (sidebar: AI agent)
   - Live agent skill cards for all 7 entities (Elliot, Copywriter, SEO, Imager, Web Manager, Crawler, Scraper)
   - Per-skill LIVE / scaffolded pills — currently 39/39 LIVE
@@ -224,12 +232,13 @@ essentialbali/
 | areas | 8 | seeded fixed; editable in admin under Taxonomy |
 | topics | 8 | seeded fixed; `+showsHero` flag (default true) |
 | personas | 4 | Maya, Komang, Putu, Sari |
-| hero_ads | **65** | 1 homepage default (`area=NULL, topic=NULL`) + 8 areas × 8 topics. Placeholder until `active=true`. |
+| hero_ads | **73** | 1 homepage default (`area=NULL, topic=NULL`) + 8 area-only (`area=X, topic=NULL`) + 8 areas × 8 topics. Placeholder until `active=true`. The 8 area-only slots were added 2026-04-30 with Imager-generated covers, one per area. |
 | articles | 63+ | seed places 1 placeholder draft per cell; +`eventDetails` group (date / time / venue) for events; +`homeFeaturedCount`, `homeLastFeaturedAt` (hidden, written by daily picker) |
 | users | 2 | super_admin (admin) + elliot (ai-agent) |
 | subscribers | 0+ | newsletter sign-ups |
 | newsletters | 0+ | broadcast history |
 | **home_daily_feed** | 0+ | one row per Bali date, written by `pick-daily-feed.mjs` cron (04:00 GMT+8) — 16 article slots / day |
+| **hero_ad_versions** | 0+ | append-only audit log of every hero_ads change (create/update/delete + snapshot of all key fields + who + when). New 2026-04-30. |
 
 **Globals**
 
@@ -339,17 +348,26 @@ You review at /admin/collections/articles/{id}
 
 ## Public site layout (post-redesign 2026-04-29 → 2026-04-30)
 
+### Header / nav (every page)
+- Logo always links to `/` (universal back-to-home anchor; was previously "stay-in-area" — fixed 2026-04-30)
+- **Area dropdown** — when an area is selected (label !== "All Area"), the trigger renders in brand red text + semibold + tinted red pill background + a leading map-pin icon
+- **Topic nav** — the topic matching the current URL renders red + semibold + 2px red bottom border
+- **Topic-preserving area picker** — picking "Ubud" while on `/canggu/dine` navigates to `/ubud/dine`, not `/ubud`
+
 ### Homepage `/`
-1. Header (logo + All Area selector + search)
-2. Topic nav (8 topics)
-3. **`<HeroBanner />`** — single full-width hero, sourced from `hero_ads` (NULL, NULL) homepage default slot. Optional editorial headline + subline + CTA button.
+1. Header + topic nav (above)
+2. **`<HeroBanner />`** — single full-width hero, sourced from `hero_ads` (NULL, NULL) homepage default slot. Optional editorial headline + subline + CTA button.
 4. **`<DailyEssentials />`** — daily-rotated 4×4 grid (16 articles, 2 per topic, from 2 different areas where possible). Reads today's `home_daily_feed` row. Shrinks-and-centres if sparse (16 → 4×4, 12 → 4×3, 8 → 4×2, 4 → 2×2, 0 → "No daily picks yet" panel).
 5. **`<Newsletter />`** (sign-up form) — copy from `newsletter-notice` Global. POST to `/api/subscribers/subscribe`.
 6. Footer
 
+### Area page `/{area}` (e.g. `/canggu`)
+- Header shows the area name in red with map-pin icon
+- **`<HeroBanner area="canggu" />`** — strict-area lookup: `(canggu, NULL)` area-only hero first, then any `(canggu, *)` cell hero. Never crosses area boundary; never falls back to the homepage default.
+
 ### Area × Topic listing `/{area}/{topic}` (e.g. `/canggu/dine`)
-1. Header + topic nav
-2. **`<HeroBanner area={...} topic={...} />`** — cell-specific hero, falls back to homepage default if cell is empty
+1. Header + topic nav (active topic underlined red)
+2. **`<HeroBanner area={...} topic={...} />`** — strict (area, topic) cell hero, then (area, NULL) area-only, then any same-area hero. Never crosses area boundary (fixed 2026-04-30 — previously fell back to homepage default which surfaced a wrong-area CTA).
 3. Page title + optional subcategory + tag rows
 4. Article grid — `lg:grid-cols-3 md:grid-cols-2`, `LISTING_PAGE_SIZE = 20` per page (single source of truth: `frontend/src/lib/constants.ts`, mirrored in `backend/src/ssr/content.fetch.js`)
 5. Pagination

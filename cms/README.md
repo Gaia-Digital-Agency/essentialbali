@@ -10,7 +10,11 @@ Live admin: `https://essentialbali.com/admin` (and `https://essentialbali.gaiada
 
 ## Capability surface (UAT-verified 2026-04-29 → 2026-04-30)
 
-Detailed test evidence in `../docs/full_test.md`. Subsequent batches A→C added the homepage redesign (HeroBanner / DailyEssentials / NewsletterNotice / picker cron / eventDetails group / content-area-check semantic gate / push-to-all). State below reflects the current admin.
+Detailed test evidence in `../docs/full_test.md`. Successive batches landed in this order:
+- Batches A→C — homepage redesign (HeroBanner / DailyEssentials / NewsletterNotice / daily picker cron / eventDetails group / content-area-check semantic gate / push-to-all)
+- Items A→I (2026-04-30) — admin polish + agent-driven improvements (label rename, logo-home, you-are-here highlight, topic-preserve, area-only heroes, mass actions, Imager Gallery picker, newsletter quick-filters, hero-ad audit history)
+
+State below reflects the current admin.
 
 ### Admin
 
@@ -22,13 +26,17 @@ Detailed test evidence in `../docs/full_test.md`. Subsequent batches A→C added
 | **`eventDetails` group on Articles** | `/admin/collections/articles/{id}` | working | Date / time / venue / ticket URL / recurrence. `timeOfDay` auto-derived from `startTime` hour (1-12 morning / 12-18 afternoon / 18-24 night). Used by EventsV3 + SingleEventV2 templates when `topic = events`. |
 | SEO meta auto-fill | hook on Articles `beforeChange` | working | Uses Vertex Gemini via `src/lib/seo-agent.ts` |
 | Imager regenerate | "🔁 Regenerate hero" on edit page | working | Uses Vertex Imagen via `src/lib/imager-regenerate.ts` |
-| **Hero Images — 9-row visual grid** | `/admin/collections/hero-ads` | working | Sidebar label was renamed from "Hero Ads" 2026-04-29; collection slug stays `hero-ads`. 1 homepage default + 8 areas × N topics where `showsHero=true` (default 8 = 65 visible slots). |
+| **Hero Ads grid — 73 slots** | `/admin/collections/hero-ads` | working | Sidebar label "Hero Ads" (was briefly "Hero Image" 2026-04-29 → reverted 2026-04-30). Collection slug stays `hero-ads`. Three slot kinds rendered as three rows: 1 homepage default banner + 8 area-only tiles + 8 areas × N topics where `showsHero=true` (default 8 = 64 cells = **73 slots total**). |
 | **"Push to all cell heroes"** | edit page of homepage hero (id=65) | working | New 2026-04-29. Copies image / headline / subline / link / CTA from the homepage hero to every cell hero where `topic.showsHero=true`, activates them. Inline two-step confirm. POST `/api/hero-ads/push-to-all` (admin/editor only). |
+| **Browse Imager Gallery** (article hero picker) | edit page of any Article | working | New 2026-04-30. "🖼 Browse Imager Gallery" button on the article edit page opens a modal showing only `source=imager, kind=hero` media (filtered, area+topic-tagged tiles). Click any tile → PATCH `/api/articles/{id}` with `{hero: <mediaId>}` → page reloads. |
+| **Hero Ad History** (audit trail) | edit page of any hero ad | working | New 2026-04-30. Collapsible panel showing every snapshot of this slot (create / update / delete events). Timeline of who changed what when. Sourced from the new `hero-ad-versions` collection (System group). |
+| **Bulk actions on Articles** | `/admin/collections/articles` toolbar | working | New 2026-04-30. 5 verbs: Approve / Publish / Unpublish / Reject / Delete. Tick rows in the list, click action, inline two-step confirm, atomic. POST `/api/articles/bulk` (admin/editor only). Reject is mark-only — NO automatic Elliot redispatch (human decides next step). |
 | Subscribers list | `/admin/collections/subscribers` | working | Searchable; public sign-ups land via `/api/subscribers/subscribe` |
-| **Subscriber Communication** | `/admin/collections/newsletters` | working compose; SMTP requires App Password rotation (see Open issues) | Sidebar label renamed from "Newsletters" 2026-04-29; collection slug stays `newsletters`. Lifecycle hook on `beforeChange` does `draft → sending → {sent, failed}` and stamps `sentAt` + `recipientCount` + `lastError`. |
+| **Subscriber Communication** | `/admin/collections/newsletters` | working compose; SMTP requires App Password rotation (see Open issues) | Sidebar label renamed from "Newsletters" 2026-04-29; collection slug stays `newsletters`. Lifecycle hook on `beforeChange` does `draft → sending → {sent, failed}` and stamps `sentAt` + `recipientCount` + `lastError`. **Quick-filter chips** (added 2026-04-30) above the list: All / Drafts / In flight / Sent / Failed — each chip is a one-click `?where[status][equals]=...` filter link with live counts inlined. |
 | **Newsletter Notice** (Global) | `/admin/globals/newsletter-notice` | working | New 2026-04-29. Edits the on-page subscribe-form copy shown at the bottom of every public page. Fields: `active` (kill-switch), `headline`, `subline`, `placeholder`, `buttonText`, `successMessage`, `alreadySubscribedMessage`, `errorMessage`, optional `backgroundImage`. |
 | **Areas + Topics** | `/admin/collections/areas`, `/admin/collections/topics` | working | Surfaced 2026-04-29 under Taxonomy sidebar group. Editable name/slug/intro/hero. Topics also have `showsHero` flag (default `true`). |
 | **Home Daily Feed** | `/admin/collections/home-daily-feed` | read-only in practice | New 2026-04-29. Written by `cms/scripts/pick-daily-feed.mjs` cron at 04:00 GMT+8 (= 20:00 UTC). One row per Bali date; 16 article slots / day (2 per topic × 8 topics, distinct areas where possible). |
+| **Hero Ad History** (audit log) | `/admin/collections/hero-ad-versions` | append-only, hook-driven | New 2026-04-30. Append-only audit collection. Every hero-ads change (create/update/delete) writes a snapshot row capturing area / topic / active / client / creative / headline / subline / CTA + who + when. Surfaced inline as the "History" panel on each hero-ad edit page. Read public, create=hook only, update=disabled, delete=admin only. |
 | Talk to Elliot | `/admin/elliot` | working | Full-page agent skill cards. **39/39 skills LIVE** across orchestrator + 6 sub-agents (Copywriter, SEO, Imager, Web Manager, Crawler, Scraper). Includes a **MediaUploadDock** + **ImagerGallery** for media work. |
 
 ### Public REST handlers (route handlers, not Payload auto-routes)
@@ -43,6 +51,9 @@ Detailed test evidence in `../docs/full_test.md`. Subsequent batches A→C added
 | `/api/seo-competitor-gap` | POST | Ranks crawler `gap-report` output. |
 | `/api/regenerate-hero` | POST | Used by the admin "🔁 Regenerate hero" button. Vertex Imagen. |
 | **`/api/hero-ads/push-to-all`** | POST | Admin/editor only. Reads the homepage hero (NULL,NULL), copies image / headline / subline / link / CTA to every cell hero where `topic.showsHero=true`, sets `active=true`. Returns `{ok, sourceHomeHeroId, heroableTopics, cellRowsConsidered, updatedCount, failedCount, activated, errors[]}`. |
+| **`/api/hero-ads/generate-area-hero`** | POST | New 2026-04-30. Admin/editor/ai-agent. Body `{areaSlug, headline?, subline?, ctaText?, ctaUrl?}`. Calls `regenerateHero` from `cms/src/lib/imager-regenerate.ts` (Vertex Imagen 3) with an area-anchored prompt, uploads PNG to media (`source=imager, kind=hero, area=<slug>`), upserts the `(area, NULL)` hero_ads row with `active=true`. Returns `{ok, areaSlug, mediaId, heroAdId, width, height, prompt}`. |
+| **`/api/hero-ads/bulk`** | POST | New 2026-04-30. Admin/editor only. Body `{ids[], action}`. Verbs: `approve` / `publish` (active=true), `unpublish` (active=false), `reject` (active=false + creative=null), `delete` (hard DELETE). Caps 200 ids/request. |
+| **`/api/articles/bulk`** | POST | New 2026-04-30. Admin/editor only. Body `{ids[], action}`. Verbs: `approve` (status=approved → auto-publish), `publish` (status=published + stamp publishedAt), `unpublish` (status=draft + clear publishedAt), `reject` (status=rejected, releases hash-lock), `delete` (hard DELETE). Caps 500 ids/request. **No automatic Elliot redispatch on reject — human decides.** |
 | `/api/media` | POST | Payload auto-route. Auto-converts JPEG → WebP, applies canonical filename, generates 480×270 thumbnail + 768×432 card variants, writes to GCS. |
 
 ### nginx allowlist for `/api/*`
@@ -52,10 +63,10 @@ Production nginx only proxies a fixed list of API paths to Payload — anything 
 Current allowlist (in `/etc/nginx/sites-available/essentialbali.com`):
 
 ```
-location ~ ^/api/(users|areas|topics|articles|personas|media|comments|hero-ads|newsletters|home-daily-feed|globals|subscribers|payload-preferences|access|graphql|graphql-playground|ai-chat|advertise|seo-optimize|seo-competitor-gap|regenerate-hero)(/|$)
+location ~ ^/api/(users|areas|topics|articles|personas|media|comments|hero-ads|hero-ad-versions|newsletters|home-daily-feed|globals|subscribers|payload-preferences|access|graphql|graphql-playground|ai-chat|advertise|seo-optimize|seo-competitor-gap|regenerate-hero)(/|$)
 ```
 
-This trap has caught us multiple times — `subscribers` (sub-route 404), `newsletters` (Save broken in admin), `home-daily-feed` and `globals` (404 from new endpoints in the homepage redesign). Each addition to the regex needed `sudo nginx -s reload`. Backups left at `.bak.uat-<ts>` files.
+This trap has caught us multiple times — `subscribers` (sub-route 404), `newsletters` (Save broken in admin), `home-daily-feed` + `globals` (404 from new endpoints in the homepage redesign), `hero-ad-versions` (404 from the History panel). Each addition to the regex needs `sudo nginx -s reload`. Backups left at `.bak.uat-<ts>` and `.bak.heroad-versions-<ts>` files.
 
 ---
 

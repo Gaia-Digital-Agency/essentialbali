@@ -8,17 +8,27 @@ Live: `https://essentialbali.com`, `https://www.essentialbali.com`, `https://ess
 
 ## Layout (post-redesign 2026-04-29 → 2026-04-30)
 
+### Header / nav (every page) — `Templates/Header.tsx`
+- Logo links to `/` (universal back-to-home anchor; the previous "stay-in-area" behaviour was confusing — fixed 2026-04-30).
+- **Area dropdown** (`AreaMenuToggleButton.tsx`): when an area is selected (label !== "All Area"), the trigger renders in brand red text + semibold + tinted red pill background + a leading map-pin icon. Sets `aria-current="page"`. Default state stays neutral.
+- **Topic nav** (`MenuNav` inside Header): the topic matching the current URL is rendered red + semibold + 2px red bottom border. Inactive topics drop to icewhite/70 on hover.
+- **Area picker preserves the current topic**: choosing "Ubud" while on `/canggu/dine` navigates to `/ubud/dine`, not `/ubud`. Implementation: `AreaMenuPanel.tsx` reads `useRoute().actualRoute.category` and appends the slug when present.
+
 ### Homepage `/` — `pages/Front/Templates/Home.tsx`
-1. Header (logo + All Area selector + search) — `Templates/Header.tsx`
-2. Topic nav — 8 topic links across the top
-3. **`<HeroBanner />`** (`components/front/HeroBanner.tsx`) — single full-width hero from `hero_ads` (NULL,NULL) homepage default slot. Renders editorial headline + subline overlay. Optional CTA button when `ctaActive=true`. Soft gradient overlay so light copy stays legible. Falls back to NULL when no active hero.
-4. **`<DailyEssentials />`** (`components/front/DailyEssentials.tsx`) — daily-rotated 4×4 grid (16 articles, 2 per topic from 2 different areas). Reads today's `home_daily_feed` row with `depth=2` (article + area + topic + hero materialised). Shrink-and-centre when sparse.
-5. **`<Newsletter />`** (`components/front/Newsletter.tsx`) — sign-up form, copy from `newsletter-notice` Global. POST to `/api/subscribers/subscribe`. Server-side success message wins (knows new vs reactivated).
-6. Footer
+1. Header + topic nav (above)
+2. **`<HeroBanner />`** (`components/front/HeroBanner.tsx`) — single full-width hero from `hero_ads` (NULL,NULL) homepage default slot. Renders editorial headline + subline overlay. Optional CTA button when `ctaActive=true`. Soft gradient overlay so light copy stays legible. Renders nothing when no active hero (no fallback needed on the homepage — this IS the default).
+3. **`<DailyEssentials />`** (`components/front/DailyEssentials.tsx`) — daily-rotated 4×4 grid (16 articles, 2 per topic from 2 different areas). Reads today's `home_daily_feed` row with `depth=2` (article + area + topic + hero materialised). Shrink-and-centre when sparse.
+4. **`<Newsletter />`** (`components/front/Newsletter.tsx`) — sign-up form, copy from `newsletter-notice` Global. POST to `/api/subscribers/subscribe`. Server-side success message wins (knows new vs reactivated).
+5. Footer
+
+### Area page `/{area}` (e.g. `/canggu`) — same Directory template
+- Header now shows the area name in red + map-pin in the dropdown
+- **`<HeroBanner area="canggu" />`** — strict-area lookup: tries `(canggu, NULL)` area-only hero first, then any `(canggu, *)` cell hero. Never crosses area boundaries — no fallback to homepage default. (Fixed 2026-04-30: previously fell back to homepage default which surfaced an "Explore Canggu" CTA on a Nusa Penida page.)
+- 8 area-only heroes (one per area) generated 2026-04-30 via `POST /api/hero-ads/generate-area-hero` (Vertex Imagen with area-anchored prompt).
 
 ### Area × Topic listing `/{area}/{topic}` — `Templates/Directory.tsx`
-1. Header + topic nav
-2. **`<HeroBanner area={...} topic={...} />`** — cell-specific hero, falls back to homepage default if cell empty/inactive
+1. Header + topic nav (active topic underlined red, area dropdown in red)
+2. **`<HeroBanner area={...} topic={...} />`** — strict (area, topic) cell hero. Falls back to (area, NULL) area-only, then any same-area hero. Never crosses area boundary.
 3. Page title + optional subcategory + tag rows
 4. Article grid using `LISTING_PAGE_SIZE = 20` from `lib/constants.ts` (single source of truth — same constant used by `backend/src/ssr/content.fetch.js`)
 5. Pagination

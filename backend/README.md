@@ -55,7 +55,7 @@ A frontend code change requires **rebuilding the frontend AND restarting the bac
 Everything *except* the paths nginx routes to Payload. The current Payload-allowlist regex is:
 
 ```
-location ~ ^/api/(users|areas|topics|articles|personas|media|comments|hero-ads|newsletters|home-daily-feed|globals|subscribers|payload-preferences|access|graphql|graphql-playground|ai-chat|advertise|seo-optimize|seo-competitor-gap|regenerate-hero)(/|$)
+location ~ ^/api/(users|areas|topics|articles|personas|media|comments|hero-ads|hero-ad-versions|newsletters|home-daily-feed|globals|subscribers|payload-preferences|access|graphql|graphql-playground|ai-chat|advertise|seo-optimize|seo-competitor-gap|regenerate-hero)(/|$)
 ```
 
 Anything else hits this backend:
@@ -73,7 +73,7 @@ Anything else hits this backend:
 | `/uploads/*` | static serve from `../old_assets/legacy-uploads/` (73 pre-Payload images, kept for back-compat) |
 | `/signin`, `/signup` | nginx `410 Gone` (legacy admin retired) |
 
-> **Note — nginx allowlist gotcha.** Adding a new Payload collection means updating the regex above (in `/etc/nginx/sites-available/essentialbali.com`) AND running `sudo nginx -t && sudo nginx -s reload`. Caught us multiple times during the 2026-04-29 → 2026-04-30 work — `subscribers/subscribe` (silent 404), `newsletters` (admin Save broken), `home-daily-feed` and `globals` (404 from new endpoints in the homepage redesign). Each addition needed a reload. Backups left at `.bak.uat-<ts>` files. If you add `tags`, `events`, `jobs`, `housing`, `deals`, etc., remember the regex.
+> **Note — nginx allowlist gotcha.** Adding a new Payload collection means updating the regex above (in `/etc/nginx/sites-available/essentialbali.com`) AND running `sudo nginx -t && sudo nginx -s reload`. Caught us multiple times during the 2026-04-29 → 2026-04-30 work — `subscribers/subscribe` (silent 404), `newsletters` (admin Save broken), `home-daily-feed` + `globals` (404 from new endpoints in the homepage redesign), `hero-ad-versions` (404 from the History panel). Each addition needed a reload. Backups left at `.bak.uat-<ts>` and `.bak.heroad-versions-<ts>` files. If you add `tags`, `events`, `jobs`, `housing`, `deals`, etc., remember the regex.
 
 > **Note — `/api/article?slug=...` MUST honour the slug filter.** Without that, every PathResolver lookup of a non-article URL segment returned the full set, and the frontend rendered a random article on every listing URL. Added 2026-04-30 (commit `2d24a93`).
 
