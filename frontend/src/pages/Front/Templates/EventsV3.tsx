@@ -36,6 +36,28 @@ const generateImageUrl = (image: string | undefined, id: number) => {
   return `https://picsum.photos/id/${id * 10}/800/600`;
 };
 
+// Format a single 24-hour HH:MM as a compact display (handles both
+// "5:00 PM" style for English readability).
+const formatHourMinute = (hhmm?: string | null): string => {
+  if (!hhmm) return "";
+  const m = String(hhmm).match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return "";
+  const hour = Number(m[1]);
+  const min = m[2];
+  const ampm = hour >= 12 ? "pm" : "am";
+  const display = hour % 12 === 0 ? 12 : hour % 12;
+  return `${display}:${min}${ampm}`;
+};
+
+// Build a compact time range string from start/end HH:MM. Falls back
+// gracefully if only one is set.
+const formatTimeRange = (start?: string | null, end?: string | null): string => {
+  const s = formatHourMinute(start);
+  const e = formatHourMinute(end);
+  if (s && e) return `${s} – ${e}`;
+  return s || e || "";
+};
+
 const ArticleCardV3: React.FC<{ article: ArticleApiResponseProps }> = ({ article }) => {
   const { getCountryById, getCategoryById } = useTaxonomies();
   const generateUrl = (art: ArticleApiResponseProps) => {
@@ -43,39 +65,108 @@ const ArticleCardV3: React.FC<{ article: ArticleApiResponseProps }> = ({ article
   };
   const imageRef = useRef<any>(null);
 
+  // Event metadata. Mirrored from articles.eventDetails into meta_data
+  // by the SSR fetcher (backend/src/ssr/articles.fetch.js mapPayloadArticle)
+  // — keeps this template back-compat with the legacy meta_data shape
+  // while sourcing real data from Payload's eventDetails group.
+  const md = (article as any)?.meta_data || {};
+  const startDate: string | undefined = md.start_date;
+  const startTime: string | undefined = md.start_time;
+  const endTime: string | undefined = md.end_time;
+  const timeOfDay: string | undefined = md.time_of_day;
+  const venueName: string | undefined = md.venue_name;
+  const ticketUrl: string | undefined = md.ticket_url;
+  const recurrence: string | undefined = md.recurrence;
+
+  const timeOfDayBadge = timeOfDay
+    ? { morning: "Morning", afternoon: "Afternoon", night: "Night", "all-day": "All day" }[timeOfDay]
+    : null;
+
+  const recurrenceBadge =
+    recurrence && recurrence !== "one-off"
+      ? recurrence === "weekly"
+        ? "Every week"
+        : recurrence === "monthly"
+          ? "Every month"
+          : recurrence === "annual"
+            ? "Annual"
+            : null
+      : null;
+
   return (
-    <div 
+    <div
       className="flex flex-col md:flex-row gap-6 mb-10 p-4 rounded-2xl group"
       onMouseEnter={() => imageRef.current?.zoomIn()}
       onMouseLeave={() => imageRef.current?.zoomOut()}
     >
-      <div className="md:w-2/5 overflow-hidden rounded-xl">
+      <div className="md:w-2/5 overflow-hidden rounded-xl relative">
         <Image
           link={generateUrl(article)}
           url={generateImageUrl(article.featured_image_url, article.id)}
           ref={imageRef}
           ratio="75%"
         />
+        {timeOfDayBadge && (
+          <span className="absolute top-3 left-3 bg-front-navy text-front-icewhite text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
+            {timeOfDayBadge}
+          </span>
+        )}
       </div>
       <div className="md:w-3/5 flex flex-col justify-between py-2">
         <div>
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
             <span className="bg-front-navy/10 text-front-navy text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
               {article.category_name}
             </span>
-            <span className="text-gray-300 text-xs">•</span>
-            <span className="text-gray-400 text-xs font-medium uppercase tracking-tighter">
-              {formatPublished(article?.meta_data?.start_date) ?? "TBA"}
-            </span>
+            {startDate && (
+              <>
+                <span className="text-gray-300 text-xs">•</span>
+                <span className="text-front-navy text-xs font-semibold uppercase tracking-tighter">
+                  {formatPublished(startDate) ?? "TBA"}
+                </span>
+              </>
+            )}
+            {(startTime || endTime) && (
+              <>
+                <span className="text-gray-300 text-xs">•</span>
+                <span className="text-gray-600 text-xs font-medium">
+                  {formatTimeRange(startTime, endTime)}
+                </span>
+              </>
+            )}
+            {recurrenceBadge && (
+              <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                {recurrenceBadge}
+              </span>
+            )}
           </div>
           <Link to={generateUrl(article)}>
             <h3 className="text-2xl font-serif text-front-navy mb-3 leading-tight group-hover:text-front-navy transition-colors">
               {article.title}
             </h3>
           </Link>
+          {venueName && (
+            <div className="flex items-center gap-1.5 mb-2 text-gray-600 text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 11 13" fill="none" aria-hidden="true">
+                <path d="M5.5 0.5C2.7 0.5 0.5 2.7 0.5 5.5c0 3.7 5 7 5 7s5-3.3 5-7c0-2.8-2.2-5-5-5zm0 7c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="currentColor"/>
+              </svg>
+              <span>{venueName}</span>
+            </div>
+          )}
           <p className="text-gray-500 text-sm line-clamp-3 leading-relaxed mb-4">
             {article.sub_title}
           </p>
+          {ticketUrl && (
+            <a
+              href={ticketUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-block bg-front-navy text-front-icewhite text-xs font-semibold uppercase tracking-wider px-4 py-2 rounded hover:bg-front-navy/90 transition-colors"
+            >
+              Get tickets
+            </a>
+          )}
         </div>
       </div>
     </div>
