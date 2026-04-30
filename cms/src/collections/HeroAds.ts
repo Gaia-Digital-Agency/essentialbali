@@ -26,11 +26,11 @@ import { isStaffOrAgent } from "../access";
  */
 export const HeroAds: CollectionConfig = {
   slug: "hero-ads",
-  labels: { singular: "Hero Image", plural: "Hero Images" },
+  labels: { singular: "Hero Ad", plural: "Hero Ads" },
   admin: {
     useAsTitle: "label",
     description:
-      "Hero image slots: the homepage default + (8 areas × topics where showsHero=true). Editorial copy and an optional CTA button can be set per slot. Empty client = editorial; populated client = paid placement.",
+      "Hero ad slots: the homepage default + (8 areas × topics where showsHero=true). Editorial copy and an optional CTA button can be set per slot. Empty client = editorial; populated client = paid placement.",
     defaultColumns: ["label", "active", "client", "startAt", "endAt"],
     // The default Payload list view is replaced with the visual grid
     // (HeroGridView). Detail edit pages remain at /admin/collections/hero-ads/{id}.

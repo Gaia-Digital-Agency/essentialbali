@@ -167,7 +167,7 @@ export default function HeroGridView() {
       </a>
       <header style={head}>
         <div>
-          <div style={title}>Hero image grid</div>
+          <div style={title}>Hero Ads grid</div>
           <div style={sub}>
             {1 + AREAS_ORDER.length * TOPICS_ORDER.length} slots = 1 homepage default +{" "}
             {AREAS_ORDER.length} areas × {TOPICS_ORDER.length} topics with showsHero ·{" "}
