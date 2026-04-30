@@ -8,9 +8,9 @@ Live admin: `https://essentialbali.com/admin` (and `https://essentialbali.gaiada
 
 ---
 
-## Capability surface (UAT-verified 2026-04-29)
+## Capability surface (UAT-verified 2026-04-29 → 2026-04-30)
 
-Detailed test evidence in `../docs/full_test.md`.
+Detailed test evidence in `../docs/full_test.md`. Subsequent batches A→C added the homepage redesign (HeroBanner / DailyEssentials / NewsletterNotice / picker cron / eventDetails group / content-area-check semantic gate / push-to-all). State below reflects the current admin.
 
 ### Admin
 
@@ -19,27 +19,31 @@ Detailed test evidence in `../docs/full_test.md`.
 | Login | `/admin/login` | working | seeded `super_admin@email.com` / `Teameditor@123` |
 | Content Matrix dashboard | `/admin` | working | 8 areas × 8 topics; per-cell status counts (`Np · Nr · Nd`) and green/grey hero-ad dot |
 | Articles list + filter | `/admin/collections/articles` | working | Status workflow `draft → pending_review → approved → published` (auto-promote on approve hook); also `rejected` (releases hash-lock) and delete (releases hash-lock — Path B) |
-| SEO meta auto-fill | hook on Articles `beforeChange` | working | Uses Vertex Gemini via `src/lib/seo-agent.ts`. Confirmed during article #1 promotion. |
+| **`eventDetails` group on Articles** | `/admin/collections/articles/{id}` | working | Date / time / venue / ticket URL / recurrence. `timeOfDay` auto-derived from `startTime` hour (1-12 morning / 12-18 afternoon / 18-24 night). Used by EventsV3 + SingleEventV2 templates when `topic = events`. |
+| SEO meta auto-fill | hook on Articles `beforeChange` | working | Uses Vertex Gemini via `src/lib/seo-agent.ts` |
 | Imager regenerate | "🔁 Regenerate hero" on edit page | working | Uses Vertex Imagen via `src/lib/imager-regenerate.ts` |
-| Hero Ads — 8×8 visual grid | `/admin/collections/hero-ads` | working | `HeroGridView` replaces the default list view. Activating a slot flips the dot green on the dashboard. UAT activated 5 slots with image creatives. |
-| Subscribers list | `/admin/collections/subscribers` | working | Searchable; UAT showed 3 active rows landing from the public subscribe form |
-| Newsletters compose + send | `/admin/collections/newsletters` | working (compose); SMTP send blocked by expired Gmail App Password (cred rotation needed — see UAT report §6) | Lifecycle hook on `beforeChange` correctly does `draft → sending → {sent, failed}` and stamps `sentAt` + `recipientCount` + `lastError` |
+| **Hero Images — 9-row visual grid** | `/admin/collections/hero-ads` | working | Sidebar label was renamed from "Hero Ads" 2026-04-29; collection slug stays `hero-ads`. 1 homepage default + 8 areas × N topics where `showsHero=true` (default 8 = 65 visible slots). |
+| **"Push to all cell heroes"** | edit page of homepage hero (id=65) | working | New 2026-04-29. Copies image / headline / subline / link / CTA from the homepage hero to every cell hero where `topic.showsHero=true`, activates them. Inline two-step confirm. POST `/api/hero-ads/push-to-all` (admin/editor only). |
+| Subscribers list | `/admin/collections/subscribers` | working | Searchable; public sign-ups land via `/api/subscribers/subscribe` |
+| **Subscriber Communication** | `/admin/collections/newsletters` | working compose; SMTP requires App Password rotation (see Open issues) | Sidebar label renamed from "Newsletters" 2026-04-29; collection slug stays `newsletters`. Lifecycle hook on `beforeChange` does `draft → sending → {sent, failed}` and stamps `sentAt` + `recipientCount` + `lastError`. |
+| **Newsletter Notice** (Global) | `/admin/globals/newsletter-notice` | working | New 2026-04-29. Edits the on-page subscribe-form copy shown at the bottom of every public page. Fields: `active` (kill-switch), `headline`, `subline`, `placeholder`, `buttonText`, `successMessage`, `alreadySubscribedMessage`, `errorMessage`, optional `backgroundImage`. |
+| **Areas + Topics** | `/admin/collections/areas`, `/admin/collections/topics` | working | Surfaced 2026-04-29 under Taxonomy sidebar group. Editable name/slug/intro/hero. Topics also have `showsHero` flag (default `true`). |
+| **Home Daily Feed** | `/admin/collections/home-daily-feed` | read-only in practice | New 2026-04-29. Written by `cms/scripts/pick-daily-feed.mjs` cron at 04:00 GMT+8 (= 20:00 UTC). One row per Bali date; 16 article slots / day (2 per topic × 8 topics, distinct areas where possible). |
 | Talk to Elliot | `/admin/elliot` | working | Full-page agent skill cards. **39/39 skills LIVE** across orchestrator + 6 sub-agents (Copywriter, SEO, Imager, Web Manager, Crawler, Scraper). Includes a **MediaUploadDock** + **ImagerGallery** for media work. |
 
 ### Public REST handlers (route handlers, not Payload auto-routes)
 
-Every handler below was exercised end-to-end during UAT 2026-04-29.
-
-| Path | Method | What it does | UAT result |
-|---|---|---|---|
-| `/api/subscribers/subscribe` | POST | **Public** subscribe-from-homepage. Validates email, upserts via Payload local API, idempotent for repeats, reactivates `unsubscribed`/`bounced` rows. | working — 3 sign-ups landed |
-| `/api/subscribers/broadcast` | POST | Admin-only one-off broadcast to all active subscribers via Payload's email transport. Redis 5-minute cooldown lock. | exists; not exercised in UAT (newsletter compose covers the same path) |
-| `/api/advertise` | POST | Public Advertise-with-us inquiry form. Sends via Gmail OAuth from `ai@gaiada.com`. | working — 1 inquiry landed |
-| `/api/ai-chat` | POST | Public Ask-Elliot homepage popup. Vertex Gemini, scope-grounded to Essential Bali content. | working — 6 questions answered including correct fail-soft on out-of-scope (Seminyak) |
-| `/api/seo-optimize` | POST | Used by Elliot dispatch chain + Articles hook (in-process). Vertex Gemini. | working — fired on all 7 Elliot articles |
-| `/api/seo-competitor-gap` | POST | Ranks crawler `gap-report` output. | exists; not directly exercised in UAT |
-| `/api/regenerate-hero` | POST | Used by the admin "🔁 Regenerate hero" button. Vertex Imagen. | exists; not directly exercised in UAT |
-| `/api/media` | POST | Payload auto-route. Auto-converts JPEG → WebP, applies canonical filename, generates 480×270 thumbnail + 768×432 card variants, writes to GCS. | working — 12 media uploads landed (5 hero-ad creatives + 7 Elliot heroes) |
+| Path | Method | What it does |
+|---|---|---|
+| `/api/subscribers/subscribe` | POST | **Public** subscribe-from-homepage. Validates email, upserts via Payload local API, idempotent, reactivates `unsubscribed`/`bounced` rows. |
+| `/api/subscribers/broadcast` | POST | Admin-only one-off broadcast via Payload's email transport. Redis 5-minute cooldown lock. |
+| `/api/advertise` | POST | Public Advertise-with-us modal target. Sends via Gmail OAuth from `ai@gaiada.com`. |
+| `/api/ai-chat` | POST | Public Ask-Elliot popup. Vertex Gemini, scope-grounded to Essential Bali. |
+| `/api/seo-optimize` | POST | Used by Elliot dispatch chain + Articles `beforeChange` hook. Vertex Gemini. |
+| `/api/seo-competitor-gap` | POST | Ranks crawler `gap-report` output. |
+| `/api/regenerate-hero` | POST | Used by the admin "🔁 Regenerate hero" button. Vertex Imagen. |
+| **`/api/hero-ads/push-to-all`** | POST | Admin/editor only. Reads the homepage hero (NULL,NULL), copies image / headline / subline / link / CTA to every cell hero where `topic.showsHero=true`, sets `active=true`. Returns `{ok, sourceHomeHeroId, heroableTopics, cellRowsConsidered, updatedCount, failedCount, activated, errors[]}`. |
+| `/api/media` | POST | Payload auto-route. Auto-converts JPEG → WebP, applies canonical filename, generates 480×270 thumbnail + 768×432 card variants, writes to GCS. |
 
 ### nginx allowlist for `/api/*`
 
@@ -48,10 +52,10 @@ Production nginx only proxies a fixed list of API paths to Payload — anything 
 Current allowlist (in `/etc/nginx/sites-available/essentialbali.com`):
 
 ```
-location ~ ^/api/(users|areas|topics|articles|personas|media|comments|hero-ads|newsletters|subscribers|payload-preferences|access|graphql|graphql-playground|ai-chat|advertise|seo-optimize|seo-competitor-gap|regenerate-hero)(/|$)
+location ~ ^/api/(users|areas|topics|articles|personas|media|comments|hero-ads|newsletters|home-daily-feed|globals|subscribers|payload-preferences|access|graphql|graphql-playground|ai-chat|advertise|seo-optimize|seo-competitor-gap|regenerate-hero)(/|$)
 ```
 
-This trap caught us twice during UAT — once for `subscribers/subscribe` (silent 404 on the homepage subscribe form, since `subscribers` IS in the list, the new sub-route works) and once for `newsletters` (Save in admin returned "An unknown error has occurred" because `newsletters` was missing from the regex). Both fixed in the same UAT run.
+This trap has caught us multiple times — `subscribers` (sub-route 404), `newsletters` (Save broken in admin), `home-daily-feed` and `globals` (404 from new endpoints in the homepage redesign). Each addition to the regex needed `sudo nginx -s reload`. Backups left at `.bak.uat-<ts>` files.
 
 ---
 
@@ -161,26 +165,34 @@ export const importMap = {
 
 ```
 cms/
-├── ecosystem.config.cjs              pm2 entry
+├── ecosystem.config.cjs              pm2 entry — `essentialbali-cms` + `essentialbali-daily-feed` (cron 0 20 * * * UTC)
 ├── next.config.mjs
 ├── .env                              see "Local development" table
+├── scripts/                          one-off + cron scripts
+│   ├── migrate-hero-65.mjs              partial unique index + seed homepage default hero (2026-04-29)
+│   ├── pick-daily-feed.mjs              daily picker — writes 16-slot home_daily_feed row (cron 04:00 GMT+8)
+│   └── compose-test-newsletter.mjs      Vertex Gemini draft newsletter from latest published articles (Test prefix)
 └── src/
-    ├── payload.config.ts             central config; reads ../shared/allowed-origins.json for cors[]/csrf[]
+    ├── payload.config.ts             central config; reads ../shared/allowed-origins.json for cors[]/csrf[]; registers globals[] = [NewsletterNotice]
     ├── access.ts                     isStaffOrAgent helper
     ├── seed.ts, seed-articles-placeholders.ts, create-elliot-user.ts
     ├── collections/
-    │   ├── Articles.ts               beforeChange hooks: SEO meta auto-fill + auto-promote on approve
-    │   ├── HeroAds.ts                admin.components.views.list = HeroGridView
-    │   ├── Subscribers.ts            newsletter list (create requires isStaffOrAgent — public sign-up goes via /api/subscribers/subscribe)
-    │   ├── Newsletters.ts            compose + dispatch via beforeChange hook
+    │   ├── Articles.ts               beforeChange hooks: SEO meta auto-fill + auto-promote on approve + eventDetails group with timeOfDay auto-derive
+    │   ├── HeroAds.ts                admin.components.views.list = HeroGridView; admin.components.edit.beforeDocumentControls = PushHomeHeroButton
+    │   ├── Subscribers.ts            list (create requires isStaffOrAgent — public sign-up goes via /api/subscribers/subscribe)
+    │   ├── Newsletters.ts            "Subscriber Communication" — compose + dispatch via beforeChange hook
+    │   ├── HomeDailyFeed.ts          read-only in practice; written by pick-daily-feed.mjs cron
     │   ├── Media.ts                  GCS storage adapter, JPEG→WebP, canonical naming
-    │   ├── Users, Areas, Topics, Personas, Tags, Comments    (hidden in UI, REST-functional)
-    │   └── …
+    │   ├── Areas.ts, Topics.ts       Taxonomy (surfaced 2026-04-29). Topics have +showsHero flag.
+    │   └── Users, Personas, Tags, Comments    (hidden in UI, REST-functional)
+    ├── globals/
+    │   └── NewsletterNotice.ts       on-page subscribe-form copy + kill-switch
     ├── components/
-    │   ├── MatrixDashboard.tsx       8×8 grid as admin home
+    │   ├── MatrixDashboard.tsx       8×8 article-count grid as admin home
     │   ├── ArticlesMatrixFilter.tsx  matrix above Articles list
-    │   ├── HeroGridView.tsx          the 8×8 hero-ad grid (replaces default list)
-    │   ├── NewslettersIntro.tsx      compose walkthrough panel (single CTA — duplicate "+ Compose newsletter" was removed in 2026-04-29 UAT)
+    │   ├── HeroGridView.tsx          9-row hero grid (1 homepage default + 8×8 cells); skips topics with showsHero=false
+    │   ├── PushHomeHeroButton.tsx    "Push to all cell heroes" — homepage hero edit page
+    │   ├── NewslettersIntro.tsx      compose walkthrough panel
     │   ├── TalkToElliotView.tsx      /admin/elliot — agent skill cards + chat
     │   ├── MediaUploadDock.tsx       drag-and-drop upload on the Elliot page
     │   ├── ImagerGallery.tsx         24 most recent AI-generated media tiles
@@ -194,13 +206,17 @@ cms/
     │   ├── gmail-api.ts              OAuth-refresh Gmail send helper
     │   ├── media-naming.ts           canonical filename derivation
     │   └── payload.ts                getPayload helper
-    ├── app/(payload)/admin/elliot/   /admin/elliot route (Talk to Elliot)
+    ├── app/(payload)/admin/
+    │   ├── elliot/                   /admin/elliot route (Talk to Elliot)
+    │   └── importMap.js              client-component manifest (hand-edit when CLI workaround needed — see "Adding a new admin client component")
     └── app/(frontend)/api/
         ├── ai-chat/route.ts                      Vertex Gemini Elliot chat
         ├── advertise/route.ts                    public Advertise modal target
         ├── seo-optimize/route.ts                 POST — used by Elliot dispatch + Articles hook
         ├── seo-competitor-gap/route.ts           POST — ranks crawler gap-report
         ├── regenerate-hero/route.ts              POST — used by RegenerateHeroButton
+        ├── hero-ads/
+        │   └── push-to-all/route.ts              POST — admin/editor only; site-wide hero campaign
         └── subscribers/
             ├── subscribe/route.ts                **public** sign-up (added 2026-04-29 UAT)
             └── broadcast/route.ts                admin-only broadcast

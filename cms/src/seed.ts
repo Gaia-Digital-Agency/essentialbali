@@ -13,11 +13,12 @@ const AREAS = [
   { slug: "nusa-penida", name: "Nusa Penida", lat: -8.7278, lng: 115.5444 },
 ];
 
-const TOPICS = [
-  // showsHero defaults to true on every topic — admin keeps the full
-  // 8-column hero grid (65 visible slots = 1 home + 8x8). The flag
-  // exists so individual topics can be hidden later without a code
-  // change, but no topic ships hidden by default.
+// showsHero defaults to true on every topic — admin keeps the full
+// 8-column hero grid (65 visible slots = 1 home + 8x8). The flag
+// exists so individual topics can be hidden later without a code
+// change, but no topic ships hidden by default. Type expressed
+// explicitly so the heroTopics filter below stays type-safe.
+const TOPICS: { slug: string; name: string; showsHero?: boolean }[] = [
   { slug: "events", name: "Events" },
   { slug: "news", name: "News" },
   { slug: "featured", name: "Featured" },

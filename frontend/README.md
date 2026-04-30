@@ -6,7 +6,38 @@ Live: `https://essentialbali.com`, `https://www.essentialbali.com`, `https://ess
 
 ---
 
-## Public capability surface (UAT-verified 2026-04-29)
+## Layout (post-redesign 2026-04-29 → 2026-04-30)
+
+### Homepage `/` — `pages/Front/Templates/Home.tsx`
+1. Header (logo + All Area selector + search) — `Templates/Header.tsx`
+2. Topic nav — 8 topic links across the top
+3. **`<HeroBanner />`** (`components/front/HeroBanner.tsx`) — single full-width hero from `hero_ads` (NULL,NULL) homepage default slot. Renders editorial headline + subline overlay. Optional CTA button when `ctaActive=true`. Soft gradient overlay so light copy stays legible. Falls back to NULL when no active hero.
+4. **`<DailyEssentials />`** (`components/front/DailyEssentials.tsx`) — daily-rotated 4×4 grid (16 articles, 2 per topic from 2 different areas). Reads today's `home_daily_feed` row with `depth=2` (article + area + topic + hero materialised). Shrink-and-centre when sparse.
+5. **`<Newsletter />`** (`components/front/Newsletter.tsx`) — sign-up form, copy from `newsletter-notice` Global. POST to `/api/subscribers/subscribe`. Server-side success message wins (knows new vs reactivated).
+6. Footer
+
+### Area × Topic listing `/{area}/{topic}` — `Templates/Directory.tsx`
+1. Header + topic nav
+2. **`<HeroBanner area={...} topic={...} />`** — cell-specific hero, falls back to homepage default if cell empty/inactive
+3. Page title + optional subcategory + tag rows
+4. Article grid using `LISTING_PAGE_SIZE = 20` from `lib/constants.ts` (single source of truth — same constant used by `backend/src/ssr/content.fetch.js`)
+5. Pagination
+6. Newsletter
+7. Footer
+
+### Events listings `/events` and `/{area}/events` — `Templates/EventsV3.tsx`
+- Does NOT render `<HeroBanner>` (events have their own structured header)
+- Card shape: image + time-of-day badge overlay (Morning / Afternoon / Night / All day) → category chip · start date · time range · recurrence pill (Every week / Every month / Annual) · venue with map pin · "Get tickets" button when `eventDetails.ticketUrl` is set
+- Filter UI: date-range picker + morning/afternoon/night chips → query keys `metaData_start_date / _end_date / _start_time / _end_time` translate server-side to `where[eventDetails.*]`
+
+### Single article `/{area}/{topic}/{slug}` — `Templates/SingleV2.tsx`
+- Breadcrumb (Home / Area / Topic) ABOVE the hero (was `md:absolute md:top-10 md:left-10 md:z-20` overlay, fixed 2026-04-30)
+- Title + sub_title + author/date row
+- Body, tags, share
+
+---
+
+## Public capability surface (UAT-verified 2026-04-29 → 2026-04-30)
 
 The following user-facing features are validated end-to-end against production. Detailed test evidence in `../docs/full_test.md`.
 

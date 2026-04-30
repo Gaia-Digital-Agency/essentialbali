@@ -172,7 +172,7 @@ essentialbali/
 |---|---|
 | `/admin*` | Payload Next.js (`:4008`) |
 | `/_next/*` | Payload (Next.js asset chunks) |
-| `/api/(users\|areas\|topics\|articles\|personas\|media\|comments\|hero-ads\|subscribers\|payload-preferences\|access\|graphql\|graphql-playground\|ai-chat\|advertise\|seo-optimize\|seo-competitor-gap\|regenerate-hero)` | Payload |
+| `/api/(users\|areas\|topics\|articles\|personas\|media\|comments\|hero-ads\|newsletters\|home-daily-feed\|globals\|subscribers\|payload-preferences\|access\|graphql\|graphql-playground\|ai-chat\|advertise\|seo-optimize\|seo-competitor-gap\|regenerate-hero)` | Payload |
 | `/signin` `/signup` | **410 Gone** (legacy admin retired) |
 | `/sitemap.xml` `/sitemap-areas.xml` `/sitemap-topics.xml` `/sitemap-articles.xml` `/robots.txt` | Payload Next.js |
 | `/uploads/*` | Express (symlinked to old_assets/legacy-uploads/ for back-compat) |
@@ -188,13 +188,32 @@ essentialbali/
   - SEO meta auto-fill on save (Vertex Gemini, in-process via `cms/src/lib/seo-agent.ts`)
   - Auto-promote on approve: setting status=`approved` → publishes (sets `publishedAt`, flips to `published`) in a single beforeChange hook
   - "🔁 Regenerate hero" button on the edit page (Vertex Imagen via `cms/src/lib/imager-regenerate.ts`)
-- **Hero Ads → 8×8 visual grid** — `admin.components.views.list = HeroGridView` makes the grid THE list view (one click toggles `active`)
-- **Newsletters** — compose + Save with status=Sending → BCC dispatch via Gmail API, history kept
-- **Subscribers** — pure list
+  - **`eventDetails` group** (added 2026-04-30) — `startDate / endDate / startTime / endTime / timeOfDay / venueName / venueAddress / venueLat / venueLng / ticketUrl / recurrence`. Used by EventsV3 + SingleEventV2 templates when `topic = events`. `timeOfDay` auto-derives from `startTime` hour via beforeChange hook (1-12 morning, 12-18 afternoon, 18-24 night). Replaces the legacy MySQL `meta_data` JSON blob retired in cleanup-C.
+- **Hero Images → 9-row visual grid** (renamed from "Hero Ads" 2026-04-29 — collection slug stays `hero-ads`)
+  - 1 homepage default banner (NULL area, NULL topic) at the top + 8 areas × N topics-with-`showsHero=true` cells below
+  - 65 total slots when all topics have `showsHero=true`
+  - Cell content: image, headline, subline, optional CTA button (text + url, only shown when `ctaActive=true`), optional `client` (empty = editorial, populated = paid placement), schedule (`startAt / endAt`)
+  - Partial unique index on `COALESCE(area_id,0), COALESCE(topic_id,0)` enforces single (NULL,NULL) homepage row + uniqueness per cell
+  - **"Push to all cell heroes" button** on the homepage hero edit page — copies image / headline / subline / link / CTA to every cell hero where `topic.showsHero=true`, activates them. Useful for site-wide campaigns.
+- **Subscriber Communication** (renamed from "Newsletters" 2026-04-29 — collection slug stays `newsletters`)
+  - Compose + save with status="Ready to send" → BCC dispatch via SMTP (`SMTP_*` env vars). beforeChange hook flips status `draft → sending → sent | failed` and stamps `recipientCount`, `sentAt`, `lastError`.
+- **Subscribers** — list of email signups. Public signup goes via `POST /api/subscribers/subscribe` (idempotent, reactivates `unsubscribed`/`bounced`).
+- **Newsletter Notice** (Global, new 2026-04-30) — admin sidebar group "Site sections"
+  - Edits the on-page subscribe-form copy that appears at the bottom of every public page (homepage, all listing pages, every article)
+  - Fields: `active` (kill-switch), `headline`, `subline`, `placeholder`, `buttonText`, `successMessage`, `alreadySubscribedMessage`, `errorMessage`, optional `backgroundImage`
+  - Distinct from Subscriber Communication (which sends actual broadcast emails) — this is just the form's display copy
+- **Home Daily Feed** (collection, new 2026-04-30) — admin sidebar group "System"
+  - Read-only in practice. Written by `cms/scripts/pick-daily-feed.mjs` cron at 04:00 GMT+8 (= 20:00 UTC).
+  - One row per Bali date with up to 16 slots (2 articles per topic × 8 topics). Each slot = `{slotIndex, topic, article}`.
+  - Sort key: `(home_featured_count ASC NULLS FIRST, home_last_featured_at ASC NULLS FIRST, random())`. Bumps counters on selected articles after writing.
+  - Cycle math at full population (1280 published): 80 days before any article repeats.
+- **Areas + Topics** (admin sidebar group "Taxonomy" — surfaced 2026-04-29; previously hidden)
+  - Editable `name / slug / intro / hero / lat / lng` for areas, `name / slug / icon / intro / showsHero` for topics
+  - `topics.showsHero` (default `true`) — when `false`, the admin Hero Image grid hides that topic's column AND the "Push to all" button skips it. Use for topics whose listing template handles its own header instead of a generic hero (today: nobody — Events used to be `false`, flipped back to `true` 2026-04-30 because the column should remain visible even though `EventsV3.tsx` doesn't render heroes on the public side).
 - **`/admin/elliot`** — Talk to Elliot full-page chat (sidebar: AI agent)
   - Live agent skill cards for all 7 entities (Elliot, Copywriter, SEO, Imager, Web Manager, Crawler, Scraper)
-  - Per-skill 🟢 LIVE / 🟡 scaffolded pills — currently 39/39 LIVE
-- **Hidden collections** (still functional via API): Users, Media, Personas, Comments, Tags, Areas, Topics
+  - Per-skill LIVE / scaffolded pills — currently 39/39 LIVE
+- **Hidden collections** (still functional via API): Users, Media, Personas, Comments, Tags
 
 ---
 
@@ -202,16 +221,28 @@ essentialbali/
 
 | Collection | Count | Notes |
 |---|---|---|
-| areas | 8 | seeded fixed |
-| topics | 8 | seeded fixed |
+| areas | 8 | seeded fixed; editable in admin under Taxonomy |
+| topics | 8 | seeded fixed; `+showsHero` flag (default true) |
 | personas | 4 | Maya, Komang, Putu, Sari |
-| hero_ads | 64 | placeholder labels until `active=true` |
-| articles | 64 (placeholders) | all `draft`, populated by Elliot |
+| hero_ads | **65** | 1 homepage default (`area=NULL, topic=NULL`) + 8 areas × 8 topics. Placeholder until `active=true`. |
+| articles | 63+ | seed places 1 placeholder draft per cell; +`eventDetails` group (date / time / venue) for events; +`homeFeaturedCount`, `homeLastFeaturedAt` (hidden, written by daily picker) |
 | users | 2 | super_admin (admin) + elliot (ai-agent) |
 | subscribers | 0+ | newsletter sign-ups |
 | newsletters | 0+ | broadcast history |
+| **home_daily_feed** | 0+ | one row per Bali date, written by `pick-daily-feed.mjs` cron (04:00 GMT+8) — 16 article slots / day |
 
-Migrations under `cms/src/migrations/` — apply with `pnpm payload migrate`.
+**Globals**
+
+| Global | Notes |
+|---|---|
+| **newsletter-notice** | edits the on-page subscribe-form copy (headline, subline, button, success/error messages, optional bg image, kill-switch) |
+
+Schema is managed by `db.push: true` (Drizzle auto-syncs from collection configs on CMS boot). The `cms/src/migrations/` directory has older migration files retained for reference but is not actively applied.
+
+For one-off ops migrations that Drizzle can't express (partial unique indexes, etc.), see `cms/scripts/`:
+  - `migrate-hero-65.mjs` — drops the old `area_topic_idx`, adds the partial unique on `COALESCE(area_id,0), COALESCE(topic_id,0)`, seeds the homepage default hero row
+  - `pick-daily-feed.mjs` — daily picker (cron entry in `cms/ecosystem.config.cjs`)
+  - `compose-test-newsletter.mjs` — drafts a Test newsletter via Vertex Gemini from the latest published articles
 
 ---
 
@@ -225,6 +256,11 @@ Migrations under `cms/src/migrations/` — apply with `pnpm payload migrate`.
   1. **Crawler** — research across 4 benchmark sites
   2. **xlsx** — operator drops `Essential Bali Proofread.xlsx` into `bridge/`-synced inbox
 - All articles enter as `pending_review`. Human approves to `published`.
+- **Semantic gate (added 2026-04-30)** — the `review-gate` skill calls a new
+  `content-area-check` skill that asks Vertex Gemini to predict the
+  `(area, topic)` from the body and HARD-FAILS if the prediction does not
+  match the declared `(area, topic)`. Closes the "no bleed" rule end-to-end:
+  even if the LLM drifts off-topic, Web Manager won't submit it.
 
 ### How to fire Elliot for a new article
 
@@ -298,6 +334,35 @@ You review at /admin/collections/articles/{id}
       ├── ✏ edit, save           (stays pending_review, hash-locked)
       └── 🗑 delete               (Path B — clears the hash, next dispatch creates fresh)
 ```
+
+---
+
+## Public site layout (post-redesign 2026-04-29 → 2026-04-30)
+
+### Homepage `/`
+1. Header (logo + All Area selector + search)
+2. Topic nav (8 topics)
+3. **`<HeroBanner />`** — single full-width hero, sourced from `hero_ads` (NULL, NULL) homepage default slot. Optional editorial headline + subline + CTA button.
+4. **`<DailyEssentials />`** — daily-rotated 4×4 grid (16 articles, 2 per topic, from 2 different areas where possible). Reads today's `home_daily_feed` row. Shrinks-and-centres if sparse (16 → 4×4, 12 → 4×3, 8 → 4×2, 4 → 2×2, 0 → "No daily picks yet" panel).
+5. **`<Newsletter />`** (sign-up form) — copy from `newsletter-notice` Global. POST to `/api/subscribers/subscribe`.
+6. Footer
+
+### Area × Topic listing `/{area}/{topic}` (e.g. `/canggu/dine`)
+1. Header + topic nav
+2. **`<HeroBanner area={...} topic={...} />`** — cell-specific hero, falls back to homepage default if cell is empty
+3. Page title + optional subcategory + tag rows
+4. Article grid — `lg:grid-cols-3 md:grid-cols-2`, `LISTING_PAGE_SIZE = 20` per page (single source of truth: `frontend/src/lib/constants.ts`, mirrored in `backend/src/ssr/content.fetch.js`)
+5. Pagination
+6. Newsletter
+7. Footer
+
+### Events listings `/events` and `/{area}/events` use a separate template
+- **`EventsV3.tsx`** — does NOT render `<HeroBanner>` (events have their own structured header)
+- Cards show: time-of-day badge over image, category chip, start date, time range, recurrence pill ("Every week" / "Every month" / "Annual"), venue with map pin, "Get tickets" button when `eventDetails.ticketUrl` is set
+- Filter UI: date-range picker + morning/afternoon/night chips. Translates to `where[eventDetails.*]` Payload filters via the `metaData_*` legacy query keys (back-compat).
+
+### Single article `/{area}/{topic}/{slug}` uses `SingleV2.tsx`
+- Breadcrumb (Home / Area / Topic) renders ABOVE the hero image (not absolute-overlaid — fixed 2026-04-30, was bleeding onto dark hero photos)
 
 ---
 

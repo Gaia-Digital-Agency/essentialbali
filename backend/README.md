@@ -55,7 +55,7 @@ A frontend code change requires **rebuilding the frontend AND restarting the bac
 Everything *except* the paths nginx routes to Payload. The current Payload-allowlist regex is:
 
 ```
-location ~ ^/api/(users|areas|topics|articles|personas|media|comments|hero-ads|newsletters|subscribers|payload-preferences|access|graphql|graphql-playground|ai-chat|advertise|seo-optimize|seo-competitor-gap|regenerate-hero)(/|$)
+location ~ ^/api/(users|areas|topics|articles|personas|media|comments|hero-ads|newsletters|home-daily-feed|globals|subscribers|payload-preferences|access|graphql|graphql-playground|ai-chat|advertise|seo-optimize|seo-competitor-gap|regenerate-hero)(/|$)
 ```
 
 Anything else hits this backend:
@@ -66,11 +66,16 @@ Anything else hits this backend:
 | `/{area}` | SSR — area page (8 areas) |
 | `/{area}/{topic}` | SSR — listing page (64 cells) |
 | `/{area}/{topic}/{slug}` | SSR — single article |
+| `/api/article` | Express handler — legacy adapter the frontend service layer uses for related/listing/search fetches. Translates legacy query keys (`category[]=`, `id_country=`, `slug=`, `metaData_*` for events) into Payload `where[...]` filters via `fetchArticlesData`. Returns `{status_code, data: {articles, pagination}}`. |
+| `/api/article/search` | Express handler — keyword search adapter |
+| `/api/content` | Express handler — refresh SSR-shaped `initialContent` for SPA intra-nav |
+| `/api/advertise` | nginx → Payload route handler (NOT this backend) |
 | `/uploads/*` | static serve from `../old_assets/legacy-uploads/` (73 pre-Payload images, kept for back-compat) |
 | `/signin`, `/signup` | nginx `410 Gone` (legacy admin retired) |
-| Other `/api/*` not in the Payload allowlist | reach this Express app — currently used for legacy SSR helpers only |
 
-> **Note — nginx allowlist gotcha.** Adding a new Payload collection means updating the regex above (in `/etc/nginx/sites-available/essentialbali.com`) AND running `sudo nginx -t && sudo nginx -s reload`. The 2026-04-29 UAT surfaced this when `/api/newsletters` was 404 because `newsletters` had been added to Payload but not to the regex. Same trap previously broke the homepage subscribe form. If you add `tags`, `events`, `jobs`, `housing`, `deals`, etc., remember the regex.
+> **Note — nginx allowlist gotcha.** Adding a new Payload collection means updating the regex above (in `/etc/nginx/sites-available/essentialbali.com`) AND running `sudo nginx -t && sudo nginx -s reload`. Caught us multiple times during the 2026-04-29 → 2026-04-30 work — `subscribers/subscribe` (silent 404), `newsletters` (admin Save broken), `home-daily-feed` and `globals` (404 from new endpoints in the homepage redesign). Each addition needed a reload. Backups left at `.bak.uat-<ts>` files. If you add `tags`, `events`, `jobs`, `housing`, `deals`, etc., remember the regex.
+
+> **Note — `/api/article?slug=...` MUST honour the slug filter.** Without that, every PathResolver lookup of a non-article URL segment returned the full set, and the frontend rendered a random article on every listing URL. Added 2026-04-30 (commit `2d24a93`).
 
 ---
 
