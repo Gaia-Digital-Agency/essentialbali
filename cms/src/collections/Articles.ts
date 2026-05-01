@@ -144,6 +144,28 @@ export const Articles: CollectionConfig = {
       ],
     },
     {
+      // Homepage placement. Independent of area + category — only the 20
+      // articles tagged into one of these 5 groups (4 per group) appear
+      // on the homepage. Everything else has group = NULL and lives on
+      // its area-page and category-page only. Manage via /admin/homepage-
+      // curation. Set or refreshed by Elliot.
+      name: "group",
+      type: "select",
+      options: [
+        { label: "Most Popular",   value: "mostPopular" },
+        { label: "Trending",       value: "trending" },
+        { label: "Ultimate Guide", value: "ultimateGuide" },
+        { label: "Overseas",       value: "overseas" },
+        { label: "Spotlight",      value: "spotlight" },
+      ],
+      index: true,
+      admin: {
+        description:
+          "Homepage placement. Leave blank for 99% of articles. The 20 articles tagged here (4 per group) make up the homepage feed.",
+        position: "sidebar",
+      },
+    },
+    {
       name: "status",
       type: "select",
       defaultValue: "draft",

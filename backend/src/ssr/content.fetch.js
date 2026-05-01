@@ -16,84 +16,35 @@ const LISTING_PAGE_SIZE = 20;
 const logger = pino(pino.destination("./logs/pino-content-fetch.log"));
 
 const HomeTemplate = {
-  heroImage: {
-    // articles: [0,0,0],
-    rules: {
-      limit: 3,
-    },
-    query: {
-      useRoute: true,
-      // pinned: 1,
-      category: {
-        slug: "people-culture",
-      },
-    },
+  // Phase 0 v4 — homepage is now driven by the explicit `group` field
+  // on articles, not by category slug. Each of the 5 sections is one
+  // group lookup with limit 4 = 20 articles total. The 20 articles get
+  // their `group` value set via /admin/homepage-curation (Elliot picks
+  // an initial assignment; humans override). All other articles in the
+  // site have group = NULL and live on area / category pages only.
+  //
+  // baseQuery merging is intentionally OFF for every section (was on
+  // for non-overseas in v3) — homepage queries should NOT respect any
+  // area / topic filter the request might carry. Homepage = no filter.
+  mostPopular: {
+    rules: { limit: 4 },
+    query: { group: "mostPopular" },
   },
   trending: {
-    // articles: [0,0,0,0,0],
-    rules: {
-      limit: 5,
-    },
-    query: {
-      useRoute: true,
-      category: {
-        // Exclude topics that have their own dedicated section below so
-        // a "trending across everything else" feed doesn't double-up.
-        exclude_slugs: ["featured", "news", "events"],
-      },
-    },
-  },
-  mostPopular: {
-    // 8 -> 5 (Phase-0 content campaign): matches the 5 featured articles
-    // we generate. Restore to 8 once the campaign scales up.
-    rules: {
-      limit: 5,
-    },
-    query: {
-      useRoute: true,
-      category: {
-        // "Most Popular" was a legacy MySQL curation bucket that no longer
-        // exists. Closest match in the Payload topic set is "Featured"
-        // (editorial picks). Revisit when product confirms section intent.
-        slug: "featured",
-      },
-    },
-  },
-  events: {
-    // 4 -> 3 (Phase-0 content campaign): matches the 3 events generated.
-    rules: {
-      limit: 3,
-    },
-    query: {
-      useRoute: true,
-      category: {
-        slug: "events",
-      },
-    },
+    rules: { limit: 4 },
+    query: { group: "trending" },
   },
   ultimateGuide: {
-    // 6 -> 4 (Phase-0 content campaign): matches the 4 news articles.
-    rules: {
-      limit: 4,
-    },
-    query: {
-      useRoute: true,
-      category: {
-        // "Ultimate Guide" was a legacy long-form bucket. Mapping to "News"
-        // as the closest Payload topic for depth/journalism content.
-        // Revisit when product confirms section intent.
-        slug: "news",
-      },
-    },
+    rules: { limit: 4 },
+    query: { group: "ultimateGuide" },
   },
   overseas: {
-    // articles: [0,0,0,0,0,0,0,0],
-    rules: {
-      limit: 8,
-    },
-    query: {
-      useRoute: false,
-    },
+    rules: { limit: 4 },
+    query: { group: "overseas" },
+  },
+  spotlight: {
+    rules: { limit: 4 },
+    query: { group: "spotlight" },
   },
 };
 
@@ -139,78 +90,27 @@ const generateContentHomeTemplate = async (
   baseQuery,
   taxonomies,
 ) => {
+  // Phase 0 v4 — every section in HomeTemplate now declares
+  //   query: { group: "<one-of-five>" }
+  // and we fan out one fetchArticlesData() per section. Categories +
+  // exclude_slugs + pinned + baseQuery are intentionally NOT merged on
+  // the homepage; the group field IS the homepage placement spec. If
+  // you ever need backward-compatibility with the v3 category-driven
+  // sections, see generateContentHomeTemplate_old above.
   let res = { ...HomeTemplate };
 
-  const categories = taxonomies?.categories ?? [];
-
   for (const key of Object.keys(res)) {
-    logger.info("Processing section:", key);
-
     const sectionConfig = res[key];
+    const group = sectionConfig?.query?.group;
 
-    // ===============================
-    // 1️⃣ Resolve category by slug
-    // ===============================
-    let categoryId = null;
-
-    const slugCategory = sectionConfig?.query?.category?.slug;
-
-    if (slugCategory) {
-      const foundCategory = categories.find(
-        (cat) => cat.slug_title === slugCategory
-      );
-
-      categoryId = foundCategory?.id ?? null;
-    }
-
-    logger.info(categoryId);
-
-    // ===============================
-    // 2️⃣ Build query base
-    // ===============================
-    let query = {
-      limit: sectionConfig?.rules?.limit ?? 5,
+    const query = {
+      limit: sectionConfig?.rules?.limit ?? 4,
     };
-
-    // ===============================
-    // 3️⃣ Exclude categories
-    // ===============================
-    const excludeSlugs = sectionConfig?.query?.category?.exclude_slugs;
-
-    if (excludeSlugs?.length) {
-      const includedCategories = categories
-        .filter((cat) => !excludeSlugs.includes(cat.slug_title))
-        .map((cat) => cat.id);
-
-      query.category = includedCategories;
+    if (group) {
+      query.group = group;
     }
 
-    // ===============================
-    // 4️⃣ Pinned filter
-    // ===============================
-    if (sectionConfig?.query?.pinned) {
-      query.pinned = true;
-    }
-
-    // ===============================
-    // 5️⃣ Merge baseQuery
-    // ===============================
-    if (key !== "overseas") {
-      query = { ...baseQuery, ...query };
-    }
-
-    // ===============================
-    // 6️⃣ Override category if single slug used
-    // ===============================
-    if (categoryId) {
-      query.category = categoryId;
-    }
-
-    // ===============================
-    // 7️⃣ Fetch articles
-    // ===============================
     const getArticle = await fetchArticlesData(query);
-
     res[key].articles = getArticle?.articles ?? [];
   }
 

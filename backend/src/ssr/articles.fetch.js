@@ -138,6 +138,13 @@ export const fetchArticlesData = async (query = {}) => {
       params["where[slug][equals]"] = query.slug.trim();
     }
 
+    // Phase 0 v4 — homepage `group` filter (5-value enum on articles).
+    // The HomeTemplate v4 calls fetchArticlesData with { group: "<X>" }
+    // for each homepage section.
+    if (typeof query.group === "string" && query.group) {
+      params["where[group][equals]"] = query.group;
+    }
+
     if (Array.isArray(query.category) && query.category.length > 0) {
       params["where[topic][in]"] = query.category.join(",");
     } else if (query.category != null && query.category !== "") {
