@@ -83,6 +83,20 @@ app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(requestTimer);
 
+// Public read-cache helper — sets a short-lived Cache-Control on
+// idempotent JSON endpoints so repeat visitors / nav-after-first-load
+// reuse the bytes from the browser cache rather than round-tripping
+// to Express. Apply per-route (not globally) so admin / write endpoints
+// keep their default no-cache behaviour. stale-while-revalidate gives
+// a CDN-friendly grace window for background revalidation.
+const cacheJson = (seconds) => (_req, res, next) => {
+  res.set(
+    "Cache-Control",
+    `public, max-age=${seconds}, stale-while-revalidate=${seconds * 5}`,
+  );
+  next();
+};
+
 // CORS allowlist — single source at shared/allowed-origins.json.
 //
 // Defence in depth (this code path got us into trouble before):
@@ -324,11 +338,12 @@ const articleListHandler = async (req, res) => {
       .json({ status_code: 500, status: "ERROR", data: null, message: String(e?.message || e) });
   }
 };
-app.get(["/api/article", pathWithBase("/api/article")], articleListHandler);
+app.get(["/api/article", pathWithBase("/api/article")], cacheJson(60), articleListHandler);
 
 // Legacy public-API adapter: /api/article/search?keyword=…
 app.get(
   ["/api/article/search", pathWithBase("/api/article/search")],
+  cacheJson(30),
   async (req, res) => {
     try {
       const keyword = String(req.query?.keyword || "").trim();
@@ -429,7 +444,7 @@ if (frontendPath) {
 // initial request (taxonomies + route + content + template content) so the
 // article/event/listing templates can refresh related/discover/listing data
 // after intra-SPA route changes without a full reload.
-app.get(["/api/content", pathWithBase("/api/content")], async (req, res) => {
+app.get(["/api/content", pathWithBase("/api/content")], cacheJson(30), async (req, res) => {
   try {
     const rawPath = String(req.query?.path || "/");
     const search = req.query?.search ? String(req.query.search) : undefined;
