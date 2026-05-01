@@ -143,6 +143,42 @@ it on the article as `source.hash`. If you dispatch the SAME brief again:
 
 ---
 
+## Homepage curation
+
+> **Live since 2026-05-01.** Visit `/admin/homepage-curation`.
+
+The public homepage shows **20 articles total**, organised into 5 groups
+of 4 each:
+
+| Group | What it is |
+|---|---|
+| **mostPopular** | Editorial pick / above-the-fold |
+| **trending** | Timely, what's happening now |
+| **ultimateGuide** | Evergreen long-form depth pieces |
+| **overseas** | Outside-Bali / regional spotlight |
+| **spotlight** | Single-feature standout, rotates |
+
+Every article has an optional `group` field (set in the article's
+sidebar in the Payload admin, OR — much faster — managed visually in
+`/admin/homepage-curation`). The 20 articles tagged into one of those
+5 groups are the homepage. Every other article has `group = NULL` and
+lives only on its area-page and category-page.
+
+In the curation view you can:
+
+* **+ Add** — search for an article by title and tag it into a group
+* **×** — remove an article from a group (keeps the article; just
+  un-pins from the homepage)
+* **🎲 Refresh** — let Elliot pick 4 fresh articles for one group at
+  random from the unpinned-published pool
+* **🎲 Refresh all 20** — global re-shuffle across all 5 groups in
+  one click
+
+Useful for: weekly content rotation, A/B testing different editorial
+angles, or quickly populating the homepage after a content sprint.
+
+---
+
 ## Hero ads grid (the 64 ad slots)
 
 Sidebar → **Collections → Hero Ads**.
