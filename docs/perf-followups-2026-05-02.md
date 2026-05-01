@@ -280,51 +280,63 @@ function-calling loop), `cms/src/components/TalkToElliotView.tsx`
 
 ---
 
-## 9. 🟡 Redesign Imager Gallery — fix refresh + scope to 5×2 by category
+## 9. 🟡 Redesign Imager Gallery — fix refresh + 8 lanes × 3 images, per-lane refresh
 
 **Symptom captured 2026-05-02.** Two issues with
 `/admin/elliot` → Imager Gallery panel:
 1. **Refresh button doesn't work.** ↻ button click should re-fetch
    the 24 most recent imager media; currently silently does nothing
-   (or silent error). Need to verify in browser devtools whether the
-   fetch fires + what it returns.
-2. **24 images dumped at once is too noisy.** Operator wants
-   curation-relevant slices, not a firehose. Proposed:
-   - **2 images per category × 5 categories = 10 images total.**
-   - Categories: People & Culture, Activities, Nightlife,
-     Health & Wellness, Dine.
-   - Each category labelled with its name, 2 most recent imager
-     images for that category side-by-side.
+   (or silent error).
+2. **24 images dumped flat is too noisy.** Operator wants
+   curation-relevant slices, not a firehose.
+
+**Final spec (per user 2026-05-02).** Reorganise the same 24-image
+budget but distributed by topic:
+- **8 topic lanes × 3 images each = 24 total.**
+- Lanes (one per Bali topic): Events, News, Featured, Dine,
+  Health & Wellness, Nightlife, Activities, People & Culture.
+- Each lane shows the 3 most recent `source=imager` media
+  belonging to that topic.
+- **Per-lane ↻ refresh button** (not a single global refresh) so an
+  operator can refresh just the lane they care about without
+  re-querying the other 7. Lighter on the API and lighter on
+  Elliot's attention.
+- Single global "↻ refresh all" optional, kept smaller / less
+  prominent.
 
 **Investigation steps for the refresh bug.**
 1. Open browser devtools on `/admin/elliot`.
 2. Click ↻ refresh, watch Network tab.
-3. Confirm the GET `/api/media?where[source][equals]=imager&...` fires.
-4. If yes, check whether the response replaces the grid or not
-   (likely a state-update bug in `ImagerGallery.tsx` —
-   the `setRefreshTick` is wired but maybe the useEffect deps are
-   stale).
-5. If no fetch fires, check `onClick={refresh}` binding.
+3. Confirm the GET `/api/media?where[source][equals]=imager&...`
+   fires. If yes, check whether the response replaces the grid
+   (likely a state-update bug in `ImagerGallery.tsx` — the
+   `setRefreshTick` is wired but maybe the useEffect deps are
+   stale or the component memoizes incorrectly).
+4. If no fetch fires, check `onClick={refresh}` binding.
 
 **Steps for the redesign.**
 1. Rewrite `ImagerGallery.tsx` to:
-   - Hardcode the 5 categories with their topic-slug equivalents:
-     `[people-culture, activities, nightlife, health-wellness, dine]`
-   - For each category, query
+   - Hardcode the 8 topic slugs:
+     `[events, news, featured, dine, health-wellness, nightlife,
+       activities, people-culture]`
+   - For each lane, fire one query:
      `/api/media?where[source][equals]=imager
       &where[topic][equals]=<topic-slug>
-      &limit=2&sort=-createdAt&depth=0`
-   - Render as a 5-row × 2-column grid with category title above
-     each row. Or 5 horizontal lanes.
-   - Drop the single "24 most recent" query.
-2. Click-to-preview + Copy URL behaviour stays the same (modal
-   already works).
-3. Refresh button: rebuild the per-category queries.
+      &limit=3&sort=-createdAt&depth=0`
+   - Render as 8 stacked horizontal lanes. Lane header = topic name +
+     ↻ refresh button + count chip ("2/3" if a lane has only 2
+     images so far).
+   - Drop the single "24 most recent" flat query.
+2. Per-lane refresh: re-fires only that one lane's query, updates
+   only that lane's state slice.
+3. Click-to-preview + Copy URL behaviour unchanged (modal already
+   works).
+4. Empty lane state: small "no imager output yet for this topic"
+   note, with a hint to trigger generate-hero for that area/topic.
 
-**Expected outcome.** Gallery becomes a curation tool, not a dump.
-Operator sees the 10 most-relevant images, evenly distributed across
-the categories that matter for content rotation. Refresh actually
-refreshes.
+**Expected outcome.** Gallery becomes a curation tool. 8 visible
+slices distributed by topic; per-lane refresh keeps churn low.
+Refresh actually refreshes.
 
 **Effort.** ~30–45 min.
 
