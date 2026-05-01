@@ -1,11 +1,14 @@
-# Performance follow-ups — captured 2026-05-02
+# Site follow-ups — captured 2026-05-02 (revised)
 
 State at capture:
 - 10-item perf series complete (commits `48cec03` through `a92c712`).
 - Lighthouse mobile 67 / desktop 72. Target 90+ not hit.
 - Reports: `/Users/rogerwoolie/Downloads/essentialbaliNopenclaw/lighthouse-2026-05-02-post-perf-series/`.
+- Two Elliot UX gaps surfaced today: chat panel can't actually do
+  things (#6/#7/#8), Imager Gallery refresh broken + 24-image dump
+  too noisy (#9).
 
-These five are queued for later sessions. Each is sized so it can be
+These nine are queued for later sessions. Each is sized so it can be
 done independently in 30–90 minutes.
 
 ---
@@ -89,8 +92,7 @@ binary mid-series on production.
 1. Plan a maintenance window (5 min downtime acceptable; nginx
    reload is graceful but cold-start of `nginx-extras` may differ).
 2. `sudo apt install nginx-extras` (already in apt).
-3. `sudo nginx -t` to validate (the `nginx-extras` binary still reads
-   `/etc/nginx/nginx.conf`).
+3. `sudo nginx -t` to validate.
 4. Add to `nginx.conf` http block:
    ```
    brotli on;
@@ -111,8 +113,7 @@ binary mid-series on production.
 transfer than gzip.
 
 **Risk.** `nginx-extras` is a different package; pin a backup of
-`/etc/nginx/nginx.conf` and verify all 3 vhosts (`essentialbali.com`,
-`subdomains.gaiada.online`, `essentialbali.com` apex) come up.
+`/etc/nginx/nginx.conf` and verify all 3 vhosts come up.
 
 ---
 
@@ -149,35 +150,198 @@ import "react-quill-new/dist/quill.core.css"
 import "react-quill-new/dist/quill.snow.css"
 ```
 But no Quill component is rendered anywhere on the public site.
-The CSS contributes maybe 30–60 KB raw / 5–10 KB gz to the bundle
-without any runtime benefit.
 
 **Steps.**
 1. `grep -rn "react-quill\|<Quill\|Quill.register" frontend/src` to
-   confirm zero JS-level Quill usage. (`AppLayout.tsx` should be the
-   only hit, and only for the CSS imports.)
+   confirm zero JS-level Quill usage.
 2. Delete the two `import "react-quill-new/dist/...css"` lines from
    `AppLayout.tsx`.
 3. Also remove the `.ql-*` class definitions in `frontend/src/index.css`
-   lines 1054–1063 and the `.ql-custom-image` / `.ql-embed-article`
-   rules at 1322–1346 (they reference FontAwesome which we already
-   dropped in Perf #9).
+   (lines 1054–1063, 1322–1346).
 4. Build, smoke, commit.
 
 **Expected delta.** +2–3 perf points, –40 KB raw / –8 KB gz off the
 shared CSS.
 
-**Risk.** Minimal — CSS rules with no rendering component are inert.
-If a future component reintroduces Quill, the imports come back with
-it.
+---
+
+## 6. 🟡 Bump Elliot chat maxOutputTokens 600 → 4000
+
+**Symptom captured 2026-05-02.** User asked Elliot in
+`/admin/elliot` chat: "Cam you create three events. One Morning For
+People & Culture, One Afternoon for Health & Fitness, One Night For
+News…". Response cut off mid-sentence at "…focused on People &".
+
+**Cause (the cosmetic half).** Vertex `generateContentResponse` at
+`maxOutputTokens: 600` (`cms/src/app/(frontend)/api/ai-chat/route.ts`
+line 152). 600 tokens ≈ 450 words; describing 3 events doesn't fit.
+
+**Caveat.** Bumping tokens lets Elliot WRITE more, but does NOT
+make him execute anything. See #7 + #8 for the real fix.
+
+**Fix.** Change `maxOutputTokens: 600` → `maxOutputTokens: 4000`.
+That's it. One line.
+
+**Expected outcome.** Long answers complete instead of truncating.
+Latency increases by 1–3 seconds on multi-paragraph answers; fine.
+
+**Files.** `cms/src/app/(frontend)/api/ai-chat/route.ts`.
+
+---
+
+## 7. 🔴 Add "Execute" button to Elliot chat for content creation
+
+**Symptom captured 2026-05-02.** User asked Elliot to create 3
+events. Elliot's chat described what he WOULD create, but no rows
+were written to the DB. Investigation showed the `/api/ai-chat`
+route is Q&A-only — it has no tool-calling, no DB writes, no
+shell-out to the agent host on `gda-ai01`.
+
+**The architectural gap.** `/admin/elliot` UI lists 39 "skills"
+(dispatch-article, generate-hero, pick-daily-feed, etc.). Those are
+real scripts on `gda-ai01:/opt/.openclaw-ess/workspace-*/scripts/*.mjs`
+and they DO create content. But they're invoked by SSH'ing to the
+agent host — NOT by the chat panel. UI says "agent", behaves like
+"chatbot".
+
+**Fix (level B from the diagnosis).** Add a structured-output mode
+to the chat:
+1. When user prompts with content-creation intent, Elliot returns
+   JSON-structured event/article specs alongside the prose answer.
+2. Below each spec, render an **Execute** button.
+3. Clicking Execute POSTs the spec to a new
+   `/api/ai-chat/dispatch` route in the cms.
+4. That route either SSHes to gda-ai01 and runs
+   `workspace-main/scripts/dispatch-article.mjs` with the spec, or
+   calls a relayed REST endpoint on the agent host.
+5. UI streams "creating…" status, then "✓ created article #N" with
+   a link to the admin row.
+
+Human-in-the-loop gate preserved: nothing executes without a
+deliberate button click.
+
+**Steps.**
+1. Extend the prompt: ask Gemini to wrap creation specs in
+   `<spec>{json}</spec>` blocks alongside its prose.
+2. Parse the spec blocks in `TalkToElliotView.tsx`, render each as a
+   collapsible card with an Execute button.
+3. New route `cms/src/app/(payload)/api/ai-chat/dispatch/route.ts` —
+   takes a spec, ssh's to gda-ai01 (re-use the deployment-key auth
+   from CLAUDE.md), runs dispatch-article, streams the JSON output.
+4. UI: show success/failure chip, link to the new article.
+
+**Expected outcome.** Elliot can ACTUALLY create content from the
+chat, with one human approval click per item. The user's
+"create three events" prompt would render 3 cards, click each →
+3 articles materialize.
+
+**Effort.** ~2 hours.
+
+**Files.** `cms/src/app/(payload)/api/ai-chat/dispatch/route.ts`
+(new), `cms/src/components/TalkToElliotView.tsx` (extend with spec
+parsing + Execute button), `cms/src/app/(frontend)/api/ai-chat/route.ts`
+(prompt extension to emit spec blocks).
+
+---
+
+## 8. 🟡 Full Vertex tool-calling in Elliot chat (level C)
+
+**Status.** The "real agent" version. Bigger build, bigger payoff.
+Treat as a follow-up to #7 — only worth doing if #7's button-driven
+flow proves too clicky for the operator.
+
+**Idea.** Use Vertex Gemini's function-calling spec to declare
+`dispatch_article`, `generate_hero`, `pick_daily_feed` etc. as tools
+Gemini can call directly. Stream the tool calls back to the UI so the
+operator sees "Elliot is creating event 1 of 3…" in real time.
+
+**Steps.**
+1. Define Vertex tool schemas for each agent skill (one tool per
+   skill, declared in JSON schema form).
+2. Replace the simple `generateContent` call in ai-chat with a
+   function-calling loop: Gemini emits tool-call → server executes
+   tool → result fed back into Gemini → final answer.
+3. Each tool execution still goes through the same SSH-to-gda-ai01
+   bridge from #7, so the human-in-the-loop gate can be kept by
+   adding a `confirm: true` parameter the first time the tool is
+   used in a chat session.
+4. UI: render tool-call events as a timeline, with manual abort.
+
+**Expected outcome.** Conversational agent that creates content
+without per-item button clicks. Operator says "create 3 events" and
+they appear; operator says "actually replace the second one" and
+Elliot does.
+
+**Effort.** ~6 hours plus a quality-control pass.
+
+**Files.** `cms/src/app/(frontend)/api/ai-chat/route.ts` (rewrite to
+function-calling loop), `cms/src/components/TalkToElliotView.tsx`
+(streaming tool-event timeline UI), backend bridge to gda-ai01.
+
+---
+
+## 9. 🟡 Redesign Imager Gallery — fix refresh + scope to 5×2 by category
+
+**Symptom captured 2026-05-02.** Two issues with
+`/admin/elliot` → Imager Gallery panel:
+1. **Refresh button doesn't work.** ↻ button click should re-fetch
+   the 24 most recent imager media; currently silently does nothing
+   (or silent error). Need to verify in browser devtools whether the
+   fetch fires + what it returns.
+2. **24 images dumped at once is too noisy.** Operator wants
+   curation-relevant slices, not a firehose. Proposed:
+   - **2 images per category × 5 categories = 10 images total.**
+   - Categories: People & Culture, Activities, Nightlife,
+     Health & Wellness, Dine.
+   - Each category labelled with its name, 2 most recent imager
+     images for that category side-by-side.
+
+**Investigation steps for the refresh bug.**
+1. Open browser devtools on `/admin/elliot`.
+2. Click ↻ refresh, watch Network tab.
+3. Confirm the GET `/api/media?where[source][equals]=imager&...` fires.
+4. If yes, check whether the response replaces the grid or not
+   (likely a state-update bug in `ImagerGallery.tsx` —
+   the `setRefreshTick` is wired but maybe the useEffect deps are
+   stale).
+5. If no fetch fires, check `onClick={refresh}` binding.
+
+**Steps for the redesign.**
+1. Rewrite `ImagerGallery.tsx` to:
+   - Hardcode the 5 categories with their topic-slug equivalents:
+     `[people-culture, activities, nightlife, health-wellness, dine]`
+   - For each category, query
+     `/api/media?where[source][equals]=imager
+      &where[topic][equals]=<topic-slug>
+      &limit=2&sort=-createdAt&depth=0`
+   - Render as a 5-row × 2-column grid with category title above
+     each row. Or 5 horizontal lanes.
+   - Drop the single "24 most recent" query.
+2. Click-to-preview + Copy URL behaviour stays the same (modal
+   already works).
+3. Refresh button: rebuild the per-category queries.
+
+**Expected outcome.** Gallery becomes a curation tool, not a dump.
+Operator sees the 10 most-relevant images, evenly distributed across
+the categories that matter for content rotation. Refresh actually
+refreshes.
+
+**Effort.** ~30–45 min.
+
+**Files.** `cms/src/components/ImagerGallery.tsx`.
 
 ---
 
 ## How to pick these up
 
-When you're ready: `git log --grep="^perf"` to see the perf series
-commits as reference, open this file, pick an item, work through
-the steps. Each is a single short-lived branch + single commit.
+When ready: `git log --grep="^perf"` for the perf series reference,
+open this file, pick an item, work through the steps. Each is a
+single short-lived branch + single commit.
 
-The 90+ Performance target needs items 1 + 2 to land. Items 3, 4, 5
-add cumulative polish but aren't critical for the headline number.
+**Priority ordering for hitting 90+ Performance + a usable Elliot
+chat:**
+- #1 + #2 are the path to 90+ Lighthouse. Required.
+- #6 + #7 are the path to a usable Elliot chat. #6 is 5 min, #7 is
+  the real fix (~2 hr).
+- #9 is operator UX polish — small improvement, high satisfaction.
+- #3, #4, #5, #8 are cumulative polish — schedule when convenient.
