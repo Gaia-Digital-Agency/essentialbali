@@ -44,9 +44,10 @@ const HomeTemplate = {
     },
   },
   mostPopular: {
-    // articles: [0,0,0,0,0,0,0,0],
+    // 8 -> 5 (Phase-0 content campaign): matches the 5 featured articles
+    // we generate. Restore to 8 once the campaign scales up.
     rules: {
-      limit: 8,
+      limit: 5,
     },
     query: {
       useRoute: true,
@@ -59,9 +60,9 @@ const HomeTemplate = {
     },
   },
   events: {
-    // articles: [0,0,0,0],
+    // 4 -> 3 (Phase-0 content campaign): matches the 3 events generated.
     rules: {
-      limit: 4,
+      limit: 3,
     },
     query: {
       useRoute: true,
@@ -71,9 +72,9 @@ const HomeTemplate = {
     },
   },
   ultimateGuide: {
-    // articles: [0,0,0,0,0,0],
+    // 6 -> 4 (Phase-0 content campaign): matches the 4 news articles.
     rules: {
-      limit: 6,
+      limit: 4,
     },
     query: {
       useRoute: true,
