@@ -32,7 +32,8 @@ const API_URL = import.meta.env.VITE_WHATSNEW_BACKEND_URL;
 const IMAGE_URL = import.meta.env.VITE_IMAGE_URL || API_URL;
 
 const generateImageUrl = (image: string | undefined, id: number) => {
-  if (image) return `${IMAGE_URL}/${image}`;
+  if (image) if (/^https?:\/\//i.test(image)) return image;
+    return `${IMAGE_URL}/${image}`;
   return `https://picsum.photos/id/${id * 10}/800/600`;
 };
 

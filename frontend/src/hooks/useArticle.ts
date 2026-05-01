@@ -67,11 +67,14 @@ const useArticle = () => {
 
     const getFeaturedImageUrl = (article: Article | undefined, ratio: '4_3' | '16_9' | null = null) => {
         if(!article) return ''
-        if(ratio && article[`featured_image_${ratio}_url`]){
-            return `${IMAGE_URL}/${article[`featured_image_${ratio}_url`]}`
+        const ratioUrl = ratio ? article[`featured_image_${ratio}_url`] : null
+        const candidate: string | undefined = ratioUrl || article.featured_image_url
+        if(candidate){
+            // GCS-backed URLs are already absolute (https://storage.googleapis.com/...).
+            // Only legacy relative-path values need the IMAGE_URL prefix.
+            if(/^https?:\/\//i.test(candidate)) return candidate
+            return `${IMAGE_URL}/${candidate}`
         }
-        if(article.featured_image_url) return `${IMAGE_URL}/${article.featured_image_url}`
-        // if(env == 'development') return `https://picsum.photos/id/${article.id*10}/1920/1080`
         return `${API_URL}/logo.png`
     }
 

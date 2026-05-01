@@ -125,7 +125,7 @@ const Newsletter: React.FC = () => {
         <div className="container grid grid-cols-12 items-center md:items-end">
           <div className="col-span-12 mb-8 text-center wrapper-kiri md:mb-0 md:col-span-6 md:text-left">
             <div className="mb-5 title-wrapper">
-              <p className="font-serif text-3xl leading-8 md:text-front-section-title text-front-dustly-slate">
+              <p className="font-serif text-2xl leading-8 text-front-dustly-slate">
                 {notice.headline}
               </p>
             </div>
