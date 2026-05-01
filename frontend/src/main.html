@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Warm the connection to the GCS bucket that serves all article hero
+         images (and the homepage hero ad). The first image is already
+         preloaded below; preconnect here means the DNS+TCP+TLS handshake
+         is reused for all the later card images that DailyEssentials
+         hydrates in. crossorigin matches the CORS-enabled bucket setting. -->
+    <link rel="preconnect" href="https://storage.googleapis.com" crossorigin />
+    <link rel="dns-prefetch" href="https://storage.googleapis.com" />
     <!-- Preload critical fonts so they begin downloading in parallel
          with HTML/CSS/JS, reducing FOUT/FOIT and avoiding the body
          text reflow on web-font swap. font-display:swap on the
