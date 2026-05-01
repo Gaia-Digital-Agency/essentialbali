@@ -362,6 +362,11 @@ same site (same nginx config, same Payload + Vite SSR backends).
 **Transport:** HTTP/2 enabled on all three domains (nginx
 `listen 443 ssl http2;`). Live since 2026-05-01.
 
+**Compression:** gzip on for HTML / JS / CSS / JSON / SVG / fonts since
+2026-05-01 (typical ~68% savings on JS bundles, ~70% on vendor chunks).
+Configured in `/etc/nginx/nginx.conf`. Brotli is a planned follow-up
+(needs the `nginx-extras` package — not yet installed).
+
 ---
 
 ## Talk to Elliot — what it can do
