@@ -359,6 +359,9 @@ You handle them in your inbox.
 `https://www.essentialbali.com/` and `https://essentialbali.com/` serve the
 same site (same nginx config, same Payload + Vite SSR backends).
 
+**Transport:** HTTP/2 enabled on all three domains (nginx
+`listen 443 ssl http2;`). Live since 2026-05-01.
+
 ---
 
 ## Talk to Elliot — what it can do
