@@ -101,6 +101,38 @@ export default defineConfig((args) => {
           // /admin is served by Payload at :4008 via nginx allowlist; the
           // legacy admin bundle is no longer built.
         },
+        output: {
+          // Better cache + parallelism: split heavy vendor deps into their
+          // own chunks so they cache forever (deps rarely change), let HTTP/2
+          // multiplex fetching, and shrink the per-page critical bundle.
+          manualChunks: (id) => {
+            if (!id.includes('node_modules')) return undefined;
+            // React + Router + ReactDOM — every page needs these, keep
+            // together so they share React's runtime symbol table.
+            if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) {
+              return 'vendor-react';
+            }
+            // GSAP is used only for hover/scroll animations on a few
+            // components (Image, Button, MobileMenu, SearchBar). Splitting
+            // lets the browser fetch it in parallel with the main app.
+            if (/[\\/]node_modules[\\/](gsap|@gsap)[\\/]/.test(id)) {
+              return 'vendor-gsap';
+            }
+            // Quill rich-text editor — only used in admin contexts, but
+            // marked noExternal so it gets bundled. Force into its own
+            // chunk so the homepage doesn't pay for it on first load.
+            if (/[\\/]node_modules[\\/](quill|react-quill-new)[\\/]/.test(id)) {
+              return 'vendor-quill';
+            }
+            // Swiper carousel — large, only some pages use it.
+            if (/[\\/]node_modules[\\/](swiper)[\\/]/.test(id)) {
+              return 'vendor-swiper';
+            }
+            // Everything else from node_modules → vendor-misc
+            // (Helmet, axios, etc. — small, no need for further split)
+            return 'vendor-misc';
+          },
+        },
       }
     }
   }
