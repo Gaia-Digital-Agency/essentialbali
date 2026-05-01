@@ -274,6 +274,7 @@ These were lettered A–I in commit messages. Mapping to numeric IDs:
 | 163 | Search UX — replace the `<input>` placeholder with a real search results page powered by `/api/article/search` | ❌ | The endpoint exists (item 112) but the frontend listing/results page is stub. |
 | 164 | Push notifications / email digests for active subscribers (the Subscribers collection exists at item 21) | ❌ | Newsletters collection is wired (#20). One-shot newsletter send works. Recurring digest doesn't. |
 | 165 | Analytics — at minimum a privacy-first counter (Plausible / Umami) so we can see which content actually reads | ❌ | Currently no analytics on the public site. Lighthouse audit is a single-shot health check, not traffic data. |
+| 166 | Create 3 events ad-hoc (Ubud morning / Canggu afternoon / Denpasar night, June 2026 dates) | ❌ | Spec ready in docs/perf-followups-2026-05-02.md "Bonus task" section. ~25 min wall, ~$0.15 Imagen. One-shot fulfilment from a 2026-05-02 chat ask; will be removed once executed. |
 
 ---
 
@@ -284,8 +285,8 @@ These were lettered A–I in commit messages. Mapping to numeric IDs:
 | A — Original 89 | 89 | 88 ✅ · 1 ⚠ (75) · 0 ❌ active · 1 🚫 (79) · 1 still-open (78) |
 | B — Added since (1–6) | 57 (90–146) | 57 ✅ |
 | C — Unactioned follow-ups | 9 (147–155) | 9 ❌ |
-| D — Strategic / long-horizon | 10 (156–165) | 10 ❌ |
-| **Total tracked items** | **165** | **145 ✅ · 1 ⚠ · 19 ❌ · 1 🚫** |
+| D — Strategic / long-horizon | 11 (156–166) | 11 ❌ |
+| **Total tracked items** | **166** | **145 ✅ · 1 ⚠ · 20 ❌ · 1 🚫** |
 
 So roughly **88% complete**, with 19 items meaningfully open. Of those:
 - **2 are unblocking the 90+ Lighthouse target** (147, 148)
