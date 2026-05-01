@@ -540,7 +540,7 @@ app.use("*", async (req, res, next) => {
     // const initialContent = []
     const initialTemplateContent = await fetchTemplateContent(initialRoute);
     const initialTime = new Date().toISOString();
-    const initialHeroImage = getInitialArticleHeroImage(
+    const initialHeroImage = await getInitialArticleHeroImage(
       initialRoute,
       initialContent,
     );
@@ -571,7 +571,7 @@ app.use("*", async (req, res, next) => {
       `${helmet?.title?.toString() ?? ""}
          ${helmet?.meta?.toString() ?? ""}
          ${helmet?.link?.toString() ?? ""}
-         ${initialHeroImage ? '<link rel="preload" as="image" href="' + process.env.IMAGE_URL + initialHeroImage + '" fetchpriority="high" type="image/webp">' : ""}
+         ${initialHeroImage ? '<link rel="preload" as="image" href="' + (/^https?:\/\//i.test(initialHeroImage) ? initialHeroImage : (process.env.IMAGE_URL || "") + initialHeroImage) + '" fetchpriority="high" type="image/webp">' : ""}
          ${initialHeadScript ? initialHeadScript : ""}
          `,
     );

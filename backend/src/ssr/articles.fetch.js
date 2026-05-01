@@ -213,4 +213,38 @@ export const fetchArticleDataByKeyword = async (q) => {
   }
 };
 
-export const getInitialArticleHeroImage = () => false;
+/**
+ * For LCP preload: return the homepage hero-ad image URL when the
+ * initial route is LISTING_HOME, else false. The SSR template
+ * (backend/app.js) injects a <link rel="preload" as="image"
+ * fetchpriority="high"> for whatever URL we return here, so the
+ * browser starts downloading the LCP image in parallel with JS
+ * parsing instead of after HeroBanner hydrates and fires its own
+ * fetch.
+ *
+ * Resolves the homepage default (area=NULL, topic=NULL, active=true)
+ * via Payload REST. Falls back to false on any failure — preload is
+ * a hint, not a hard requirement; an empty hint is safe.
+ */
+export const getInitialArticleHeroImage = async (initialRoute) => {
+  if (!initialRoute || initialRoute.type !== "LISTING_HOME") return false;
+  try {
+    const res = await payload.find("hero-ads", {
+      "where[area][exists]": false,
+      "where[topic][exists]": false,
+      "where[active][equals]": true,
+      depth: 2,
+      limit: 1,
+    });
+    const doc = (res?.docs || [])[0];
+    const c = doc?.creative;
+    if (!c || typeof c !== "object") return false;
+    // Prefer the card-size variant (768x432) — that's what HeroBanner
+    // will end up rendering on mobile + most desktops, so preloading
+    // the same URL avoids a double-fetch.
+    return c?.sizes?.card?.url || c?.url || false;
+  } catch (e) {
+    console.error("[ssr/articles.fetch:getInitialArticleHeroImage]", e?.message || e);
+    return false;
+  }
+};
