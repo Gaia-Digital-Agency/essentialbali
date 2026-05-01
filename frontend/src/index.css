@@ -1,5 +1,10 @@
 @import "tailwindcss" layer(base);
-@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css");
+/* Removed: @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css");
+   Was loaded on every public page but only used by Quill rich-text editor
+   toolbar icons (.ql-custom-image, .ql-embed-article) which are no longer
+   rendered on the public site. Saves a cross-origin DNS+TCP+TLS handshake
+   to cdnjs.cloudflare.com per fresh page load. Re-add inside an admin-
+   scoped CSS file if a future component needs FA icons. */
 
 /* @custom-variant dark (&:is(.dark *)); */
 @custom-variant dark (&:where(.dark, .dark *));
