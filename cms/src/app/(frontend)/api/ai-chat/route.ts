@@ -146,7 +146,7 @@ async function callVertex(prompt: string): Promise<string> {
     },
     body: JSON.stringify({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.3, maxOutputTokens: 600 },
+      generationConfig: { temperature: 0.3, maxOutputTokens: 4000 },
     }),
   });
 
