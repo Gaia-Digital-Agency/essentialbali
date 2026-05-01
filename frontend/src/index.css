@@ -1050,24 +1050,8 @@ span.flatpickr-weekday,
   transform: translate(-50%, -50%);
 }
 
-.ql-font-serif {
-  font-family: "Playfair Display", serif;
-}
-.ql-font-sans {
-  font-family: "Helvetica Neue";
-}
-.ql-size-small {
-  font-size: 14px;
-}
-.ql-size-normal {
-  font-size: 16px;
-}
-.ql-size-large {
-  font-size: 18px;
-}
-.ql-size-huge {
-  font-size: 20px;
-}
+/* F5 — removed Quill toolbar style overrides (.ql-font-*, .ql-size-*).
+   No Quill editor renders on the public site. */
 
 article .content-wrapper img {
   width: 100%;
@@ -1318,54 +1302,11 @@ article .content-wrapper h6 {
   min-height: 600px;
 }
 
-.ql-dropcap::before {
-  content: "D";
-}
-.ql-highlight::before {
-  content: "H";
-}
-.ql-custom-image::before {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  /* font-family: 'Font Awesome 6 Free'; */
-  font-family: "FontAwesome";
-  font-weight: 900;
-  content: "\f03e";
+/* F5 — removed .ql-dropcap / .ql-highlight / .ql-custom-image /
+   .ql-embed-article toolbar-icon rules. They referenced the removed
+   FontAwesome import; the toolbar buttons themselves don't render. */
 
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-}
-
-.ql-embed-article::before {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  font-family: "FontAwesome";
-  font-weight: 900;
-  content: "\f15c";
-
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-}
-
-.ql-size-small {
-  font-size: var(--text-front-small);
-}
-.ql-size-normal {
-  font-size: var(--text-front-body);
-}
-.ql-size-large {
-  font-size: var(--text-front-body-big);
-}
-.ql-size-larger {
-  font-size: var(--text-front-subtitle);
-}
-.ql-size-huge {
-  font-size: var(--text-front-article-title);
-}
+/* F5 — removed duplicate .ql-size-* rules using var(--text-front-*). */
 
 .before-dash::before {
   content: "- ";

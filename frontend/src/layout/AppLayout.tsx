@@ -4,13 +4,18 @@ import { Outlet } from "react-router";
 import AppHeader from "./AppHeader";
 import Backdrop from "./Backdrop";
 import AppSidebar from "./AppSidebar";
-import "react-quill-new/dist/quill.core.css"
+// F5 — Quill + FontAwesome imports removed. AppLayout is currently
+// orphaned (no consumers); even if it were used, the public site
+// renders zero Quill components. The CSS was bundled into front-*.css
+// without runtime payoff. Re-add when a Quill editor or FA-icon
+// component is reintroduced.
+// import "react-quill-new/dist/quill.core.css"
 // import "../index.css"
-import "react-quill-new/dist/quill.snow.css";
+// import "react-quill-new/dist/quill.snow.css";
 // import { registerAllCustomFormats } from "../quill/quill.setup";
 import { NotificationProvider } from "../context/NotificationContext";
 import ProtectedRoute from "../components/ProtectedRoute";
-import '@fortawesome/fontawesome-free/css/all.min.css';
+// import '@fortawesome/fontawesome-free/css/all.min.css';
 // import '../non-critical.css'
 // registerAllCustomFormats()
 
