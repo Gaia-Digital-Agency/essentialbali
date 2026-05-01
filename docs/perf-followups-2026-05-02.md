@@ -344,6 +344,61 @@ Refresh actually refreshes.
 
 ---
 
+## Agreed execution order (locked 2026-05-02 by operator)
+
+When picking these up in a fresh context, work them in **this** order:
+
+| Step | F# | Master # | Item | Effort |
+|---|---|---|---|---|
+| 1 | F6 | 152 | Bump Elliot chat maxOutputTokens 600->4000 | ~5 min |
+| 2 | F5 | 151 | Drop unused Quill CSS imports | ~20 min |
+| 3 | F9 | 155 | Imager Gallery -> 8 lanes x 3 images + per-lane refresh + fix refresh bug | ~30-45 min |
+| 4 | F3 | 149 | Install Brotli (`nginx-extras` package swap) | ~30 min |
+| 5 | F2 | 148 | Find + fix desktop CLS culprit | ~45 min |
+| 6 | F1 | 147 | Diagnose mobile LCP regression (cache hero-ad SSR fetch) | ~60 min |
+| 7 | F4 | 150 | Trim vendor-misc 556 KB chunk | ~90 min |
+| 8 | F7 | 153 | Execute button on Elliot chat (real fix for "create content") | ~2 hr |
+| 9 | F8 | 154 | Full Vertex tool-calling — agent level | ~6 hr |
+
+**Cumulative ~12 hours** across multiple sessions. Commit per item.
+
+Rationale:
+- Steps 1–3 are quick wins with visible outcomes. Builds momentum.
+- Step 4 (Brotli) is a brief infra change, low blast radius.
+- Steps 5–6 unblock the 90+ Lighthouse target. Desktop CLS first
+  because the investigation is contained to a single shift event;
+  mobile LCP requires diving into the SSR fetch path.
+- Step 7 (vendor-misc trim) needs a clean perf baseline first
+  (after 5/6 stabilise) so the delta is measurable.
+- Steps 8–9 are the agent-chat refactor. F7 (button-driven) before
+  F8 (function-calling agent) — F7 is the human-in-the-loop MVP;
+  F8 depends on F7's dispatch bridge being proven.
+
+---
+
+## Bonus task — also queued (parallel to F-series)
+
+**3 events ad-hoc** (raised by operator in chat 2026-05-02). Spec:
+- Morning · Ubud · People & Culture flavour · Sat 7 Jun 2026 06:00–09:30
+  (sunrise canang-sari making + temple offering walk)
+- Afternoon · Canggu · Health & Wellness flavour · Sat 14 Jun 2026 14:00–17:00
+  (beach yoga + sound healing pop-up)
+- Night · Denpasar · News flavour · Fri 27 Jun 2026 19:30–22:00
+  (live current-affairs panel + journalism Q&A)
+
+Driver script ready (in this session's transcript memory at
+`/tmp/run-3-events.mjs`) but not yet copied to the openclaw-ess
+repo. To execute: re-write the driver into
+`workspace-main/scripts/run-3-events.mjs`, scp to gda-ai01, run.
+~25 min wall, ~$0.15 Imagen.
+
+This is technically a one-shot fulfilment, not a maintained
+follow-up — but tracking here so it doesn't get lost across
+context handoffs. Once executed and the 3 events publish, this
+note can be deleted from the doc.
+
+---
+
 ## How to pick these up
 
 When ready: `git log --grep="^perf"` for the perf series reference,
