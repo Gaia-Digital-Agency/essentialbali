@@ -163,6 +163,7 @@ const HeroBanner: React.FC<Props> = ({ area, topic }) => {
               alt={doc.creative?.alt || doc.headline || ""}
               className="absolute inset-0 w-full h-full object-cover"
               fetchPriority="high"
+              loading="eager"
               decoding="async"
             />
           )}
