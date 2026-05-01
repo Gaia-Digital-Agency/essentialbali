@@ -102,11 +102,23 @@ const DailyEssentials: React.FC = () => {
   }, []);
 
   if (!loaded) {
+    // Skeleton card stack — pre-reserves the same vertical footprint the
+    // populated grid will occupy. aspect-video (16:9) matches the hero
+    // image aspect; the 3 stacked grey lines reserve title + subtitle +
+    // area-pin block below. Count = 12 matches the picker's typical
+    // output today (sparse pool: events topic empty, single-article
+    // topics). CLS-critical: any aspect or count mismatch here causes
+    // a layout jump on hydration.
     return (
       <section className="container py-12">
         <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-1 gap-6">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="aspect-square bg-front-icewhite animate-pulse" />
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="flex flex-col gap-3">
+              <div className="aspect-video bg-front-icewhite animate-pulse rounded" />
+              <div className="h-3 w-1/3 bg-front-icewhite animate-pulse rounded" />
+              <div className="h-5 w-5/6 bg-front-icewhite animate-pulse rounded" />
+              <div className="h-3 w-3/4 bg-front-icewhite animate-pulse rounded" />
+            </div>
           ))}
         </div>
       </section>
@@ -157,7 +169,7 @@ const DailyEssentials: React.FC = () => {
               <div className="mb-4 image-wrapper">
                 <Image
                   url={articleImage(a) || undefined}
-                  ratio="100%"
+                  ratio="56.25%"
                   alt={a.hero?.alt || a.title}
                 />
               </div>
