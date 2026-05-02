@@ -133,6 +133,10 @@ export default buildConfig({
   // reads the same file at boot. To add/remove a host: edit that JSON,
   // then restart both pm2 processes.
   cors: ALLOWED_ORIGINS,
-  csrf: ALLOWED_ORIGINS.filter(o => o.startsWith("https://essentialbali")),
+  csrf: ALLOWED_ORIGINS.filter(
+    (o) =>
+      o.startsWith("https://essentialbali") ||
+      o === "http://localhost:4008", // admin via SSH tunnel
+  ),
   // GraphQL is enabled by default at /api/graphql
 });
