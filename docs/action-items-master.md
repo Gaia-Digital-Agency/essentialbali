@@ -245,13 +245,13 @@ These were lettered A–I in commit messages. Mapping to numeric IDs:
 |---|---|---|---|
 | 147 | 🔴 | F1 — Diagnose mobile LCP regression (cache hero-ad SSR fetch) | ~60 min |
 | 148 | 🔴 | F2 — Find + fix desktop CLS culprit | ~45 min |
-| 149 | 🟡 | F3 — Install Brotli (`nginx-extras` package swap) | ~30 min |
+| 149 | ✅ | F3 — Install Brotli (`nginx-extras` + `libnginx-mod-http-brotli-*`) — `d7a7db3` |
 | 150 | 🟡 | F4 — Trim vendor-misc 556 KB chunk | ~90 min |
-| 151 | 🟢 | F5 — Drop Quill CSS imports | ~20 min |
-| 152 | 🟡 | F6 — Bump Elliot chat maxOutputTokens 600→4000 | ~5 min |
+| 151 | ✅ | F5 — Drop Quill CSS imports + .ql-* rules — `aaad584` |
+| 152 | ✅ | F6 — Bump Elliot chat maxOutputTokens 600→4000 — `3524c80` |
 | 153 | 🔴 | F7 — Execute button on Elliot chat (REAL fix for "create content") | ~2 hr |
 | 154 | 🟡 | F8 — Full Vertex tool-calling in chat (level C) | ~6 hr |
-| 155 | 🟡 | F9 — Imager Gallery → 8 lanes × 3 images, per-lane refresh | ~30–45 min |
+| 155 | ✅ | F9 — Imager Gallery → 8 lanes × 3 + per-lane refresh + cache-bust — `e33fb59` |
 
 **Priorities:**
 - **147 + 148** → path to 90+ Lighthouse
@@ -286,7 +286,7 @@ These were lettered A–I in commit messages. Mapping to numeric IDs:
 | B — Added since (1–6) | 57 (90–146) | 57 ✅ |
 | C — Unactioned follow-ups | 9 (147–155) | 9 ❌ |
 | D — Strategic / long-horizon | 11 (156–166) | 11 ❌ |
-| **Total tracked items** | **166** | **145 ✅ · 1 ⚠ · 20 ❌ · 1 🚫** |
+| **Total tracked items** | **166** | **149 ✅ · 1 ⚠ · 16 ❌ · 1 🚫** |
 
 So roughly **88% complete**, with 19 items meaningfully open. Of those:
 - **2 are unblocking the 90+ Lighthouse target** (147, 148)
