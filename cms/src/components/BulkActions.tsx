@@ -61,20 +61,53 @@ type Props = {
   noun: string;
 };
 
-function getSelectedIds(): number[] {
+function rowCheckboxes(): HTMLInputElement[] {
   if (typeof document === "undefined") return [];
   // Payload v3 list checkboxes: each row has an input[type=checkbox]
-  // inside a td.cell-_select. The checkbox 'name' attr is "select-row"
-  // and value is the document id.
-  const checks = document.querySelectorAll<HTMLInputElement>(
-    'td.cell-_select input[type="checkbox"]:checked, .cell-_select input[type="checkbox"]:checked',
+  // inside td.cell-_select. v3.84 also exposes them at the wrapper
+  // as .select-row__checkbox — match both for robustness.
+  return Array.from(
+    document.querySelectorAll<HTMLInputElement>(
+      'td.cell-_select input[type="checkbox"], .cell-_select input[type="checkbox"], .select-row__checkbox input[type="checkbox"]',
+    ),
   );
-  const ids: number[] = [];
-  checks.forEach((c) => {
-    const v = Number(c.value);
-    if (Number.isInteger(v) && v > 0) ids.push(v);
-  });
-  return ids;
+}
+
+function getSelectedIds(): number[] {
+  // v3.84: the checkbox <input> has no value attribute; the row id
+  // lives on the closest <tr data-id="NNN">. Walk up to the row.
+  return rowCheckboxes()
+    .filter((c) => c.checked)
+    .map((c) => {
+      const tr = c.closest("tr[data-id]") as HTMLElement | null;
+      const fromTr = tr?.dataset?.id;
+      if (fromTr) return Number(fromTr);
+      // Fallback for older Payload versions that did set value=.
+      return Number(c.value);
+    })
+    .filter((v) => Number.isInteger(v) && v > 0);
+}
+
+/**
+ * Programmatically toggle every row checkbox on the current page.
+ * Operator can act on every visible row without clicking each box by
+ * hand. Dispatches a real `click` event so Payload's React state hook
+ * updates (just setting .checked wouldn't propagate).
+ */
+function toggleAllVisible(target: boolean): number {
+  const checks = rowCheckboxes();
+  let changed = 0;
+  for (const c of checks) {
+    if (c.checked !== target) {
+      c.click();
+      changed++;
+    }
+  }
+  return changed;
+}
+
+function countVisibleRows(): number {
+  return rowCheckboxes().length;
 }
 
 const BulkActions: React.FC<Props> = ({ endpoint, noun }) => {
@@ -154,8 +187,41 @@ const BulkActions: React.FC<Props> = ({ endpoint, noun }) => {
       <div style={titleRow}>
         <strong style={{ fontSize: "0.85rem" }}>Bulk actions</strong>
         <span style={{ fontSize: "0.75rem", opacity: 0.7 }}>
-          tick rows below, then click an action
+          tick rows in the list (or use Select all on page below)
         </span>
+      </div>
+      <div style={selectRow}>
+        <button
+          type="button"
+          onClick={() => {
+            const n = toggleAllVisible(true);
+            const total = countVisibleRows();
+            setResult(
+              n === 0
+                ? `Already ticked ${total} row${total === 1 ? "" : "s"} on this page.`
+                : `Ticked ${n} row${n === 1 ? "" : "s"} (now ${total} selected).`,
+            );
+            setResultOk(true);
+          }}
+          disabled={!!pendingAction || !!confirmingAction}
+          style={selectBtn}
+          title="Tick every row checkbox on the current page."
+        >
+          ☑ Select all on page
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            const n = toggleAllVisible(false);
+            setResult(n === 0 ? "Nothing was selected." : `Cleared ${n} selection${n === 1 ? "" : "s"}.`);
+            setResultOk(true);
+          }}
+          disabled={!!pendingAction || !!confirmingAction}
+          style={selectBtn}
+          title="Untick every row checkbox on the current page."
+        >
+          ☐ Clear
+        </button>
       </div>
       <div style={btnRow}>
         {(Object.keys(ACTION_META) as Action[]).map((a) => {
@@ -206,6 +272,23 @@ const BulkActions: React.FC<Props> = ({ endpoint, noun }) => {
       )}
     </div>
   );
+};
+
+const selectRow: React.CSSProperties = {
+  display: "flex",
+  gap: "0.4rem",
+  marginBottom: "0.4rem",
+  flexWrap: "wrap",
+};
+const selectBtn: React.CSSProperties = {
+  fontSize: "0.75rem",
+  padding: "0.3rem 0.7rem",
+  background: "transparent",
+  border: "1px solid var(--theme-elevation-300)",
+  color: "var(--theme-text)",
+  borderRadius: "5px",
+  cursor: "pointer",
+  fontWeight: 500,
 };
 
 const wrap: React.CSSProperties = {
