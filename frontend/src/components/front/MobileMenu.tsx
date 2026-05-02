@@ -140,9 +140,9 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isModalOpen = false, closeModal
                   name="q"
                   type="text"
                   placeholder="Search articles, events..."
-                  className="pt-4 pb-2 w-full text-center bg-transparent border-b outline-none border-front-navy/20 text-front-navy placeholder:text-front-navy/40"
+                  className="py-3 pl-12 pr-3 w-full text-center bg-transparent border-b outline-none border-front-navy/20 text-front-navy placeholder:text-front-navy/40 min-h-[48px]"
                 />
-                <button type="submit" aria-label="Search" className="absolute left-0 bottom-2 text-front-navy/40">
+                <button type="submit" aria-label="Search" className="absolute left-0 bottom-0 inline-flex items-center justify-center w-12 h-12 text-front-navy/60 hover:text-front-navy">
                   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
