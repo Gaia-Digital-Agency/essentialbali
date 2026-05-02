@@ -5,6 +5,65 @@ import ImagerGallery from "./ImagerGallery";
 
 type Msg = { role: "user" | "elliot"; text: string; ts: number };
 
+interface DispatchSpec {
+  type?: string;
+  area?: string;
+  topic?: string;
+  persona?: string;
+  brief?: string;
+  target_words?: number;
+  research_url?: string;
+}
+
+interface ParsedSpec {
+  id: string;             // stable per-spec id (msg-ts + spec-index)
+  raw: string;            // the raw JSON inside <spec>...</spec>
+  parsed: DispatchSpec | null;
+  parseError?: string;
+}
+
+interface MessageParts {
+  prose: string;          // text with <spec>...</spec> blocks stripped
+  specs: ParsedSpec[];
+}
+
+/**
+ * Pull <spec>{...}</spec> blocks out of an Elliot message.
+ * Returns the stripped prose + parsed spec objects (with errors per-block
+ * if JSON didn't validate, so the UI can still render a useful card).
+ */
+function parseSpecs(text: string, msgTs: number): MessageParts {
+  const re = /<spec>([\s\S]*?)<\/spec>/g;
+  const specs: ParsedSpec[] = [];
+  let i = 0;
+  let prose = text.replace(re, (_match, raw: string) => {
+    const trimmed = raw.trim();
+    let parsed: DispatchSpec | null = null;
+    let parseError: string | undefined;
+    try {
+      parsed = JSON.parse(trimmed) as DispatchSpec;
+    } catch (e) {
+      parseError = (e as Error).message;
+    }
+    specs.push({
+      id: `${msgTs}-${i++}`,
+      raw: trimmed,
+      parsed,
+      parseError,
+    });
+    return "";
+  });
+  prose = prose.replace(/\n{3,}/g, "\n\n").trim();
+  return { prose, specs };
+}
+
+type DispatchState =
+  | { status: "idle" }
+  | { status: "executing" }
+  | { status: "done"; articleId?: number; articleUrl?: string; skipped?: boolean; message?: string }
+  | { status: "error"; message: string };
+
+
 type Skill = {
   name: string;
   signature: string;
@@ -161,6 +220,46 @@ export default function TalkToElliotView() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  // Per-spec execution state. Key = spec.id from parseSpecs().
+  const [dispatch, setDispatch] = useState<Record<string, DispatchState>>({});
+
+  const executeSpec = async (specId: string, spec: DispatchSpec) => {
+    setDispatch((d) => ({ ...d, [specId]: { status: "executing" } }));
+    try {
+      const res = await fetch("/api/ai-chat/dispatch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ spec }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.ok) {
+        const reason =
+          data?.error ||
+          data?.detail ||
+          data?.stderr_tail ||
+          `HTTP ${res.status}`;
+        setDispatch((d) => ({ ...d, [specId]: { status: "error", message: String(reason) } }));
+        return;
+      }
+      setDispatch((d) => ({
+        ...d,
+        [specId]: {
+          status: "done",
+          articleId: data.article_id,
+          articleUrl: data.article_url,
+          skipped: !!data.skipped,
+          message: data.message,
+        },
+      }));
+    } catch (e) {
+      setDispatch((d) => ({
+        ...d,
+        [specId]: { status: "error", message: (e as Error)?.message || "network error" },
+      }));
+    }
+  };
 
   const send = async () => {
     const q = input.trim();
@@ -333,14 +432,98 @@ export default function TalkToElliotView() {
       {/* Chat */}
       <div style={chatLabel}>Chat with Elliot</div>
       <div ref={scrollRef} style={msgs}>
-        {messages.map((m, i) => (
-          <div key={i} style={{ ...row, justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
-            <div style={m.role === "user" ? bubbleUser : bubbleElliot}>
-              <div style={whoLabel}>{m.role === "user" ? "You" : "Elliot"}</div>
-              <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.55 }}>{m.text}</div>
+        {messages.map((m, i) => {
+          if (m.role === "user") {
+            return (
+              <div key={i} style={{ ...row, justifyContent: "flex-end" }}>
+                <div style={bubbleUser}>
+                  <div style={whoLabel}>You</div>
+                  <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.55 }}>{m.text}</div>
+                </div>
+              </div>
+            );
+          }
+          // Elliot — parse out <spec> blocks and render each as a card.
+          const { prose, specs } = parseSpecs(m.text, m.ts);
+          return (
+            <div key={i} style={{ ...row, justifyContent: "flex-start" }}>
+              <div style={bubbleElliot}>
+                <div style={whoLabel}>Elliot</div>
+                {prose && (
+                  <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.55 }}>{prose}</div>
+                )}
+                {specs.map((s) => {
+                  const state: DispatchState = dispatch[s.id] || { status: "idle" };
+                  const sp = s.parsed;
+                  return (
+                    <div key={s.id} style={specCard}>
+                      {sp ? (
+                        <>
+                          <div style={specHeaderRow}>
+                            <div style={specChipRow}>
+                              <span style={specChip}>{sp.area || "?"}</span>
+                              <span style={specChipDot}>·</span>
+                              <span style={specChip}>{sp.topic || "?"}</span>
+                              <span style={specChipDot}>·</span>
+                              <span style={specChipPersona}>{sp.persona || "?"}</span>
+                              {sp.target_words ? (
+                                <>
+                                  <span style={specChipDot}>·</span>
+                                  <span style={specChipMeta}>{sp.target_words}w</span>
+                                </>
+                              ) : null}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => sp && executeSpec(s.id, sp)}
+                              disabled={state.status !== "idle"}
+                              style={{
+                                ...executeBtn,
+                                ...(state.status === "executing" ? executeBtnBusy : {}),
+                                ...(state.status === "done" ? executeBtnDone : {}),
+                                ...(state.status === "error" ? executeBtnErr : {}),
+                              }}
+                              title="Run dispatch-article on the agent host"
+                            >
+                              {state.status === "idle" && "▶ Execute"}
+                              {state.status === "executing" && "⏳ creating…"}
+                              {state.status === "done" && (state.skipped ? "⊘ skipped" : "✓ created")}
+                              {state.status === "error" && "✗ failed"}
+                            </button>
+                          </div>
+                          <div style={specBrief}>
+                            {sp.brief ? (sp.brief.length > 220 ? sp.brief.slice(0, 217) + "…" : sp.brief) : "(no brief)"}
+                          </div>
+                          {state.status === "done" && state.articleId && (
+                            <div style={specResult}>
+                              article #{state.articleId}{" "}
+                              {state.articleUrl && (
+                                <a href={state.articleUrl} target="_blank" rel="noopener noreferrer" style={specLink}>
+                                  open →
+                                </a>
+                              )}
+                            </div>
+                          )}
+                          {state.status === "done" && state.skipped && state.message && (
+                            <div style={specResult}>{state.message}</div>
+                          )}
+                          {state.status === "error" && (
+                            <div style={specErr}>error: {state.message}</div>
+                          )}
+                        </>
+                      ) : (
+                        <div style={specErr}>
+                          spec parse error: {s.parseError || "invalid JSON"}
+                          <pre style={{ ...specBrief, fontSize: "0.7rem", marginTop: "0.3rem" }}>{s.raw.slice(0, 200)}</pre>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {busy && (
           <div style={{ ...row, justifyContent: "flex-start" }}>
             <div style={bubbleElliot}>
@@ -541,6 +724,104 @@ const textarea: React.CSSProperties = {
   fontFamily: "inherit",
   outline: "none",
 };
+const specCard: React.CSSProperties = {
+  marginTop: "0.6rem",
+  padding: "0.55rem 0.7rem",
+  borderRadius: "0.4rem",
+  border: "1px solid rgba(110,180,255,0.35)",
+  background: "rgba(110,180,255,0.08)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.4rem",
+};
+const specHeaderRow: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "0.5rem",
+  flexWrap: "wrap",
+};
+const specChipRow: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "0.3rem",
+  flexWrap: "wrap",
+};
+const specChip: React.CSSProperties = {
+  fontSize: "0.7rem",
+  padding: "0.1rem 0.5rem",
+  borderRadius: "0.25rem",
+  background: "rgba(255,255,255,0.1)",
+  textTransform: "lowercase",
+};
+const specChipPersona: React.CSSProperties = {
+  ...{
+    fontSize: "0.7rem",
+    padding: "0.1rem 0.5rem",
+    borderRadius: "0.25rem",
+    background: "rgba(255,255,255,0.1)",
+  },
+  fontStyle: "italic",
+};
+const specChipMeta: React.CSSProperties = {
+  fontSize: "0.66rem",
+  opacity: 0.7,
+};
+const specChipDot: React.CSSProperties = {
+  fontSize: "0.7rem",
+  opacity: 0.5,
+};
+const executeBtn: React.CSSProperties = {
+  fontSize: "0.78rem",
+  padding: "0.3rem 0.75rem",
+  borderRadius: "0.3rem",
+  border: "1px solid rgba(110,180,255,0.55)",
+  background: "rgba(110,180,255,0.18)",
+  color: "inherit",
+  cursor: "pointer",
+  fontWeight: 500,
+  whiteSpace: "nowrap",
+};
+const executeBtnBusy: React.CSSProperties = {
+  cursor: "wait",
+  opacity: 0.7,
+};
+const executeBtnDone: React.CSSProperties = {
+  background: "rgba(80,200,120,0.2)",
+  borderColor: "rgba(80,200,120,0.55)",
+  cursor: "default",
+};
+const executeBtnErr: React.CSSProperties = {
+  background: "rgba(220,80,80,0.2)",
+  borderColor: "rgba(220,80,80,0.55)",
+  cursor: "default",
+};
+const specBrief: React.CSSProperties = {
+  fontSize: "0.78rem",
+  opacity: 0.85,
+  lineHeight: 1.45,
+  whiteSpace: "pre-wrap",
+};
+const specResult: React.CSSProperties = {
+  fontSize: "0.74rem",
+  padding: "0.3rem 0.5rem",
+  borderRadius: "0.25rem",
+  background: "rgba(80,200,120,0.12)",
+  border: "1px solid rgba(80,200,120,0.3)",
+};
+const specErr: React.CSSProperties = {
+  fontSize: "0.74rem",
+  padding: "0.3rem 0.5rem",
+  borderRadius: "0.25rem",
+  background: "rgba(220,80,80,0.15)",
+  border: "1px solid rgba(220,80,80,0.4)",
+};
+const specLink: React.CSSProperties = {
+  color: "inherit",
+  textDecoration: "underline",
+  marginLeft: "0.25rem",
+};
+
 const sendBtn: React.CSSProperties = {
   padding: "0.6rem 1.3rem",
   borderRadius: "var(--style-radius-s, 4px)",
