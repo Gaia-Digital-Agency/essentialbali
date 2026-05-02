@@ -235,11 +235,27 @@ export default function TalkToElliotView() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok) {
-        const reason =
-          data?.error ||
-          data?.detail ||
-          data?.stderr_tail ||
-          `HTTP ${res.status}`;
+        // Compose a useful message: the route returns a generic
+        // "dispatch failed" + stderr_tail for agent-side errors. The bare
+        // error alone is opaque, so when stderr_tail is present append the
+        // last informative line of it (skip Node deprecation noise).
+        const baseErr =
+          data?.error || data?.detail || `HTTP ${res.status}`;
+        let tail: string | undefined;
+        if (typeof data?.stderr_tail === "string" && data.stderr_tail) {
+          const lines = (data.stderr_tail as string)
+            .split("\n")
+            .map((l: string) => l.trim())
+            .filter(
+              (l: string) =>
+                l &&
+                !l.startsWith("(node:") &&
+                !l.includes("DeprecationWarning") &&
+                !l.includes("--trace-deprecation"),
+            );
+          tail = lines[lines.length - 1] || undefined;
+        }
+        const reason = tail ? `${baseErr} — ${tail}` : baseErr;
         setDispatch((d) => ({ ...d, [specId]: { status: "error", message: String(reason) } }));
         return;
       }
