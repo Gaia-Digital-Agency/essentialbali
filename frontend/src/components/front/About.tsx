@@ -191,7 +191,7 @@ const About: React.FC = () => {
               <Link to={"https://www.instagram.com/essentialbali/"} target="_blank" aria-label="Instagram">
                 <InstagramIconGreyDefault height={28} width={28} className="duration-200 cursor-pointer text-front-navy hover:text-front-dustly-slate" />
               </Link>
-              <Link to={"https://twitter.com/essentialbali"} target="_blank">
+              <Link to={"https://twitter.com/essentialbali"} target="_blank" aria-label="Twitter">
                 <TwitterIconGreyDefault height={28} width={28} className="duration-200 cursor-pointer text-front-navy hover:text-front-dustly-slate" />
               </Link>
             </div>

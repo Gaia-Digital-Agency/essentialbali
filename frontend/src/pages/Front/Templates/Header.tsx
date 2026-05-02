@@ -302,7 +302,7 @@ const Header: React.FC = () => {
               <Link to={"https://www.instagram.com/essentialbali/"} target="_blank" aria-label="Instagram">
                 <InstagramIconWhiteDefault className="w-6 h-6 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
               </Link>
-              <Link to={"https://twitter.com/essentialbali"} target="_blank">
+              <Link to={"https://twitter.com/essentialbali"} target="_blank" aria-label="Twitter">
                 <TwitterIconWhiteDefault className="w-5 h-5 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
               </Link>
             </div>
