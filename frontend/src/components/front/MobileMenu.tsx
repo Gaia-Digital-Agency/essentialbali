@@ -142,7 +142,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isModalOpen = false, closeModal
                   placeholder="Search articles, events..."
                   className="pt-4 pb-2 w-full text-center bg-transparent border-b outline-none border-front-navy/20 text-front-navy placeholder:text-front-navy/40"
                 />
-                <button type="submit" className="absolute left-0 bottom-2 text-front-navy/40">
+                <button type="submit" aria-label="Search" className="absolute left-0 bottom-2 text-front-navy/40">
                   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -178,7 +178,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isModalOpen = false, closeModal
               placeholder="Search articles, events..." 
               className="pt-4 pb-2 w-full text-center bg-transparent border-b outline-none border-front-navy/20 text-front-navy placeholder:text-front-navy/40"
             />
-            <button type="submit" className="absolute right-0 bottom-2 text-front-navy/40">
+            <button type="submit" aria-label="Search" className="absolute right-0 bottom-2 text-front-navy/40">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -198,13 +198,13 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isModalOpen = false, closeModal
                 )
               })}
               <div className="flex gap-x-6 mt-16 item">
-                <Link to={'https://www.facebook.com/essentialbali'} target="_blank">
+                <Link to={'https://www.facebook.com/essentialbali'} target="_blank" aria-label="Facebook">
                   <FacebookIconGreyDefault className="w-[24px] h-[24px] text-front-navy" />
                 </Link>
-                <Link to={'https://www.instagram.com/essentialbali'} target="_blank">
+                <Link to={'https://www.instagram.com/essentialbali'} target="_blank" aria-label="Instagram">
                   <InstagramIconGreyDefault className="w-[24px] h-[24px] text-front-navy" />
                 </Link>
-                <Link to={'https://www.linkedin.com/company/essentialbali'} target="_blank">
+                <Link to={'https://www.linkedin.com/company/essentialbali'} target="_blank" aria-label="LinkedIn">
                   <TwitterIconGreyDefault className="w-[22px] h-[22px] text-front-navy" />
                 </Link>
               </div>
@@ -215,13 +215,13 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isModalOpen = false, closeModal
         {/* <div className="outer bg-front-navy flex-0">
           <div className="py-4">
             <div className="flex gap-x-6 justify-center item">
-              <Link to={'https://www.facebook.com/essentialbali'} target="_blank">
+              <Link to={'https://www.facebook.com/essentialbali'} target="_blank" aria-label="Facebook">
                 <FacebookIcon className="w-[24px] h-[24px]" />
               </Link>
-              <Link to={'https://www.instagram.com/essentialbali'} target="_blank">
+              <Link to={'https://www.instagram.com/essentialbali'} target="_blank" aria-label="Instagram">
                 <InstagramIcon className="w-[24px] h-[24px]" />
               </Link>
-              <Link to={'https://www.linkedin.com/company/essentialbali'} target="_blank">
+              <Link to={'https://www.linkedin.com/company/essentialbali'} target="_blank" aria-label="LinkedIn">
                 <LinkedinIcon className="w-[24px] h-[24px]" />
               </Link>
             </div>

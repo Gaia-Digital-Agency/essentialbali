@@ -136,7 +136,6 @@ const Footer: React.FC = () => {
               type="button"
               onClick={() => setAdvertiseOpen(true)}
               className="inline-flex items-center px-5 py-2 font-sans text-front-small font-medium tracking-wide uppercase rounded-full border border-front-navy text-front-navy hover:bg-front-navy hover:text-front-icewhite transition-colors duration-200 cursor-pointer"
-              aria-label="Advertise with Essential Bali"
             >
               Advertise With Us
             </button>
@@ -145,7 +144,7 @@ const Footer: React.FC = () => {
             </div>
             <a
               href="/admin"
-              className="text-[11px] tracking-wide uppercase text-front-shadowed-slate/50 hover:text-front-navy transition-colors"
+              className="text-[11px] tracking-wide uppercase text-front-shadowed-slate hover:text-front-navy transition-colors"
               aria-label="Admin login"
             >
               Admin

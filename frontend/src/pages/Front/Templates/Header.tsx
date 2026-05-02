@@ -296,10 +296,10 @@ const Header: React.FC = () => {
               </React.Fragment>
             ))}
             <div className="absolute items-center justify-center hidden lg:flex right-5 gap-x-4">
-              <Link to={"https://www.facebook.com/essentialbali"} target="_blank">
+              <Link to={"https://www.facebook.com/essentialbali"} target="_blank" aria-label="Facebook">
                 <FacebookIconGreyDefault className="w-5 h-5 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
               </Link>
-              <Link to={"https://www.instagram.com/essentialbali/"} target="_blank">
+              <Link to={"https://www.instagram.com/essentialbali/"} target="_blank" aria-label="Instagram">
                 <InstagramIconWhiteDefault className="w-6 h-6 duration-200 cursor-pointer text-front-icewhite hover:text-front-dustly-slate" />
               </Link>
               <Link to={"https://twitter.com/essentialbali"} target="_blank">

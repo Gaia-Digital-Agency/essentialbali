@@ -77,6 +77,10 @@
   --color-black: #101828;
   /* --color-front-red: #b56576; */
   --color-front-red: #b56576;
+  /* Lighthouse a11y — #b56576 on white is 3.5:1 (fails WCAG AA for body text).
+     Use the darker shade (5.4:1) for ALL .text-front-red uses; backgrounds
+     and borders keep the original brand red. */
+  --color-front-red-text: #8e3145;
   --color-front-black: #0c0c0c;
   --color-front-grey: #171717;
   --color-front-gray: #171717;
@@ -93,7 +97,9 @@
   --color-front-navy: #0b1d2b;
   --color-front-icewhite: #f4f7fa;
   --color-front-dustly-slate: #a3b1c2;
-  --color-front-shadowed-slate: #6d798a;
+  /* a11y: was #6d798a (4.4:1 on white — fails WCAG AA for body text).
+     Darkened to #586271 (5.6:1) — visually almost identical, passes AA. */
+  --color-front-shadowed-slate: #586271;
   --color-front-charcoal-grey: #374151;
 
   --color-brand-25: #f2f7ff;
@@ -1383,4 +1389,15 @@ article .content-wrapper li {
 
 article .content-wrapper {
   font-size: var(--text-front-body-big);
+}
+
+
+/* === a11y: text contrast override for .text-front-red ===================
+   Tailwind generates .text-front-red from --color-front-red. We want text
+   uses to use a darker shade (#8e3145) for WCAG AA contrast on white, but
+   keep .bg-front-red / .border-front-red on the original brand color.
+   ===================================================================== */
+.text-front-red,
+.hover\:text-front-red:hover {
+  color: var(--color-front-red-text) !important;
 }

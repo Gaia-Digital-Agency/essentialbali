@@ -60,6 +60,20 @@ const VALID_TOPICS = [
   "people-culture",
 ] as const;
 
+interface EventDetails {
+  start_date?: string;        // YYYY-MM-DD
+  end_date?: string;
+  start_time?: string;        // HH:MM (24h)
+  end_time?: string;
+  time_of_day?: "morning" | "afternoon" | "night" | "all-day";
+  venue_name?: string;
+  venue_address?: string;
+  venue_lat?: number;
+  venue_lng?: number;
+  ticket_url?: string;
+  recurrence?: "one-off" | "weekly" | "monthly" | "annual";
+}
+
 interface DispatchSpec {
   type?: string;
   area?: string;
@@ -68,6 +82,91 @@ interface DispatchSpec {
   brief?: string;
   target_words?: number;
   research_url?: string;
+
+  // — Editorial controls (all optional) —
+  status?: "draft" | "pending_review" | "approved" | "published";
+  group?: "mostPopular" | "trending" | "ultimateGuide" | "overseas" | "spotlight";
+  tags?: string[];            // tag slugs
+  published_at?: string;      // ISO date or YYYY-MM-DD
+
+  // — Event-only metadata (consumed when topic = events) —
+  event_details?: EventDetails;
+
+  // — Generation hints —
+  headline_style?: string;
+  force_regenerate?: boolean;
+}
+
+const VALID_STATUSES = ["draft", "pending_review", "approved", "published"] as const;
+const VALID_GROUPS = [
+  "mostPopular",
+  "trending",
+  "ultimateGuide",
+  "overseas",
+  "spotlight",
+] as const;
+const VALID_TIME_OF_DAY = ["morning", "afternoon", "night", "all-day"] as const;
+const VALID_RECURRENCE = ["one-off", "weekly", "monthly", "annual"] as const;
+
+const RX_DATE = /^\d{4}-\d{2}-\d{2}(?:T[\d:.\-+Z]*)?$/;
+const RX_TIME = /^\d{1,2}:\d{2}$/;
+const RX_TAG_SLUG = /^[a-z0-9][a-z0-9-]{0,40}$/;
+
+function validateEventDetails(raw: unknown): EventDetails | { _error: string } {
+  if (raw == null) return {};
+  if (typeof raw !== "object") return { _error: "event_details must be an object" };
+  const e = raw as Record<string, unknown>;
+  const out: EventDetails = {};
+
+  for (const k of ["start_date", "end_date"] as const) {
+    const v = e[k];
+    if (v == null || v === "") continue;
+    const s = String(v);
+    if (!RX_DATE.test(s)) return { _error: `event_details.${k} must be YYYY-MM-DD` };
+    out[k] = s;
+  }
+  for (const k of ["start_time", "end_time"] as const) {
+    const v = e[k];
+    if (v == null || v === "") continue;
+    const s = String(v);
+    if (!RX_TIME.test(s)) return { _error: `event_details.${k} must be HH:MM (24h)` };
+    out[k] = s.length === 4 ? `0${s}` : s;
+  }
+  if (e.time_of_day != null && e.time_of_day !== "") {
+    const s = String(e.time_of_day);
+    if (!VALID_TIME_OF_DAY.includes(s as (typeof VALID_TIME_OF_DAY)[number])) {
+      return {
+        _error: `event_details.time_of_day must be one of: ${VALID_TIME_OF_DAY.join(", ")}`,
+      };
+    }
+    out.time_of_day = s as EventDetails["time_of_day"];
+  }
+  if (typeof e.venue_name === "string" && e.venue_name.trim()) {
+    out.venue_name = e.venue_name.trim().slice(0, 200);
+  }
+  if (typeof e.venue_address === "string" && e.venue_address.trim()) {
+    out.venue_address = e.venue_address.trim().slice(0, 500);
+  }
+  for (const k of ["venue_lat", "venue_lng"] as const) {
+    const v = e[k];
+    if (v == null || v === "") continue;
+    const n = Number(v);
+    if (!Number.isFinite(n)) return { _error: `event_details.${k} must be a number` };
+    out[k] = n;
+  }
+  if (typeof e.ticket_url === "string" && e.ticket_url.startsWith("http")) {
+    out.ticket_url = e.ticket_url.slice(0, 500);
+  }
+  if (e.recurrence != null && e.recurrence !== "") {
+    const s = String(e.recurrence);
+    if (!VALID_RECURRENCE.includes(s as (typeof VALID_RECURRENCE)[number])) {
+      return {
+        _error: `event_details.recurrence must be one of: ${VALID_RECURRENCE.join(", ")}`,
+      };
+    }
+    out.recurrence = s as EventDetails["recurrence"];
+  }
+  return out;
 }
 
 function validate(spec: unknown): { ok: true; spec: DispatchSpec } | { ok: false; error: string } {
@@ -103,6 +202,77 @@ function validate(spec: unknown): { ok: true; spec: DispatchSpec } | { ok: false
     }
   }
 
+  // status
+  let status: DispatchSpec["status"] | undefined;
+  if (s.status != null && s.status !== "") {
+    const v = String(s.status);
+    if (!VALID_STATUSES.includes(v as (typeof VALID_STATUSES)[number])) {
+      return { ok: false, error: `status must be one of: ${VALID_STATUSES.join(", ")}` };
+    }
+    status = v as DispatchSpec["status"];
+  }
+
+  // group
+  let group: DispatchSpec["group"] | undefined;
+  if (s.group != null && s.group !== "") {
+    const v = String(s.group);
+    if (!VALID_GROUPS.includes(v as (typeof VALID_GROUPS)[number])) {
+      return { ok: false, error: `group must be one of: ${VALID_GROUPS.join(", ")}` };
+    }
+    group = v as DispatchSpec["group"];
+  }
+
+  // tags — array of tag slugs
+  let tags: string[] | undefined;
+  if (s.tags != null) {
+    if (!Array.isArray(s.tags)) {
+      return { ok: false, error: "tags must be an array of slug strings" };
+    }
+    const cleaned = s.tags
+      .map((t) => String(t).trim().toLowerCase())
+      .filter(Boolean);
+    for (const t of cleaned) {
+      if (!RX_TAG_SLUG.test(t)) {
+        return { ok: false, error: `tag slug "${t}" must be lowercase a-z0-9- (max 40 chars)` };
+      }
+    }
+    if (cleaned.length > 12) {
+      return { ok: false, error: "tags max 12 entries" };
+    }
+    if (cleaned.length) tags = Array.from(new Set(cleaned));
+  }
+
+  // published_at — accept YYYY-MM-DD or ISO datetime
+  let published_at: string | undefined;
+  if (s.published_at != null && s.published_at !== "") {
+    const v = String(s.published_at);
+    if (!RX_DATE.test(v)) {
+      return { ok: false, error: "published_at must be YYYY-MM-DD or ISO datetime" };
+    }
+    const d = new Date(v.length === 10 ? `${v}T00:00:00Z` : v);
+    if (Number.isNaN(d.getTime())) {
+      return { ok: false, error: "published_at could not be parsed as a date" };
+    }
+    published_at = d.toISOString();
+  }
+
+  // event_details — only meaningful when topic = events, but accept on
+  // any topic (the field group is just ignored by non-events templates).
+  let event_details: EventDetails | undefined;
+  if (s.event_details != null) {
+    const result = validateEventDetails(s.event_details);
+    if ("_error" in result) return { ok: false, error: result._error };
+    if (Object.keys(result).length) event_details = result;
+  }
+
+  // headline_style — free-form copywriter hint
+  let headline_style: string | undefined;
+  if (typeof s.headline_style === "string" && s.headline_style.trim()) {
+    headline_style = s.headline_style.trim().slice(0, 300);
+  }
+
+  const force_regenerate = !!s.force_regenerate;
+
   const cleaned: DispatchSpec = {
     type: typeof s.type === "string" ? s.type : "article",
     area,
@@ -113,6 +283,13 @@ function validate(spec: unknown): { ok: true; spec: DispatchSpec } | { ok: false
     ...(typeof s.research_url === "string" && s.research_url.startsWith("http")
       ? { research_url: s.research_url }
       : {}),
+    ...(status ? { status } : {}),
+    ...(group ? { group } : {}),
+    ...(tags ? { tags } : {}),
+    ...(published_at ? { published_at } : {}),
+    ...(event_details ? { event_details } : {}),
+    ...(headline_style ? { headline_style } : {}),
+    ...(force_regenerate ? { force_regenerate } : {}),
   };
   return { ok: true, spec: cleaned };
 }
