@@ -362,10 +362,13 @@ same site (same nginx config, same Payload + Vite SSR backends).
 **Transport:** HTTP/2 enabled on all three domains (nginx
 `listen 443 ssl http2;`). Live since 2026-05-01.
 
-**Compression:** gzip on for HTML / JS / CSS / JSON / SVG / fonts since
-2026-05-01 (typical ~68% savings on JS bundles, ~70% on vendor chunks).
-Configured in `/etc/nginx/nginx.conf`. Brotli is a planned follow-up
-(needs the `nginx-extras` package — not yet installed).
+**Compression:** gzip + brotli both on for HTML / JS / CSS / JSON /
+SVG / fonts. gzip live since 2026-05-01 (~68-70% savings on JS bundles).
+Brotli added 2026-05-02 via `nginx-extras` + `libnginx-mod-http-brotli-
+filter` — clients that send `Accept-Encoding: br` get brotli; everyone
+else gets gzip. Modest extra savings (3-5% on top of gzip at
+`brotli_comp_level 5`); can bump level for more compression at CPU
+cost. Configured in `/etc/nginx/nginx.conf`.
 
 ---
 
