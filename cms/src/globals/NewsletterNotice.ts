@@ -38,77 +38,94 @@ export const NewsletterNotice: GlobalConfig = {
   fields: [
     {
       name: "active",
+      label: "Active (sitewide kill-switch)",
       type: "checkbox",
       defaultValue: true,
       admin: {
         description:
-          "If unchecked, the section is hidden sitewide. Use as a kill-switch.",
+          "If unchecked, the entire newsletter notice section is hidden across the whole site.",
         position: "sidebar",
       },
     },
     {
       name: "headline",
+      label: "Headline",
       type: "text",
       required: true,
       defaultValue: "Get The Essential",
       maxLength: 80,
+      admin: {
+        description: "Big serif headline shown at the top of the section.",
+      },
     },
     {
       name: "subline",
+      label: "Paragraph",
       type: "textarea",
       defaultValue:
         "The Essential guide to Bali's modern landscape. We bring you curated News and Events, while exploring hidden Destinations and unique Stays.",
       maxLength: 400,
+      admin: {
+        description: "Body paragraph under the headline.",
+      },
     },
     {
       type: "row",
       fields: [
         {
           name: "placeholder",
+          label: "Email Placeholder Text",
           type: "text",
           defaultValue: "Enter your email",
           maxLength: 60,
+          admin: { description: "Greyed-out text inside the email input field." },
         },
         {
           name: "buttonText",
+          label: "Button Text",
           type: "text",
           defaultValue: "Subscribe Now",
           maxLength: 30,
+          admin: { description: "Label on the Subscribe button." },
         },
       ],
     },
     {
       name: "successMessage",
+      label: "Success Message",
       type: "text",
       defaultValue: "Thanks for subscribing to our newsletter!",
       maxLength: 120,
       admin: {
-        description: "Shown to a brand-new subscriber after a successful sign-up.",
+        description: "Toast shown to a brand-new subscriber after a successful sign-up.",
       },
     },
     {
       name: "alreadySubscribedMessage",
+      label: "Already Subscribed Message",
       type: "text",
       defaultValue: "You're already subscribed — thanks!",
       maxLength: 120,
       admin: {
-        description: "Shown when an email is submitted that's already on the active list.",
+        description: "Toast shown when the submitted email is already on the active subscriber list.",
       },
     },
     {
       name: "errorMessage",
+      label: "Error Message",
       type: "text",
       defaultValue: "Something went wrong. Please try again.",
       maxLength: 120,
-      admin: { description: "Generic fallback for unexpected errors." },
+      admin: { description: "Generic fallback toast for unexpected errors (network failure, server 500, etc.)." },
     },
     {
       name: "backgroundImage",
+      label: "Background Image (GCS-hosted)",
       type: "upload",
       relationTo: "media",
       admin: {
         description:
-          "Optional. If set, used as the section background. 1600×900 or larger recommended.",
+          "Optional. Upload an image and it's auto-stored in the gda-essentialbali-media GCS bucket and served from there. If set, used as the section background. 1600×900 or larger recommended.",
       },
     },
   ],
