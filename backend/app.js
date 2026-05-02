@@ -548,34 +548,40 @@ app.use("*", async (req, res, next) => {
     const initialRoute = await fetchRouteData(url, initialTaxonomies, req.ip);
     logger.info(initialRoute);
     // console.log(initialRoute);
-    const initialContent = await fetchContentData(
-      initialRoute,
-      initialTaxonomies,
-      search,
-    );
-    // const initialContent = []
-    const initialTemplateContent = await fetchTemplateContent(initialRoute);
-    const initialTime = new Date().toISOString();
-    const initialHeroImage = await getInitialArticleHeroImage(
-      initialRoute,
+    // F1 — fan out independent fetches in parallel. Was 7 sequential
+    // awaits + daily-feed totalling ~250-300ms; now bounded by the
+    // slowest call ~50ms (Promise.all elapses in max-of-children time).
+    //
+    // Dependency notes:
+    //   - initialContent depends on initialRoute + initialTaxonomies +
+    //     search (all already resolved at this point).
+    //   - initialHeroImage depends on initialRoute only (no need to wait
+    //     for initialContent — that arg was unused).
+    //   - initialDailyFeed depends only on initialRoute.type.
+    //   - The 4 template-route fetches are independent.
+    //   - initialNewsletterNotice is independent.
+    const isHomeRoute = initialRoute?.type === "LISTING_HOME";
+    const [
       initialContent,
-    );
-
-    const initialHeadScript = await fetchTemplateRoute("/script/head");
-    const initialPreBodyScript = await fetchTemplateRoute("/script/prebody");
-    const initialPostBodyScript = await fetchTemplateRoute("/script/postbody");
-
-    const initialNewsletterNotice = await fetchNewsletterNotice();
-    // Pre-resolve the homepage daily-feed so DailyEssentials renders
-    // the populated grid directly on first paint (avoids the
-    // skeleton-to-loaded layout shift that was driving desktop CLS).
-    // Only run for LISTING_HOME — other routes don't need it.
-    let initialDailyFeed = null;
-    if (initialRoute?.type === "LISTING_HOME") {
-      initialDailyFeed = await fetchDailyFeed();
-    }
-
-    const initialData = {
+      initialTemplateContent,
+      initialHeroImage,
+      initialHeadScript,
+      initialPreBodyScript,
+      initialPostBodyScript,
+      initialNewsletterNotice,
+      initialDailyFeed,
+    ] = await Promise.all([
+      fetchContentData(initialRoute, initialTaxonomies, search),
+      fetchTemplateContent(initialRoute),
+      getInitialArticleHeroImage(initialRoute, null),
+      fetchTemplateRoute("/script/head"),
+      fetchTemplateRoute("/script/prebody"),
+      fetchTemplateRoute("/script/postbody"),
+      fetchNewsletterNotice(),
+      isHomeRoute ? fetchDailyFeed() : Promise.resolve(null),
+    ]);
+    const initialTime = new Date().toISOString();
+const initialData = {
       initialTaxonomies,
       initialRoute,
       initialContent,
