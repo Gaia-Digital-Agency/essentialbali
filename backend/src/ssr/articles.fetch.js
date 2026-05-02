@@ -214,6 +214,34 @@ export const fetchArticleDataByKeyword = async (q) => {
 };
 
 /**
+ * SSR-inject the daily homepage-feed (the 4×4 grid backing
+ * <DailyEssentials>). Reading the same /api/home-daily-feed endpoint
+ * the React component would otherwise hit client-side, but resolving
+ * it during SSR so the populated grid lands in __INITIAL_DATA__ and
+ * the component renders cards directly — no skeleton-to-loaded swap,
+ * no CLS event.
+ *
+ * Returns the doc shape Payload returns: { id, date, slots: [{ slotIndex, article, topic }] }
+ * — already expanded to depth=2 so article.hero is a Media object.
+ *
+ * Falls back to null on any error; the React component then runs its
+ * normal client-side fetch and the page shows the skeleton briefly.
+ */
+export const fetchDailyFeed = async () => {
+  try {
+    const res = await payload.find("home-daily-feed", {
+      limit: 1,
+      sort: "-date",
+      depth: 2,
+    });
+    return (res?.docs || [])[0] || null;
+  } catch (e) {
+    console.error("[ssr/articles.fetch:fetchDailyFeed]", e?.message || e);
+    return null;
+  }
+};
+
+/**
  * For LCP preload: return the homepage hero-ad image URL when the
  * initial route is LISTING_HOME, else false. The SSR template
  * (backend/app.js) injects a <link rel="preload" as="image"

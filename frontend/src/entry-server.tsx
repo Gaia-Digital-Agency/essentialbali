@@ -102,8 +102,14 @@ export function render(url: string, initialData: InitialDataProps) {
     // ContentProvider contract.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const initialNewsletterNotice = (initialData as any)?.initialNewsletterNotice;
-    const enrichedContent = initialNewsletterNotice
-      ? { ...(initialContent || {}), initialNewsletterNotice }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const initialDailyFeed = (initialData as any)?.initialDailyFeed;
+    const enrichedContent = (initialNewsletterNotice || initialDailyFeed)
+      ? {
+          ...(initialContent || {}),
+          ...(initialNewsletterNotice ? { initialNewsletterNotice } : {}),
+          ...(initialDailyFeed ? { initialDailyFeed } : {}),
+        }
       : initialContent;
     const helmetContext: { helmet?: any } = {}
 

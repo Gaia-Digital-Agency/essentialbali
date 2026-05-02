@@ -141,7 +141,19 @@ const HeroBanner: React.FC<Props> = ({ area, topic }) => {
 
   if (!loaded) {
     // Skeleton — preserves layout height so there's no CLS on first paint.
-    return <div className="w-full bg-front-icewhite aspect-[1200/628] animate-pulse" />;
+    // Skeleton must match the loaded-state DOM tree exactly so React
+    // reconciles in place on hydration instead of tearing down +
+    // rebuilding (which causes a layout shift even when heights are
+    // identical). See the JSX below: <section><div aspectRatio>...</div>
+    // </section>. The skeleton mirrors that.
+    return (
+      <section className="relative w-full overflow-hidden">
+        <div
+          className="relative w-full bg-front-icewhite animate-pulse"
+          style={{ aspectRatio: "1200 / 628" }}
+        />
+      </section>
+    );
   }
   if (!doc) return null;
 

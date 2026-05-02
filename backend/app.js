@@ -25,6 +25,7 @@ import {
   fetchArticlesData,
   fetchArticleDataByKeyword,
   getInitialArticleHeroImage,
+  fetchDailyFeed,
 } from "./src/ssr/articles.fetch.js";
 import redis from "./redisClient.js";
 
@@ -565,12 +566,22 @@ app.use("*", async (req, res, next) => {
     const initialPostBodyScript = await fetchTemplateRoute("/script/postbody");
 
     const initialNewsletterNotice = await fetchNewsletterNotice();
+    // Pre-resolve the homepage daily-feed so DailyEssentials renders
+    // the populated grid directly on first paint (avoids the
+    // skeleton-to-loaded layout shift that was driving desktop CLS).
+    // Only run for LISTING_HOME — other routes don't need it.
+    let initialDailyFeed = null;
+    if (initialRoute?.type === "LISTING_HOME") {
+      initialDailyFeed = await fetchDailyFeed();
+    }
+
     const initialData = {
       initialTaxonomies,
       initialRoute,
       initialContent,
       initialTemplateContent,
       initialNewsletterNotice,
+      initialDailyFeed,
       initialAuth,
       initialTime,
     };

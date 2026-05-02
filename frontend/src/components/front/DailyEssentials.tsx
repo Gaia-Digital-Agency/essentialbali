@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import apiClient from "../../api";
+import { useContent } from "../../context/ContentContext";
 import Image from "./Image";
 import { DAILY_ESSENTIALS_SIZE } from "../../lib/constants";
 
@@ -74,17 +75,49 @@ function pickColsClass(n: number): string {
 }
 
 const DailyEssentials: React.FC = () => {
-  const [slots, setSlots] = useState<Slot[] | null>(null);
+  // useState lazy initializer reads from window.__INITIAL_DATA__ on the
+  // client and from a server-side global proxy on the SSR pass. The
+  // ContentContext seed is more reliable, so we use that below — these
+  // two state lines stay simple but get populated synchronously when
+  // ssrFeed is present (see effect above + the seed-at-mount logic).
+  const initialSlots = (() => {
+    // SSR safe: useContent isn't available here (we're inside the body),
+    // but on the server, window doesn't exist. We rely on ContentContext
+    // (read below) plus a one-time setSlots in a useLayoutEffect-like
+    // pattern. To keep SSR + client renders identical, we initialise to
+    // null and let the body sync via context on the first render.
+    return null as Slot[] | null;
+  })();
+  const [slots, setSlots] = useState<Slot[] | null>(initialSlots);
   const [loaded, setLoaded] = useState(false);
+
+  // F2 — read SSR-injected daily feed from ContentContext synchronously.
+  // ContentProvider is seeded both during SSR (entry-server.tsx) and on
+  // hydration (App.tsx) with the same initialDailyFeed payload, so the
+  // very first render has the populated grid. No skeleton-to-loaded
+  // swap = no layout shift on hydration.
+  const { initialData: ctx } = useContent() as { initialData?: { initialDailyFeed?: FeedDoc | null } };
+  const ssrFeed = ctx?.initialDailyFeed;
+
+  // Synchronous seed from SSR/CSR context — runs on every render but
+  // only changes state on the first render when slots is still null.
+  // useState's lazy init can't read context, so we do it here.
+  if (slots === null && ssrFeed && Array.isArray(ssrFeed.slots)) {
+    // setState during render is the documented pattern for syncing
+    // state with prop/context; React handles it without an extra
+    // commit phase.
+    setSlots(ssrFeed.slots);
+    setLoaded(true);
+  }
 
   useEffect(() => {
     let cancelled = false;
+    if (ssrFeed && Array.isArray(ssrFeed.slots)) {
+      // Already set by lazy useState initializer below — keep loaded=true.
+      return;
+    }
     (async () => {
       try {
-        // Fetch today's row. The picker writes one row per Bali date;
-        // the most recent entry IS today (or, in the picker-failure
-        // case, the most recent successful day). depth=2 expands
-        // article + area + topic + hero in one round trip.
         const res = await apiClient.get(
           "home-daily-feed?limit=1&sort=-date&depth=2",
         );
@@ -99,7 +132,7 @@ const DailyEssentials: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [ssrFeed]);
 
   if (!loaded) {
     // Skeleton card stack — pre-reserves the same vertical footprint the
