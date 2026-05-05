@@ -21,14 +21,21 @@ const NavLogo: React.FC<NavLogoProps> = ({ url, to = "/" }) => {
   useEffect(() => {
     // 1. Try location-specific logo (site_logo from region/city/country)
     const locationLogo = initialData?.currentLogo;
-    
+
     // 2. Try global logo from admin settings (template /logo-header)
     const dbLogo = initialData?.logo;
 
+    // Accept both absolute URLs (https://storage.googleapis.com/.../foo.webp,
+    // post-Phase-D Payload Media uploads) and legacy relative paths
+    // (uploads/img_*.webp, dumped from MySQL during Phase E). Mirrors the
+    // pattern in hooks/useArticle.ts so both eras coexist.
+    const resolveLogoUrl = (raw: string): string =>
+      /^https?:\/\//i.test(raw) ? raw : `${IMAGE_URL}/${raw}`;
+
     if (locationLogo) {
-      setLogoSrc(`${IMAGE_URL}/${locationLogo}`);
+      setLogoSrc(resolveLogoUrl(locationLogo));
     } else if (dbLogo?.url) {
-      setLogoSrc(`${IMAGE_URL}/${dbLogo.url}`);
+      setLogoSrc(resolveLogoUrl(dbLogo.url));
     } else if (url) {
       // 3. If not in initialData but url prop is provided, fetch it
       (async () => {
