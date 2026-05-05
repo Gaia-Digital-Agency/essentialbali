@@ -98,7 +98,7 @@ Required `.env`:
 ## Production build + deploy
 
 ```bash
-ssh gda-s01 'cd /var/www/essentialbali/cms \
+ssh gda-ce01 "cd /var/www/essentialbali/cms \
   && git pull \
   && pnpm install \
   && NODE_OPTIONS="--max-old-space-size=2560" pnpm build \

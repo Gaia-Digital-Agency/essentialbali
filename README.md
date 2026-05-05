@@ -19,7 +19,7 @@ Live on three domains, all HTTPS, all serving identical content:
                                        │ HTTPS
                                        ▼
                   ┌────────────────────────────────────┐
-                  │  nginx @ gda-s01 (:443)            │
+                  │  nginx @ gda-ce01 (:443)           │
                   │  TLS · path-aware routing          │
                   └─────┬───────────────────────────────┘
                         │
@@ -53,7 +53,7 @@ Live on three domains, all HTTPS, all serving identical content:
 
 **Stack:** PostgreSQL · Python (Elliot's scraper) · Payload v3.84 · Next.js 15 · Vite 7 · React 19 · TailwindCSS v4 · Node 20
 
-**Hosting:** GCP `gda-s01.asia-southeast1-b` (`34.124.244.233`)
+**Hosting:** GCP `gda-ce01.asia-southeast1-b` (`34.158.47.112`)
 
 **Stack alignment** — frontend, backend SSR shell, and cms all share React 19 / Vite 7 / TypeScript 5.7. The legacy Sequelize/MySQL stack and the legacy custom admin (Master/, Quill, AuthPages) were retired in the 2026-04-29 cleanup; backend now talks to Postgres only via Payload REST.
 
@@ -395,14 +395,14 @@ pm2 logs essentialbali --lines 50           # Vite SSR + Express
 pm2 logs essentialbali-cms --lines 50       # Payload Next.js
 
 # After deploy (frontend or backend SSR change)
-ssh gda-s01 'cd /var/www/essentialbali \
+ssh gda-ce01 'cd /var/www/essentialbali \
   && git pull \
   && cd frontend && pnpm install && pnpm build \
   && cd ../backend && pnpm install \
   && pm2 restart essentialbali'
 
 # After deploy (cms — Payload / admin / API change)
-ssh gda-s01 'cd /var/www/essentialbali/cms \
+ssh gda-ce01 'cd /var/www/essentialbali/cms \
   && git pull \
   && pnpm install \
   && NODE_OPTIONS="--max-old-space-size=2560" pnpm build \
