@@ -189,8 +189,7 @@ const SingleV2: React.FC = () => {
     window.scrollTo(0, 0);
 
     try {
-      setContent(actualRoute.article);
-    } catch (e) {
+      if (actualRoute?.article) setContent(actualRoute.article);;} catch (e) {
       console.log(e);
     }
   }, [actualRoute]);

@@ -170,7 +170,17 @@ const SingleV2: React.FC = () => {
     window.scrollTo(0, 0);
 
     try {
-      setContent(actualRoute.article);
+      // Only sync from actualRoute when it actually carries an article.
+      // RouteProvider initializes actualRoute from initialRoute.listingParams,
+      // which only contains {country, city, region, category} — never the
+      // article. Without this guard, hydration runs setContent(undefined)
+      // and wipes the SSR-rendered body (the user-visible 'shows up then
+      // disappears' bug). PathResolver pushes the full route object —
+      // including article — on intra-SPA nav, so this branch fires only
+      // when there's a real article to swap in.
+      if (actualRoute?.article) {
+        setContent(actualRoute.article);
+      }
     } catch (e) {
       console.log(e);
     }

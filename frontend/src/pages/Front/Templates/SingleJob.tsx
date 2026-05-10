@@ -47,8 +47,7 @@ const SingleJob: React.FC = () => {
     useEffect(() => {
         (async () => {
             if(!actualRoute.article) return
-            setContent(actualRoute.article)
-            // const getArticle = await getArticleBySlug(actualRoute.article)
+            if (actualRoute?.article) setContent(actualRoute.article);// const getArticle = await getArticleBySlug(actualRoute.article)
             // if(getArticle) {
             //     setContent(getArticle)
             // }
