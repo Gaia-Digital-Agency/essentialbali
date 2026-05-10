@@ -50,10 +50,36 @@ function escapeAttr(s) {
   return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 }
 
+/**
+ * Apply markdown patterns to text that has already been HTML-escaped.
+ * Order matters: link first (so [foo*bar*](url) doesn't have its * matched),
+ * then ** before *, then ` for code.
+ *
+ * Why: Elliot's copywriter agent emits markdown literals (### heading,
+ * *italic*, **bold**, [text](url)) inside paragraph text. The legacy
+ * markdownToLexical helper in dispatch-article.mjs naïvely wraps each
+ * paragraph as a flat text node, so the tree never gets proper heading
+ * or emphasis sub-nodes. We post-process here so existing 22+ articles
+ * render correctly without re-running dispatch.
+ */
+function processInlineMarkdown(escapedHtml) {
+  return escapedHtml
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*\w])\*([^*\s][^*\n]*?[^*\s]|[^*\s])\*(?!\*)/g, '$1<em>$2</em>')
+    .replace(/`([^`\n]+)`/g, '<code>$1</code>');
+}
+
+function detectMarkdownHeading(text) {
+  const m = String(text || "").match(/^(#{1,6})\s+(.+)$/);
+  if (!m) return null;
+  return { level: Math.min(6, m[1].length), content: m[2] };
+}
+
 function renderText(node) {
   // node.format is a bitfield; wrap text with each tag whose bit is set.
   // Also handle node.style (inline color etc.) — we ignore for safety.
-  let out = escapeHtml(node.text || "");
+  let out = processInlineMarkdown(escapeHtml(node.text || ""));
   const fmt = Number(node.format || 0);
   for (const [bitStr, [, tag]] of Object.entries(TEXT_FORMAT_BITS)) {
     const bit = Number(bitStr);
@@ -78,7 +104,19 @@ function renderNode(node) {
       return renderChildren(node.children);
 
     case "paragraph": {
-      const inner = renderChildren(node.children);
+      // Detect markdown heading prefix (### foo) at the start of the
+      // first text child. Render the whole paragraph as <h1>-<h6>.
+      const children = Array.isArray(node.children) ? node.children : [];
+      const first = children[0];
+      if (first && first.type === "text" && typeof first.text === "string") {
+        const h = detectMarkdownHeading(first.text);
+        if (h) {
+          const headInner = processInlineMarkdown(escapeHtml(h.content));
+          const restInner = renderChildren(children.slice(1));
+          return `<h${h.level}>${headInner}${restInner}</h${h.level}>`;
+        }
+      }
+      const inner = renderChildren(children);
       // Skip empty <p></p> — Lexical emits these for blank lines.
       if (!inner.replace(/&nbsp;|\s/g, "")) return "<p>&nbsp;</p>";
       const align = node.format && typeof node.format === "string" ? ` style="text-align:${node.format}"` : "";
