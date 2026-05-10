@@ -170,7 +170,13 @@ const fetchContentData = async (route, taxonomy, search = undefined) => {
   const baseQuery = deleteFalsyProperties(_baseQuery);
   if (route.type == "ARTICLE_PAGE") {
     const discover = await discoverArticle(baseQuery);
-    const related = await relatedArticle(route.listingParams.category.id);
+    // Guard: when an article's category isn't resolved (e.g. SSR path
+    // hits this with route.listingParams.category undefined because
+    // parseParams couldn't match the slug), don't crash on .id access.
+    // Return empty related list — the page still renders.
+    const related = route.listingParams.category?.id
+      ? await relatedArticle(route.listingParams.category.id)
+      : [];
     return {
       article: route.listingParams.article,
       discover,
@@ -180,8 +186,10 @@ const fetchContentData = async (route, taxonomy, search = undefined) => {
 
   if (route.type == "ARTICLE_EVENT") {
     const discover = await discoverArticle(baseQuery);
-    const related = await relatedArticle(route.listingParams.category.id);
-    const tags = await fetchTagsData(route.listingParams.article.tags);
+    const related = route.listingParams.category?.id
+      ? await relatedArticle(route.listingParams.category.id)
+      : [];
+    const tags = await fetchTagsData(route.listingParams.article?.tags);
     return {
       article: route.listingParams.article,
       discover,
