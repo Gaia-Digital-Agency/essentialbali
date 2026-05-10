@@ -219,6 +219,19 @@ const HeroBanner: React.FC<Props> = ({ area, topic }) => {
               </div>
             </div>
           )}
+
+          {/* Sponsored disclosure — small fixed badge in the bottom-right.
+              Shown on EVERY active hero-ad, regardless of whether the
+              ad has a client / headline / cta. FTC + IAB guidance: ad
+              disclosure must be clear and prominent + visually distinct
+              from editorial content. The Sponsored-by line above is
+              attribution; this is the legal disclosure marker. */}
+          <div
+            className="absolute bottom-3 right-3 z-10 select-none px-2 py-1 rounded text-[10px] font-sans font-medium uppercase tracking-[0.15em] bg-black/65 text-white pointer-events-none"
+            aria-label="Sponsored content"
+          >
+            Sponsored
+          </div>
         </div>
       </ImgWrap>
     </section>
