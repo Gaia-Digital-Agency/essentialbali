@@ -133,8 +133,22 @@ const PathResolver: React.FC = () => {
                 const qs = new URLSearchParams({ path: `/${path ?? ""}` })
                 if (search) qs.set("search", search)
                 const res = await apiClient.get(`content?${qs.toString()}`)
-                if (res?.data?.status_code === 200 && res.data.data?.initialContent) {
-                    setInitialData(res.data.data.initialContent)
+                if (res?.data?.status_code === 200 && res.data.data) {
+                    // Merge instead of replace. /api/content returns
+                    // initialContent + initialNewsletterNotice + initialDailyFeed
+                    // (when present). The previous code only spread
+                    // initialContent and dropped the daily-feed payload, so on
+                    // intra-SPA nav from a non-home page back to /, the
+                    // homepage 4x4 grid lost its data and rendered the
+                    // skeleton until DailyEssentials re-fetched home-daily-feed
+                    // — visible to operators as 'cards briefly show then gone'.
+                    const data = res.data.data
+                    setInitialData((prev: any) => ({
+                        ...(prev || {}),
+                        ...(data.initialContent || {}),
+                        ...(data.initialDailyFeed ? { initialDailyFeed: data.initialDailyFeed } : {}),
+                        ...(data.initialNewsletterNotice ? { initialNewsletterNotice: data.initialNewsletterNotice } : {}),
+                    }))
                 }
             } catch (e) {
                 console.warn("content refresh failed", e)
