@@ -148,7 +148,7 @@ const EditButton: React.FC<{
 const SingleV2: React.FC = () => {
   const { initialData } = useContent();
   const { actualRoute } = useRoute();
-  const { getDeepestLocation, getFeaturedImageUrl } = useArticle();
+  const { getFeaturedImageUrl } = useArticle();
   const [content, setContent] = useState<ArticleApiResponseProps | undefined>(
     initialData?.article ?? undefined,
   );
@@ -159,7 +159,6 @@ const SingleV2: React.FC = () => {
   const { setNotification } = useNotification();
   const { userDetails } = useAuth();
   const [isClient, setIsClient] = useState<boolean>(false);
-  const deepestLocation = getDeepestLocation(actualRoute.article, "country");
 
   useEffect(() => {
     setCurrentUrl(window.location.href);
@@ -302,29 +301,6 @@ const SingleV2: React.FC = () => {
       <article>
         <div className="bg-front-icewhite">
           <div className="container mb-[40px]">
-            {/*
-              Single breadcrumb, always above the hero image (no overlay).
-              The previous code had two copies — a mobile-only one above the
-              image and a desktop one absolutely positioned over the image
-              (md:absolute md:top-10 md:left-10 md:z-20). The desktop overlay
-              "bled" the Home/Area links onto the photograph and clashed
-              with the title overlay, especially on dark hero images.
-            */}
-            <div className="py-6 md:py-8 breadcrumb-wrapper">
-              <p className="uppercase text-front-small text-front-shadowed-slate">
-                <Link to={"/"} className="transition-colors hover:text-front-navy">Home</Link> /{" "}
-                <Link to={`/${deepestLocation?.slug}`} className="transition-colors hover:text-front-navy">
-                  {deepestLocation?.name}
-                </Link>{" "}
-                /{" "}
-                <Link
-                  to={`/${actualRoute?.country?.slug}/${actualRoute?.category?.slug_title}`}
-                  className="transition-colors hover:text-front-navy"
-                >
-                  {actualRoute?.category?.title}
-                </Link>
-              </p>
-            </div>
             <div className="grid grid-cols-12 gap-y-10 md:gap-x-10">
               <div className="col-span-12 md:col-span-12">
                 {/* MOBILE ONLY: Title and Subtitle before image */}

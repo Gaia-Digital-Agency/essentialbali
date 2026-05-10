@@ -167,7 +167,7 @@ const EditButton: React.FC<{
 const SingleV2: React.FC = () => {
   const { initialData } = useContent();
   const { actualRoute } = useRoute();
-  const { getDeepestLocation, getFeaturedImageUrl } = useArticle();
+  const { getFeaturedImageUrl } = useArticle();
   const [content, setContent] = useState<ArticleApiResponseProps | undefined>(
     initialData?.article ?? undefined,
   );
@@ -178,7 +178,6 @@ const SingleV2: React.FC = () => {
   const { setNotification } = useNotification();
   const { userDetails } = useAuth();
   const [isClient, setIsClient] = useState<boolean>(false);
-  const deepestLocation = getDeepestLocation(actualRoute.article, "country");
 
   useEffect(() => {
     setCurrentUrl(window.location.href);
@@ -323,22 +322,6 @@ const SingleV2: React.FC = () => {
                 </div>
 
                 <div className="relative py-4 mb-8 featured-image-wrapper">
-                  {/* BREADCRUMB: Above image on mobile (relative), absolute on desktop image */}
-                  <div className="mb-4 md:absolute md:top-10 md:left-10 md:z-20 md:mb-0 breadcrumb-wrapper">
-                    <p className="uppercase text-front-small text-front-shadowed-slate md:text-front-icewhite/80">
-                      <Link to={"/"} className="transition-colors hover:text-front-navy md:hover:text-front-icewhite">Home</Link> /{" "}
-                      <Link to={`/${deepestLocation?.slug}`} className="transition-colors hover:text-front-navy md:hover:text-front-icewhite">
-                        {deepestLocation?.name}
-                      </Link>{" "}
-                      /{" "}
-                      <Link
-                        to={`/${actualRoute?.country?.slug}/${actualRoute?.category?.slug_title}`}
-                        className="transition-colors hover:text-front-navy md:hover:text-front-icewhite"
-                      >
-                        {actualRoute?.category?.title}
-                      </Link>
-                    </p>
-                  </div>
 
                   <div className="relative group">
                     <Image
