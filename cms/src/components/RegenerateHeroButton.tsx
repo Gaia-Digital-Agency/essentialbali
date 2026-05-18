@@ -57,11 +57,11 @@ export default function RegenerateHeroButton() {
         return;
       }
       setMsg(
-        `New hero saved (media #${(data as any).new_media_id}, ${(data as any).width}×${(data as any).height}). Reloading…`,
+        `✓ New hero auto-saved (media #${(data as any).new_media_id}, ${(data as any).width}×${(data as any).height}). No need to click Save. Reloading to show preview…`,
       );
-      // Wait a beat so the user sees the success toast, then reload to
-      // pick up the new hero preview from Payload.
-      setTimeout(() => window.location.reload(), 1200);
+      // Wait a beat so the user reads the auto-save confirmation, then
+      // reload to pick up the new hero preview from Payload.
+      setTimeout(() => window.location.reload(), 2800);
     } catch (e: any) {
       setErr(e?.message || "network error");
     } finally {

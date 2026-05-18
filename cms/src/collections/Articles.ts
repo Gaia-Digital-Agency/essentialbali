@@ -19,11 +19,12 @@ export const Articles: CollectionConfig = {
         "@/components/ArticlesMatrixFilter",
         "@/components/BulkActionsArticles",
       ],
-      // Edit page: the "🔁 Regenerate hero" button + feedback input.
-      // Renders below the document fields. Hidden on the create form.
+      // Edit page: only HeroImagePicker stays in the header.
+      // RegenerateHeroButton is wired inline below the hero field
+      // (see hero field admin.components.afterInput) so it doesn't
+      // overlap the page header area.
       edit: {
         beforeDocumentControls: [
-          "@/components/RegenerateHeroButton",
           "@/components/HeroImagePicker",
         ],
       },
@@ -178,7 +179,16 @@ export const Articles: CollectionConfig = {
         { label: "Rejected", value: "rejected" },
       ],
     },
-    { name: "hero", type: "upload", relationTo: "media" },
+    {
+      name: "hero",
+      type: "upload",
+      relationTo: "media",
+      admin: {
+        components: {
+          afterInput: ["@/components/RegenerateHeroButton"],
+        },
+      },
+    },
     { name: "gallery", type: "upload", relationTo: "media", hasMany: true },
     { name: "body", type: "richText", required: true },
     {
