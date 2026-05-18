@@ -135,7 +135,7 @@ export default buildConfig({
   cors: ALLOWED_ORIGINS,
   csrf: ALLOWED_ORIGINS.filter(
     (o) =>
-      o.startsWith("https://essentialbali") ||
+      o.includes("essentialbali") ||
       o === "http://localhost:4008", // admin via SSH tunnel
   ),
   // GraphQL is enabled by default at /api/graphql
