@@ -11,7 +11,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import Redis from "ioredis";
-import { getPayload } from "payload";
+import { createPayloadRequest } from "payload";
 import config from "@payload-config";
 
 export const runtime = "nodejs";
@@ -35,11 +35,9 @@ function getRedis(): Redis {
 
 export async function POST(req: NextRequest) {
   try {
-    const payload = await getPayload({ config });
-
-    // Auth — must be a logged-in user with admin or editor role.
-    const headers = req.headers;
-    const { user } = await payload.auth({ headers });
+    const payloadReq = await createPayloadRequest({ config, request: req });
+    const payload = payloadReq.payload;
+    const user = payloadReq.user;
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

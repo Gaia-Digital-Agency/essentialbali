@@ -23,7 +23,7 @@
  * Returns: { ok, action, requested, succeeded, failed, errors[] }
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getPayload } from "payload";
+import { createPayloadRequest } from "payload";
 import config from "@payload-config";
 
 export const runtime = "nodejs";
@@ -41,9 +41,9 @@ const STATUS_FOR: Record<Exclude<Action, "delete">, string> = {
 
 export async function POST(req: NextRequest) {
   try {
-    const payload = await getPayload({ config });
-
-    const { user } = await payload.auth({ headers: req.headers });
+    const payloadReq = await createPayloadRequest({ config, request: req });
+    const payload = payloadReq.payload;
+    const user = payloadReq.user;
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const role = (user as any).role;
     if (role !== "admin" && role !== "editor") {

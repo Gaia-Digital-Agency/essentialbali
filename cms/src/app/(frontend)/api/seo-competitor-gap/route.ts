@@ -10,7 +10,7 @@
  * ai-agent / staff / admin.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getPayload } from "payload";
+import { createPayloadRequest } from "payload";
 import config from "@payload-config";
 import { rankCompetitorGap, type CompetitorGapInput } from "@/lib/competitor-gap";
 
@@ -23,9 +23,9 @@ export async function POST(req: NextRequest) {
   if (!auth.startsWith("JWT ")) {
     return NextResponse.json({ error: "missing JWT bearer" }, { status: 401 });
   }
-  const payload = await getPayload({ config });
-  const me = await payload.auth({ headers: req.headers as any }).catch(() => null);
-  const user = me?.user;
+  const payloadReq = await createPayloadRequest({ config, request: req });
+  const payload = payloadReq.payload;
+  const user = payloadReq.user;
   if (!user) return NextResponse.json({ error: "auth invalid" }, { status: 401 });
   const role = (user as any).role;
   if (role !== "ai-agent" && role !== "staff" && role !== "admin") {

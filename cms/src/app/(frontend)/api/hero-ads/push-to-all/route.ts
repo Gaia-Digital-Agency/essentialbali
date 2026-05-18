@@ -27,7 +27,7 @@
  *   • cells whose topic has showsHero=false (Events today)
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getPayload } from "payload";
+import { createPayloadRequest } from "payload";
 import config from "@payload-config";
 
 export const runtime = "nodejs";
@@ -35,10 +35,11 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    const payload = await getPayload({ config });
+    const payloadReq = await createPayloadRequest({ config, request: req });
+    const payload = payloadReq.payload;
 
     // Auth — admin or editor only.
-    const { user } = await payload.auth({ headers: req.headers });
+    const user = payloadReq.user;
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

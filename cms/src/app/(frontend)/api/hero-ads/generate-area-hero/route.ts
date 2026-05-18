@@ -28,7 +28,7 @@
  * 8 area slugs and POSTs to this once each.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getPayload } from "payload";
+import { createPayloadRequest } from "payload";
 import config from "@payload-config";
 import { regenerateHero } from "@/lib/imager-regenerate";
 
@@ -38,9 +38,9 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
-    const payload = await getPayload({ config });
-
-    const { user } = await payload.auth({ headers: req.headers });
+    const payloadReq = await createPayloadRequest({ config, request: req });
+    const payload = payloadReq.payload;
+    const user = payloadReq.user;
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

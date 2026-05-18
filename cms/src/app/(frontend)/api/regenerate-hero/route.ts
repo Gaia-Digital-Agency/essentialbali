@@ -16,7 +16,7 @@
  * Auth: requires authenticated Payload admin session OR JWT.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getPayload } from "payload";
+import { createPayloadRequest } from "payload";
 import config from "@payload-config";
 import { regenerateHero } from "@/lib/imager-regenerate";
 
@@ -25,9 +25,9 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-  const payload = await getPayload({ config });
-  const me = await payload.auth({ headers: req.headers as any }).catch(() => null);
-  const user = me?.user;
+  const payloadReq = await createPayloadRequest({ config, request: req });
+  const payload = payloadReq.payload;
+  const user = payloadReq.user;
   if (!user) return NextResponse.json({ error: "auth required" }, { status: 401 });
   const role = (user as any).role;
   if (role !== "ai-agent" && role !== "staff" && role !== "admin") {

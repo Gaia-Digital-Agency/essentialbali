@@ -27,7 +27,7 @@
  * impossible. The spec object is also schema-validated below.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getPayload } from "payload";
+import { createPayloadRequest, getPayload } from "payload";
 import config from "@payload-config";
 import { spawn } from "node:child_process";
 
@@ -349,11 +349,9 @@ function runDispatchOverSsh(spec: DispatchSpec): Promise<SshResult> {
 
 export async function POST(req: NextRequest) {
   try {
-    const payload = await getPayload({ config });
-    const me = await payload
-      .auth({ headers: req.headers as unknown as Headers })
-      .catch(() => null);
-    const user = me?.user as unknown as { role?: string } | null;
+    const payloadReq = await createPayloadRequest({ config, request: req });
+    const payload = payloadReq.payload;
+    const user = payloadReq.user as unknown as { role?: string } | null;
     if (!user) {
       return NextResponse.json({ error: "auth required" }, { status: 401 });
     }

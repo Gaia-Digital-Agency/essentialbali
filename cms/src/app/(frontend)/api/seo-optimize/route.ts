@@ -10,7 +10,7 @@
  * via Payload config.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getPayload } from "payload";
+import { createPayloadRequest } from "payload";
 import config from "@payload-config";
 import { optimizeSeo, type SeoOptimizeInput } from "@/lib/seo-agent";
 
@@ -24,9 +24,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "missing JWT bearer" }, { status: 401 });
   }
   // Verify token with Payload — only ai-agent / staff role allowed.
-  const payload = await getPayload({ config });
-  const me = await payload.auth({ headers: req.headers as any }).catch(() => null);
-  const user = me?.user;
+  const payloadReq = await createPayloadRequest({ config, request: req });
+  const payload = payloadReq.payload;
+  const user = payloadReq.user;
   if (!user) return NextResponse.json({ error: "auth invalid" }, { status: 401 });
   const role = (user as any).role;
   if (role !== "ai-agent" && role !== "staff" && role !== "admin") {
