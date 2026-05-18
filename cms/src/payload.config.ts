@@ -37,7 +37,7 @@ export default buildConfig({
     meta: {
       titleSuffix: " — Essential Bali CMS",
       icons: [
-        { rel: "icon", type: "image/png", url: "/favicon.png" },
+        { rel: "icon", type: "image/png", url: "/cms-favicon.png" },
       ],
       openGraph: {
         images: [{ url: "/logo.png" }],
