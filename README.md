@@ -4,9 +4,49 @@ Bali, by area. Events, dine, wellness, nightlife, activities, news, culture, fea
 
 Live on three domains, all HTTPS, all serving identical content:
 
-- **https://essentialbali.gaiada.online** (subdomain)
+- **https://essentialbali.gaiada2.online** (subdomain)
 - **https://essentialbali.com** (apex)
 - **https://www.essentialbali.com** (www)
+
+---
+
+## Overview
+
+- **Stack:** PostgreSQL · Python (Elliot's scraper) · Payload v3.84 · Next.js 15 · Vite 7 · React 19 · TailwindCSS v4 · Node 20
+- **Hosting:** GCP `gda-pn01.asia-southeast1-b` (`34.2.143.47`)
+- **Two PM2 services:** `essentialbali` (Vite SSR + Express on :8082) + `essentialbali-cms` (Payload + Next.js 15 on :4008), plus `essentialbali-daily-feed` for the daily picker cron
+- **Single shared CORS allowlist:** [shared/allowed-origins.json](shared/allowed-origins.json), hot-reloaded with 30 s TTL by both Express and Payload
+- **Repo:** [github.com/Gaia-Digital-Agency/essentialbali](https://github.com/Gaia-Digital-Agency/essentialbali)
+
+Frontend, backend SSR shell, and CMS all share React 19 / Vite 7 / TypeScript 5.7. The legacy Sequelize/MySQL stack and the legacy custom admin (Master/, Quill, AuthPages) were retired in the 2026-04-29 cleanup; backend now talks to Postgres only via Payload REST.
+
+---
+
+## Features
+
+### Public site
+- Area-first navigation across 8 areas × 8 topics (64 area/topic listing pages + 1 homepage + per-area home + per-article pages)
+- Daily-rotated homepage (`<DailyEssentials />` 4×4 grid, 16 articles/day, picked nightly by cron)
+- Hero banner with 73-slot visual matrix (1 homepage + 8 area-only + 64 area×topic)
+- Topic-preserving area picker (picking "Ubud" while on `/canggu/dine` navigates to `/ubud/dine`)
+- Events template with date/time/venue/recurrence (separate from generic listings)
+- Newsletter signup with admin-editable copy via the `newsletter-notice` Global
+- Advertise With Us modal (`POST /api/advertise`)
+- Ask Elliot popup (in-page Vertex Gemini chat)
+
+### CMS / Admin
+- Payload v3 admin at `/admin` with custom MatrixDashboard as home (8×8 article grid filter)
+- 73-slot Hero Ads grid view (replaces default list)
+- Bulk actions on Articles (Approve, Publish, Unpublish, Reject, Delete)
+- Newsletter compose + Gmail OAuth send with status pipeline
+- Editable Areas/Topics taxonomies + Subscribers + Newsletter Notice Global
+- "Talk to Elliot" full-page chat at `/admin/elliot` + per-article dispatch buttons
+
+### AI agent (Elliot)
+- 7 sub-agents (Elliot, Copywriter, SEO, Imager, Web Manager, Crawler, Scraper) — 39/39 LIVE skills
+- Operator-triggered article dispatch with hash-locked re-runs
+- Semantic gate that hard-fails articles whose body doesn't match declared (area, topic)
+- Vertex Gemini for SEO meta + content, Vertex Imagen for hero images
 
 ---
 
@@ -19,7 +59,7 @@ Live on three domains, all HTTPS, all serving identical content:
                                        │ HTTPS
                                        ▼
                   ┌────────────────────────────────────┐
-                  │  nginx @ gda-ce01 (:443)           │
+                  │  nginx @ gda-pn01 (:443)           │
                   │  TLS · path-aware routing          │
                   └─────┬───────────────────────────────┘
                         │
@@ -50,12 +90,6 @@ Live on three domains, all HTTPS, all serving identical content:
 │ essentialbali_db │    │ rate-limit cache │
 └──────────────────┘    └──────────────────┘
 ```
-
-**Stack:** PostgreSQL · Python (Elliot's scraper) · Payload v3.84 · Next.js 15 · Vite 7 · React 19 · TailwindCSS v4 · Node 20
-
-**Hosting:** GCP `gda-ce01.asia-southeast1-b` (`34.158.47.112`)
-
-**Stack alignment** — frontend, backend SSR shell, and cms all share React 19 / Vite 7 / TypeScript 5.7. The legacy Sequelize/MySQL stack and the legacy custom admin (Master/, Quill, AuthPages) were retired in the 2026-04-29 cleanup; backend now talks to Postgres only via Payload REST.
 
 ---
 
@@ -166,7 +200,81 @@ essentialbali/
 
 ---
 
-## URL routing (path-aware, identical for all 3 domains)
+## Data layer
+
+Postgres = source of truth.
+
+| Collection | Count | Notes |
+|---|---|---|
+| areas | 8 | seeded fixed; editable in admin under Taxonomy |
+| topics | 8 | seeded fixed; `+showsHero` flag (default true) |
+| personas | 4 | Maya, Komang, Putu, Sari |
+| hero_ads | **73** | 1 homepage default (`area=NULL, topic=NULL`) + 8 area-only (`area=X, topic=NULL`) + 8 areas × 8 topics. Placeholder until `active=true`. The 8 area-only slots were added 2026-04-30 with Imager-generated covers, one per area. |
+| articles | 63+ | seed places 1 placeholder draft per cell; +`eventDetails` group (date / time / venue) for events; +`homeFeaturedCount`, `homeLastFeaturedAt` (hidden, written by daily picker) |
+| users | 2 | super_admin (admin) + elliot (ai-agent) |
+| subscribers | 0+ | newsletter sign-ups |
+| newsletters | 0+ | broadcast history |
+| **home_daily_feed** | 0+ | one row per Bali date, written by `pick-daily-feed.mjs` cron (04:00 GMT+8) — 16 article slots / day |
+| **hero_ad_versions** | 0+ | append-only audit log of every hero_ads change (create/update/delete + snapshot of all key fields + who + when). New 2026-04-30. |
+
+**Globals**
+
+| Global | Notes |
+|---|---|
+| **newsletter-notice** | edits the on-page subscribe-form copy (headline, subline, button, success/error messages, optional bg image, kill-switch) |
+
+Schema is managed by `db.push: true` (Drizzle auto-syncs from collection configs on CMS boot). The `cms/src/migrations/` directory has older migration files retained for reference but is not actively applied.
+
+For one-off ops migrations that Drizzle can't express (partial unique indexes, etc.), see [cms/scripts/](cms/scripts/):
+  - `migrate-hero-65.mjs` — drops the old `area_topic_idx`, adds the partial unique on `COALESCE(area_id,0), COALESCE(topic_id,0)`, seeds the homepage default hero row
+  - `pick-daily-feed.mjs` — daily picker (cron entry in `cms/ecosystem.config.cjs`)
+  - `compose-test-newsletter.mjs` — drafts a Test newsletter via Vertex Gemini from the latest published articles
+
+---
+
+## Public site layout
+
+(post-redesign 2026-04-29 → 2026-04-30)
+
+### Header / nav (every page)
+- Logo always links to `/` (universal back-to-home anchor; was previously "stay-in-area" — fixed 2026-04-30)
+- **Area dropdown** — when an area is selected (label !== "All Area"), the trigger renders in brand red text + semibold + tinted red pill background + a leading map-pin icon
+- **Topic nav** — the topic matching the current URL renders red + semibold + 2px red bottom border
+- **Topic-preserving area picker** — picking "Ubud" while on `/canggu/dine` navigates to `/ubud/dine`, not `/ubud`
+
+### Homepage `/`
+1. Header + topic nav (above)
+2. **`<HeroBanner />`** — single full-width hero, sourced from `hero_ads` (NULL, NULL) homepage default slot. Optional editorial headline + subline + CTA button.
+4. **`<DailyEssentials />`** — daily-rotated 4×4 grid (16 articles, 2 per topic, from 2 different areas where possible). Reads today's `home_daily_feed` row. Shrinks-and-centres if sparse (16 → 4×4, 12 → 4×3, 8 → 4×2, 4 → 2×2, 0 → "No daily picks yet" panel).
+5. **`<Newsletter />`** (sign-up form) — copy from `newsletter-notice` Global. POST to `/api/subscribers/subscribe`.
+6. Footer
+
+### Area page `/{area}` (e.g. `/canggu`)
+- Header shows the area name in red with map-pin icon
+- **`<HeroBanner area="canggu" />`** — strict-area lookup: `(canggu, NULL)` area-only hero first, then any `(canggu, *)` cell hero. Never crosses area boundary; never falls back to the homepage default.
+
+### Area × Topic listing `/{area}/{topic}` (e.g. `/canggu/dine`)
+1. Header + topic nav (active topic underlined red)
+2. **`<HeroBanner area={...} topic={...} />`** — strict (area, topic) cell hero, then (area, NULL) area-only, then any same-area hero. Never crosses area boundary (fixed 2026-04-30 — previously fell back to homepage default which surfaced a wrong-area CTA).
+3. Page title + optional subcategory + tag rows
+4. Article grid — `lg:grid-cols-3 md:grid-cols-2`, `LISTING_PAGE_SIZE = 20` per page (single source of truth: `frontend/src/lib/constants.ts`, mirrored in `backend/src/ssr/content.fetch.js`)
+5. Pagination
+6. Newsletter
+7. Footer
+
+### Events listings `/events` and `/{area}/events` use a separate template
+- **`EventsV3.tsx`** — does NOT render `<HeroBanner>` (events have their own structured header)
+- Cards show: time-of-day badge over image, category chip, start date, time range, recurrence pill ("Every week" / "Every month" / "Annual"), venue with map pin, "Get tickets" button when `eventDetails.ticketUrl` is set
+- Filter UI: date-range picker + morning/afternoon/night chips. Translates to `where[eventDetails.*]` Payload filters via the `metaData_*` legacy query keys (back-compat).
+
+### Single article `/{area}/{topic}/{slug}` uses `SingleV2.tsx`
+- Breadcrumb (Home / Area / Topic) renders ABOVE the hero image (not absolute-overlaid — fixed 2026-04-30, was bleeding onto dark hero photos)
+
+---
+
+## URL routing
+
+Path-aware, identical for all 3 domains:
 
 | Path | Backend |
 |---|---|
@@ -180,7 +288,7 @@ essentialbali/
 
 ---
 
-## Admin features
+## CMS & Admin features
 
 - **`/admin`** — Payload v3 admin
 - **MatrixDashboard** as admin home — 8×8 article grid, click any cell to filter
@@ -225,37 +333,9 @@ essentialbali/
 
 ---
 
-## Data layer (Postgres = source of truth)
+## AI Agents
 
-| Collection | Count | Notes |
-|---|---|---|
-| areas | 8 | seeded fixed; editable in admin under Taxonomy |
-| topics | 8 | seeded fixed; `+showsHero` flag (default true) |
-| personas | 4 | Maya, Komang, Putu, Sari |
-| hero_ads | **73** | 1 homepage default (`area=NULL, topic=NULL`) + 8 area-only (`area=X, topic=NULL`) + 8 areas × 8 topics. Placeholder until `active=true`. The 8 area-only slots were added 2026-04-30 with Imager-generated covers, one per area. |
-| articles | 63+ | seed places 1 placeholder draft per cell; +`eventDetails` group (date / time / venue) for events; +`homeFeaturedCount`, `homeLastFeaturedAt` (hidden, written by daily picker) |
-| users | 2 | super_admin (admin) + elliot (ai-agent) |
-| subscribers | 0+ | newsletter sign-ups |
-| newsletters | 0+ | broadcast history |
-| **home_daily_feed** | 0+ | one row per Bali date, written by `pick-daily-feed.mjs` cron (04:00 GMT+8) — 16 article slots / day |
-| **hero_ad_versions** | 0+ | append-only audit log of every hero_ads change (create/update/delete + snapshot of all key fields + who + when). New 2026-04-30. |
-
-**Globals**
-
-| Global | Notes |
-|---|---|
-| **newsletter-notice** | edits the on-page subscribe-form copy (headline, subline, button, success/error messages, optional bg image, kill-switch) |
-
-Schema is managed by `db.push: true` (Drizzle auto-syncs from collection configs on CMS boot). The `cms/src/migrations/` directory has older migration files retained for reference but is not actively applied.
-
-For one-off ops migrations that Drizzle can't express (partial unique indexes, etc.), see `cms/scripts/`:
-  - `migrate-hero-65.mjs` — drops the old `area_topic_idx`, adds the partial unique on `COALESCE(area_id,0), COALESCE(topic_id,0)`, seeds the homepage default hero row
-  - `pick-daily-feed.mjs` — daily picker (cron entry in `cms/ecosystem.config.cjs`)
-  - `compose-test-newsletter.mjs` — drafts a Test newsletter via Vertex Gemini from the latest published articles
-
----
-
-## AI agent integration (Elliot)
+### Elliot
 
 - Lives at `gda-ai01:/opt/.openclaw-ess` ([github.com/Gaia-Digital-Agency/openclaw-ess](https://github.com/Gaia-Digital-Agency/openclaw-ess))
 - Mission Control: **https://ess.gaiada0.online**
@@ -308,7 +388,7 @@ What you'll get:
 {
   "status": "pending_review",
   "article_id": 67,
-  "article_url": "https://essentialbali.gaiada.online/admin/collections/articles/67",
+  "article_url": "https://essentialbali.gaiada2.online/admin/collections/articles/67",
   "public_path": "/canggu/dine/canggus-best-lunchtime-warungs-worth-the-queue",
   "hash": "4b87ccebb5175d5f",
   "word_count": 285,
@@ -346,44 +426,6 @@ You review at /admin/collections/articles/{id}
 
 ---
 
-## Public site layout (post-redesign 2026-04-29 → 2026-04-30)
-
-### Header / nav (every page)
-- Logo always links to `/` (universal back-to-home anchor; was previously "stay-in-area" — fixed 2026-04-30)
-- **Area dropdown** — when an area is selected (label !== "All Area"), the trigger renders in brand red text + semibold + tinted red pill background + a leading map-pin icon
-- **Topic nav** — the topic matching the current URL renders red + semibold + 2px red bottom border
-- **Topic-preserving area picker** — picking "Ubud" while on `/canggu/dine` navigates to `/ubud/dine`, not `/ubud`
-
-### Homepage `/`
-1. Header + topic nav (above)
-2. **`<HeroBanner />`** — single full-width hero, sourced from `hero_ads` (NULL, NULL) homepage default slot. Optional editorial headline + subline + CTA button.
-4. **`<DailyEssentials />`** — daily-rotated 4×4 grid (16 articles, 2 per topic, from 2 different areas where possible). Reads today's `home_daily_feed` row. Shrinks-and-centres if sparse (16 → 4×4, 12 → 4×3, 8 → 4×2, 4 → 2×2, 0 → "No daily picks yet" panel).
-5. **`<Newsletter />`** (sign-up form) — copy from `newsletter-notice` Global. POST to `/api/subscribers/subscribe`.
-6. Footer
-
-### Area page `/{area}` (e.g. `/canggu`)
-- Header shows the area name in red with map-pin icon
-- **`<HeroBanner area="canggu" />`** — strict-area lookup: `(canggu, NULL)` area-only hero first, then any `(canggu, *)` cell hero. Never crosses area boundary; never falls back to the homepage default.
-
-### Area × Topic listing `/{area}/{topic}` (e.g. `/canggu/dine`)
-1. Header + topic nav (active topic underlined red)
-2. **`<HeroBanner area={...} topic={...} />`** — strict (area, topic) cell hero, then (area, NULL) area-only, then any same-area hero. Never crosses area boundary (fixed 2026-04-30 — previously fell back to homepage default which surfaced a wrong-area CTA).
-3. Page title + optional subcategory + tag rows
-4. Article grid — `lg:grid-cols-3 md:grid-cols-2`, `LISTING_PAGE_SIZE = 20` per page (single source of truth: `frontend/src/lib/constants.ts`, mirrored in `backend/src/ssr/content.fetch.js`)
-5. Pagination
-6. Newsletter
-7. Footer
-
-### Events listings `/events` and `/{area}/events` use a separate template
-- **`EventsV3.tsx`** — does NOT render `<HeroBanner>` (events have their own structured header)
-- Cards show: time-of-day badge over image, category chip, start date, time range, recurrence pill ("Every week" / "Every month" / "Annual"), venue with map pin, "Get tickets" button when `eventDetails.ticketUrl` is set
-- Filter UI: date-range picker + morning/afternoon/night chips. Translates to `where[eventDetails.*]` Payload filters via the `metaData_*` legacy query keys (back-compat).
-
-### Single article `/{area}/{topic}/{slug}` uses `SingleV2.tsx`
-- Breadcrumb (Home / Area / Topic) renders ABOVE the hero image (not absolute-overlaid — fixed 2026-04-30, was bleeding onto dark hero photos)
-
----
-
 ## Operations
 
 ```bash
@@ -393,26 +435,27 @@ pm2 list | grep essentialbali
 # Live logs
 pm2 logs essentialbali --lines 50           # Vite SSR + Express
 pm2 logs essentialbali-cms --lines 50       # Payload Next.js
+pm2 logs essentialbali-daily-feed --lines 50  # daily picker cron worker
 
 # After deploy (frontend or backend SSR change)
-ssh gda-ce01 'cd /var/www/essentialbali \
+ssh gda-pn01 'cd /var/www/essentialbali \
   && git pull \
   && cd frontend && pnpm install && pnpm build \
   && cd ../backend && pnpm install \
   && pm2 restart essentialbali'
 
 # After deploy (cms — Payload / admin / API change)
-ssh gda-ce01 'cd /var/www/essentialbali/cms \
+ssh gda-pn01 'cd /var/www/essentialbali/cms \
   && git pull \
   && pnpm install \
   && NODE_OPTIONS="--max-old-space-size=2560" pnpm build \
   && pm2 restart essentialbali-cms'
 
 # Smoke
-curl -sI https://essentialbali.gaiada.online/                            # 200
-curl -sI https://essentialbali.com/                                      # 200
-curl -sI https://www.essentialbali.com/                                  # 200
-curl https://essentialbali.gaiada.online/sitemap-articles.xml            # full XML
+curl -sI https://essentialbali.gaiada2.online/                          # 200
+curl -sI https://essentialbali.com/                                     # 200
+curl -sI https://www.essentialbali.com/                                 # 200
+curl https://essentialbali.gaiada2.online/sitemap-articles.xml          # full XML
 ```
 
 ---
@@ -430,48 +473,131 @@ curl https://essentialbali.gaiada.online/sitemap-articles.xml            # full 
 
 ---
 
-## Stack alignment & decisions log
+## API Endpoints
 
-Single source of truth for "why is X this way" — append-only.
+All `/api/*` routes are served by Payload (port 4008) unless noted. Authentication via Payload session cookie or JWT bearer.
 
-### Aligned (2026-04-29)
+### Public (no auth)
+- `GET /api/articles?where[...]` — paginated articles (used by SSR + sitemap)
+- `GET /api/articles/:id`
+- `GET /api/areas` · `GET /api/topics` · `GET /api/personas` · `GET /api/tags`
+- `GET /api/media/:id` — image metadata (binary served from GCS via signed URL)
+- `GET /api/globals/newsletter-notice` — subscribe-form copy
+- `POST /api/subscribers/subscribe` — idempotent newsletter signup (reactivates `unsubscribed`/`bounced`)
+- `POST /api/advertise` — public Advertise modal target → Gmail send
+- `POST /api/ai-chat` — Ask Elliot popup (Vertex Gemini, rate-limited via Redis)
+- `GET /sitemap.xml` `/sitemap-areas.xml` `/sitemap-topics.xml` `/sitemap-articles.xml` `/robots.txt`
 
-- **React 19** across both frontend and cms. Frontend bumped from 18 to 19 (peer deps were already permitting it; @types/react had been on 19 ahead of runtime).
-- **Vite 7** across both frontend and backend SSR. Frontend bumped 6.1 → 7.3.
-- **TypeScript 5.7** across all three workspaces.
-- **CORS allowlist** in `shared/allowed-origins.json`, hot-reloaded with 30 s TTL by both Express and Payload.
-- **SEO logic** single source: `cms/src/lib/seo-agent.ts`, called both in-process by the Articles beforeChange hook and over HTTP from the Elliot dispatch chain.
-- **Imager regenerate logic** single source: `cms/src/lib/imager-regenerate.ts`, called by both the admin "🔁 Regenerate hero" button and (via a small adapter) by Elliot's orchestrator script.
-- **Lexical → HTML serialization** for the legacy SSR `article_post` field via `backend/src/lib/lexical-to-html.js` (was emitting JSON-as-text into `dangerouslySetInnerHTML` pre-2026-04-29).
+### Authenticated (admin or `ai-agent` role)
+- **Articles:** `GET/POST/PATCH/DELETE /api/articles[/:id]` · `POST /api/articles/bulk` (Approve/Publish/Unpublish/Reject/Delete)
+- **Hero Ads:** `GET/POST/PATCH/DELETE /api/hero-ads[/:id]` · `POST /api/hero-ads/bulk` · `POST /api/hero-ads/generate-area-hero` (Vertex Imagen area-anchored)
+- **Newsletters:** `GET/POST/PATCH /api/newsletters[/:id]` · `POST /api/subscribers/broadcast`
+- **Home Daily Feed:** `GET /api/home-daily-feed` (read-only in practice; written by `pick-daily-feed.mjs` cron)
+- **Hero Ad Versions:** `GET /api/hero-ad-versions` (append-only audit log)
+- **Users / Auth:** `POST /api/users/login` · `POST /api/users/logout` · `POST /api/users/forgot-password` · `POST /api/users/reset-password`
+- **Misc:** `GET /api/access` (current user permissions) · `POST /api/payload-preferences/*` (UI prefs)
+- **SEO + Imager (admin tools):** `POST /api/seo-optimize` (Vertex Gemini SEO) · `POST /api/seo-competitor-gap` (gap-ranker) · `POST /api/regenerate-hero` (Vertex Imagen re-roll)
 
-### Permanently dropped
+### GraphQL
+- `POST /api/graphql` — full Payload GraphQL surface
+- `GET /api/graphql-playground` — playground UI (dev)
 
-- **pnpm workspace migration** (formerly old-audit item 4). Considered and rejected for this project. Reasons:
-  1. Three live PM2 services (`essentialbali` ← `backend/`, `essentialbali-cms` ← `cms/`) have hard cwd assumptions; workspace hoisting changes node_modules layout and a botched migration would black out production.
-  2. Payload v3 has known monorepo quirks — `payload generate:types` and `payload generate:importmap` already failed once on this stack and had to be patched by hand. Adding a workspace-resolution layer increases that surface.
-  3. The headline benefit (shared `node_modules`) is mostly **already realized** by pnpm's content-addressed store, which hardlinks identical packages across projects on disk. The 906/507/759 MB sizes are the logical view, not real disk usage.
-  4. Of 14 cross-workspace overlapping deps, all but one show legitimate version drift (different consumers want different versions). Forcing alignment would break the picky one.
-  5. There's no shared component code between frontend and cms today. If that ever changes, revisit; until then it is overhead with no payoff.
-- **Sequelize / MySQL stack** (cleanup-A through C, 2026-04-28 → 2026-04-29). The MySQL `essentialbali` database was dropped and the Sequelize-based migrations / seeders / models / services / corresponding helpers + middlewares were removed from the codebase. Postgres-via-Payload-REST is the only data path now.
-- **Legacy custom admin** (cleanup-D, 2026-04-29). The tailadmin React shell + AuthPages + Master/* + Quill + mainAdmin entry chain (~10,000 LOC) was retired when /admin moved to Payload at port 4008.
-- **Penthouse runtime critical-CSS** (2026-04-29). The /generate-css endpoint had zero callers; Vite already inlines critical CSS at build time.
-
-### Open / deferred (no current pressure)
-
-- **React Compiler** — would reduce manual memoisation. Defer until React 19 settles in production.
-- **Payload v3 → v4 / next major** — wait for at least one minor after release.
-
----
-
-## Branch model
-
-**`main` only.** The `dev` branch was retired once Phase E cutover stabilized — Payload + Vite SSR rewire are both on main. New work commits direct to main (or a short-lived feature branch).
+### Express side (port 8082 via nginx pass-through)
+- `GET /uploads/:filename` — pre-Payload images (back-compat symlink)
+- `GET /` and all area/topic/article paths — Vite SSR
 
 ---
 
-## Repos
+## Repo Notes
+
+- Production host: `gda-pn01` (GCE) — external `34.2.143.47`, internal `10.148.0.9`
+- Path: `/var/www/essentialbali` (deploy target)
+- File ownership: `azlan:azlan`; PM2 runs as user `azlan`
+- Package manager: pnpm per workspace (no monorepo workspace at the root — see "Permanently dropped" decision below)
+- Three workspaces:
+  - [backend/](backend/) — Express + Vite 7 SSR shell (pnpm)
+  - [cms/](cms/) — Payload v3 + Next.js 15 (pnpm)
+  - [frontend/](frontend/) — Vite 7 + React 19 (pnpm)
+- Co-tenants on this VM: `baligirls-api`, `baligirls-web-vite`, `schoolcatering-api`, `schoolcatering-web`
+- HTTPS: nginx vhost `/etc/nginx/sites-enabled/essentialbali`, Let's Encrypt cert at `/etc/letsencrypt/live/essentialbali.gaiada2.online/` (Certbot-managed)
+- **Branch model:** `main` only. The `dev` branch was retired once Phase E cutover stabilized — Payload + Vite SSR rewire are both on main.
+
+### Repos
 
 | Repo | URL |
 |---|---|
 | essentialbali (this) | https://github.com/Gaia-Digital-Agency/essentialbali |
 | openclaw-ess (Elliot) | https://github.com/Gaia-Digital-Agency/openclaw-ess |
+
+---
+
+## GCP
+
+- **Project:** `gda-viceroy`
+- **Region:** `asia-southeast1` (Vertex), `asia-southeast1-b` (compute)
+- **Compute:** `gda-pn01` GCE instance (external `34.2.143.47`)
+- **Storage bucket:** `gda-essentialbali-media` — Payload `@payloadcms/storage-gcs` writes here; serves article hero images and inline media
+- **Vertex AI:**
+  - Gemini for `/api/ai-chat` (Elliot persona), `/api/seo-optimize`, `/api/seo-competitor-gap`
+  - Imagen 3 for `/api/regenerate-hero` and `/api/hero-ads/generate-area-hero`
+- **Service account:** `/var/www/gaiadaweb/secure/gda-viceroy-…json` (mode 600) — shared with other tenants; has `storage.objectAdmin` on the media bucket + Vertex predict role
+- **Gmail OAuth:** `GOOGLE_CLIENT_ID/SECRET/REFRESH_TOKEN` in `cms/.env` — sends from `ai@gaiada.com` for `/api/advertise` and Newsletters
+
+---
+
+## PM2 Processes
+
+| Process | Description | Port | Status |
+|---|---|---|---|
+| `essentialbali` | Vite SSR + Express (public site) | 8082 | online |
+| `essentialbali-cms` | Payload v3 + Next.js 15 (admin + REST + GraphQL) | 4008 | online |
+| `essentialbali-daily-feed` | Daily picker cron worker — runs `pick-daily-feed.mjs` at 04:00 GMT+8 | — | online |
+
+PM2 is managed via systemd unit `pm2-azlan.service` (user `azlan`, `PM2_HOME=/home/azlan/.pm2`). Resurrect file: `/home/azlan/.pm2/dump.pm2`.
+
+```bash
+sudo -u azlan pm2 restart essentialbali essentialbali-cms essentialbali-daily-feed --update-env
+sudo -u azlan pm2 save
+```
+
+---
+
+## Production Health Audit
+
+### Service Status — ✅ All Healthy (2026-05-18)
+
+| Endpoint | Status |
+|---|---|
+| `https://essentialbali.gaiada2.online/` | 200 |
+| `https://essentialbali.com/` | 200 |
+| `https://www.essentialbali.com/` | 200 |
+
+### Host Metrics
+
+| Metric | Value |
+|---|---|
+| Disk (`/`) | 20 GB used / 48 GB (41%) |
+| Memory | 3.2 GB used / 7.8 GB (4.5 GB available) |
+| Postgres version | 18.3 |
+| Redis | reachable (`PONG`) |
+
+### Process Uptime
+
+`essentialbali-cms` has been online 11 days with 2 restarts; `essentialbali` 7 days with 13 restarts; `essentialbali-daily-feed` 13 hours with 11 restarts (cron-driven). All three are PM2 fork-mode, owned by `azlan`.
+
+### Recovery / Restart
+
+```bash
+# Restart everything
+sudo -u azlan pm2 restart essentialbali essentialbali-cms essentialbali-daily-feed --update-env
+sudo -u azlan pm2 save
+
+# Reload nginx after config change
+sudo nginx -t && sudo nginx -s reload
+
+# View live logs
+sudo -u azlan pm2 logs essentialbali-cms --lines 100
+
+# DB connect
+sudo -u postgres psql -d essentialbali_db
+```
