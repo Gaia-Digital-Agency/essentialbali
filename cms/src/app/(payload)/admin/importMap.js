@@ -33,6 +33,9 @@ import { default as default_BulkActionsArticles } from '@/components/BulkActions
 import { default as default_BulkActionsHeroAds } from '@/components/BulkActionsHeroAds'
 import { default as default_HeroImagePicker } from '@/components/HeroImagePicker'
 import { default as default_HeroAdHistory } from '@/components/HeroAdHistory'
+import { default as default_GaiaIcon } from '@/components/GaiaIcon'
+import { default as default_GaiaLogo } from '@/components/GaiaLogo'
+import { default as default_GaiaBeforeLogin } from '@/components/GaiaBeforeLogin'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { GcsClientUploadHandler as GcsClientUploadHandler_storage_gcs } from '@payloadcms/storage-gcs/client'
 
@@ -73,6 +76,9 @@ export const importMap = {
   "@/components/BulkActionsHeroAds#default": default_BulkActionsHeroAds,
   "@/components/HeroImagePicker#default": default_HeroImagePicker,
   "@/components/HeroAdHistory#default": default_HeroAdHistory,
+  "@/components/GaiaIcon#default": default_GaiaIcon,
+  "@/components/GaiaLogo#default": default_GaiaLogo,
+  "@/components/GaiaBeforeLogin#default": default_GaiaBeforeLogin,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-gcs/client#GcsClientUploadHandler": GcsClientUploadHandler_storage_gcs
 }

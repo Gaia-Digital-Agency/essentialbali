@@ -1,0 +1,49 @@
+/* ──────────────────────────────────────────────────────────────────────
+   Gaia CMS — admin overrides (essentialbali)
+   Scoped to the login screen only. Post-login admin keeps Payload defaults.
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Yellow primary button (Login) */
+.login .btn--style-primary,
+.template-minimal .btn--style-primary {
+  background: #facc15;
+  border-color: #facc15;
+  color: #111;
+}
+.login .btn--style-primary:hover,
+.template-minimal .btn--style-primary:hover {
+  background: #eab308;
+  border-color: #eab308;
+  color: #111;
+}
+
+/* Yellow "Forgot password?" link (and any other anchor on the login template) */
+.login a,
+.template-minimal .form-submit + p a,
+.template-minimal a[href*="forgot"] {
+  color: #facc15;
+}
+.login a:hover,
+.template-minimal .form-submit + p a:hover,
+.template-minimal a[href*="forgot"]:hover {
+  color: #eab308;
+}
+
+/* Kill browser-autofill yellow on the login inputs.
+   Chrome/Edge apply a yellow box-shadow + tinted background; we override
+   with a huge inset shadow matching Payload's input fill, and a long
+   transition so the override survives autofill animation. */
+.login input:-webkit-autofill,
+.login input:-webkit-autofill:hover,
+.login input:-webkit-autofill:focus,
+.login input:-webkit-autofill:active,
+.template-minimal input:-webkit-autofill,
+.template-minimal input:-webkit-autofill:hover,
+.template-minimal input:-webkit-autofill:focus,
+.template-minimal input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--theme-elevation-50) inset !important;
+  box-shadow: 0 0 0 1000px var(--theme-elevation-50) inset !important;
+  -webkit-text-fill-color: var(--theme-elevation-1000) !important;
+  caret-color: var(--theme-elevation-1000) !important;
+  transition: background-color 9999s ease-in-out 0s;
+}

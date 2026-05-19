@@ -92,7 +92,7 @@ const AGENTS: Agent[] = [
     workspace: "/opt/.openclaw-ess/workspace-main",
     status: "live",
     skills: [
-      { status: "live",       name: "plan-wave",        signature: "plan-wave(--limit?, --execute?, --dry-run?, --gap?)", desc: "Reads Payload counts per (area, topic), computes per-cell deficit vs the 20-per-cell target, picks persona + brief from rotating templates, emits prioritised dispatch queue. --execute fires at 1/min default." },
+      { status: "live",       name: "plan-wave",        signature: "plan-wave(--limit?, --execute?, --dry-run?, --gap?)", desc: "Reads Gaia CMS counts per (area, topic), computes per-cell deficit vs the 20-per-cell target, picks persona + brief from rotating templates, emits prioritised dispatch queue. --execute fires at 1/min default." },
       { status: "live",       name: "dispatch-article", signature: "dispatch-article({area, topic, persona, brief, target_words?, research_url?, skip_imager?})", desc: "Full chain: copywriter → seo → imager → web-manager. Hash-locked (Path B) so accidental re-runs of the same brief are blocked." },
       { status: "live",       name: "review-gate",      signature: "review-gate(--id | stdin)", desc: "Standalone pre-flight: returns {ok, issues:[{level, code, message}]}. Hard rules: empty fields, missing hero, word_count below floor, banned phrases, SEO meta missing/too-long, duplicate source.hash. Soft rules: long body, no sources, no keywords. Exit 0/2." },
       { status: "live",       name: "status-report",    signature: "status-report(--table?, --status?)", desc: "Per-cell snapshot of every status (published/approved/pending_review/draft/rejected). Default JSON; --table prints an ASCII grid; --status=<one> focuses on a single column." },
@@ -149,13 +149,13 @@ const AGENTS: Agent[] = [
   {
     id: "web-manager",
     name: "Web Manager",
-    role: "Bridge to Payload CMS — pushes drafts, uploads media, manages comments + ads",
-    model: "Payload REST + JWT (elliot@gaiada.com, role ai-agent)",
+    role: "Bridge to Gaia CMS — pushes drafts, uploads media, manages comments + ads",
+    model: "Gaia CMS REST + JWT (elliot@gaiada.com, role ai-agent)",
     workspace: "/opt/.openclaw-ess/workspace-web-manager",
     status: "live",
     skills: [
       { status: "live", name: "submit-article",      signature: "POST /api/articles", desc: "Idempotent via source.hash. Always sets status=pending_review on submit." },
-      { status: "live", name: "upload-media",        signature: "POST /api/media (multipart)", desc: "Uploads file to GCS bucket gda-essentialbali-media; returns Payload media doc with public GCS URL." },
+      { status: "live", name: "upload-media",        signature: "POST /api/media (multipart)", desc: "Uploads file to GCS bucket gda-essentialbali-media; returns Gaia CMS media doc with public GCS URL." },
       { status: "live", name: "link-hero",           signature: "PATCH /api/articles/{id} {hero: mediaId}", desc: "Sets Article.hero to the uploaded media id." },
       { status: "live", name: "submit-comment",      signature: "POST /api/comments", desc: "Used by Elliot if it generates a persona-style first-comment seed." },
       { status: "live", name: "toggle-hero-ad",      signature: "PATCH /api/hero-ads/{id} {active: bool}", desc: "Flip an ad slot on/off. Same endpoint your Hero Ads grid hits." },
@@ -175,7 +175,7 @@ const AGENTS: Agent[] = [
       { status: "live",       name: "discover",   signature: "discover({area, topic, site?})", desc: "List up to 10 candidate URLs from one of honeycombers / whatsnew / nowbali / balibible for a given (area, topic)." },
       { status: "live",       name: "analyze",    signature: "analyze(url)", desc: "Fetch one URL, extract title + h1/h2/h3 + paragraphs + hero + outbound links + word count. JSON to stdout." },
       { status: "live",       name: "trend-scan", signature: "trend-scan(--area, --topic?, --site?, --limit?)", desc: "Discover URLs across all 4 benchmark sites, fetch each candidate, parse pubDate from JSON-LD / og / time tags, sort newest first. Stricter slug filter so menu/category pages don't pollute results." },
-      { status: "live",       name: "gap-report", signature: "gap-report(--area, --topic, --limit?)", desc: "Runs trend-scan internally, queries Payload for our published titles, asks Vertex for theme diff. Returns missing_themes (theme + priority + example) + overlap_themes. Pipes into SEO competitor-gap." },
+      { status: "live",       name: "gap-report", signature: "gap-report(--area, --topic, --limit?)", desc: "Runs trend-scan internally, queries Gaia CMS for our published titles, asks Vertex for theme diff. Returns missing_themes (theme + priority + example) + overlap_themes. Pipes into SEO competitor-gap." },
     ],
     invoker: "node /opt/.openclaw-ess/workspace-crawler/scripts/crawl-benchmark.mjs",
   },
@@ -209,7 +209,7 @@ export default function TalkToElliotView() {
     {
       role: "elliot",
       text:
-        "I'm Elliot — orchestrator for Essential Bali content. I plan production across 64 (area × topic) cells, dispatch to copywriter / web-manager / seo / imager / crawler / scraper, and push approved drafts to Payload. Pick a sub-agent on the left to see its skills, or ask me anything.",
+        "I'm Elliot — orchestrator for Essential Bali content. I plan production across 64 (area × topic) cells, dispatch to copywriter / web-manager / seo / imager / crawler / scraper, and push approved drafts to Gaia CMS. Pick a sub-agent on the left to see its skills, or ask me anything.",
       ts: Date.now(),
     },
   ]);
@@ -328,7 +328,7 @@ export default function TalkToElliotView() {
           width: "fit-content",
         }}
       >
-        ← Back to Payload admin
+        ← Back to Gaia CMS admin
       </a>
       <header style={head}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.7rem" }}>

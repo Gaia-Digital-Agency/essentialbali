@@ -34,16 +34,29 @@ const dirname = path.dirname(filename);
 export default buildConfig({
   admin: {
     user: Users.slug,
+    theme: "dark",
     meta: {
-      titleSuffix: " — Essential Bali CMS",
+      titleSuffix: " — Gaia CMS",
+      description: "Gaia CMS — content management for Gaia Digital Agency.",
       icons: [
-        { rel: "icon", type: "image/png", url: "/cms-favicon.png" },
+        { rel: "icon", type: "image/png", url: "/gaia-tree-favicon.png" },
       ],
       openGraph: {
-        images: [{ url: "/logo.png" }],
+        siteName: "Gaia CMS",
+        description: "Gaia CMS — content management for Gaia Digital Agency.",
+        images: [{ url: "/gaia-tree-logo.png" }],
       },
     },
     components: {
+      // White-label graphics — tree mark in the collapsed nav header,
+      // and a no-op Logo so Payload does NOT render its default wordmark
+      // at the top of the login screen. beforeLogin is the single brand.
+      graphics: {
+        Icon: "@/components/GaiaIcon",
+        Logo: "@/components/GaiaLogo",
+      },
+      // Login hero (large tree + "Gaia CMS" + "GAIA DIGITAL AGENCY").
+      beforeLogin: ["@/components/GaiaBeforeLogin"],
       // Show a discreet creds hint under the login form when
       // NEXT_PUBLIC_SHOW_LOGIN_HINT=true. Disable in real prod.
       afterLogin: ["@/components/LoginHint"],
