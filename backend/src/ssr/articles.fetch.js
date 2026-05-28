@@ -254,8 +254,12 @@ export const fetchDailyFeed = async () => {
  * via Payload REST. Falls back to false on any failure — preload is
  * a hint, not a hard requirement; an empty hint is safe.
  */
+let _heroAdCache = { url: false, expiresAt: 0 };
+
 export const getInitialArticleHeroImage = async (initialRoute) => {
   if (!initialRoute || initialRoute.type !== "LISTING_HOME") return false;
+  const now = Date.now();
+  if (_heroAdCache.expiresAt > now) return _heroAdCache.url;
   try {
     const res = await payload.find("hero-ads", {
       "where[area][exists]": false,
@@ -270,7 +274,9 @@ export const getInitialArticleHeroImage = async (initialRoute) => {
     // Prefer the card-size variant (768x432) — that's what HeroBanner
     // will end up rendering on mobile + most desktops, so preloading
     // the same URL avoids a double-fetch.
-    return c?.sizes?.card?.url || c?.url || false;
+    const url = c?.sizes?.card?.url || c?.url || false;
+    _heroAdCache = { url, expiresAt: now + 30_000 };
+    return url;
   } catch (e) {
     console.error("[ssr/articles.fetch:getInitialArticleHeroImage]", e?.message || e);
     return false;

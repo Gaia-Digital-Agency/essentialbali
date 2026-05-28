@@ -1,4 +1,3 @@
-// import React, { useRef, useEffect } from "react";
 import {
   useRef,
   useEffect,
@@ -26,7 +25,6 @@ type ImageProps = {
   height?: string;
 };
 
-// const Image: React.FC<ImageProps> = ({
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const Image = forwardRef<any, ImageProps>(
   (
@@ -46,7 +44,6 @@ const Image = forwardRef<any, ImageProps>(
     },
     ref,
   ) => {
-    // const containerRef = useRef<HTMLDivElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const imgRef = useRef<HTMLImageElement | null>(null);
 
@@ -73,15 +70,10 @@ const Image = forwardRef<any, ImageProps>(
 
     const { contextSafe } = useGSAP({ scope: containerRef });
     const theUrl = url ?? `${IMAGE_URL}/logo.png`;
-    // const isUrl = url != `${IMAGE_URL}/uploads/placeholder.png`
 
     const onMouseEnter = contextSafe(() => {
       const imageEl = containerRef.current;
       if (imageEl) {
-        // gsap.to(imageEl.querySelector(".overlay"), {
-        //     opacity: overlay ? 0.6 : 0.4
-        // })
-
         gsap.to(imageEl.querySelector("img"), {
           scale: 1.1,
           duration: 0.4,
@@ -93,9 +85,6 @@ const Image = forwardRef<any, ImageProps>(
     const onMouseLeave = contextSafe(() => {
       const imageEl = containerRef.current;
       if (imageEl) {
-        //   gsap.to(imageEl.querySelector(".overlay"), {
-        //     opacity: overlay ? 0.4 : 0,
-        //   });
         gsap.to(imageEl.querySelector("img"), {
           scale: 1,
           duration: 0.4,
@@ -150,11 +139,12 @@ const Image = forwardRef<any, ImageProps>(
       return (
         <div
           ref={containerRef}
-          // className="image-container relative"
           className="image-container relative overflow-hidden rounded-[10px]"
           onMouseEnter={link ? onMouseEnter : undefined}
           onMouseLeave={link ? onMouseLeave : undefined}
           style={{
+            // Reserve space before GSAP useEffect runs — eliminates CLS from image containers
+            paddingTop: noRatio ? undefined : ratio,
             aspectRatio: width && height ? `${width} / ${height}` : undefined,
           }}
         >

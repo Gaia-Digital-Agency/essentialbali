@@ -1,17 +1,31 @@
-import React, { useEffect, useState } from "react"; //useEffect, useState
-// import { getTemplateByUrl } from "../../../services/template.service";
+import React, { useEffect, useState } from "react";
 import NavLogo from "../../../components/front/NavLogo";
-import { NavLink } from "react-router"; //Link, useNavigate
-// import { FacebookIcon, InstagramIcon, LinkedinIcon } from "../../../icons";
+import { NavLink } from "react-router";
 import { useTaxonomies } from "../../../context/TaxonomyContext";
-// import { isBaliAreaSlug } from "../../../utils/baliAreas";
-// import SelectNav from "../../../components/front/SelectNav";
 import { Category } from "../../../types/category.type";
 import { RouteProps, useRoute } from "../../../context/RouteContext";
 import { getTemplateByUrl } from "../../../services/template.service";
 import { useHeaderContent } from "../../../context/HeaderContext";
 import { AdvertiseModal } from "../../../components/front/AdvertiseModal";
 
+const deriveMenuList = (
+  categories: Category[],
+  header: { linkCategory: number }[],
+): Category[] => {
+  const linkCategoryIds = header.map((item) => item.linkCategory);
+  return categories.filter((c) => linkCategoryIds.includes(c.id));
+};
+
+const getInitialMenuList = (): Category[] => {
+  if (typeof window === "undefined") return [];
+  const raw = (window as unknown as { __INITIAL_DATA__?: Record<string, unknown> }).__INITIAL_DATA__;
+  if (!raw) return [];
+  const cats = (raw.initialTaxonomies as { categories?: Category[] } | undefined)?.categories;
+  const header = (raw.initialTemplateContent as { header?: { linkCategory: number }[] } | undefined)?.header;
+  if (!cats) return [];
+  if (!header || !Array.isArray(header) || header.length === 0) return cats;
+  return deriveMenuList(cats, header);
+};
 
 const MenuNav: React.FC<{
   menu: Category;
@@ -64,24 +78,16 @@ const MenuNav: React.FC<{
 };
 
 const Footer: React.FC = () => {
-  // const [content, setContent] = useState()
-  // const [visitorCount, setVisitorCount] = useState(7127);
-  // const [userLocation, setUserLocation] = useState("Bali Area");
-  // const [userTime, setUserTime] = useState("");
-  const [menuList, setMenuList] = useState<Category[]>([]);
+  const [menuList, setMenuList] = useState<Category[]>(getInitialMenuList);
   const [advertiseOpen, setAdvertiseOpen] = useState(false);
   const { taxonomies } = useTaxonomies();
   const { initialData } = useHeaderContent();
+
   useEffect(() => {
     if (!taxonomies.categories) return;
     const ssrHeader = Array.isArray(initialData?.header) ? initialData.header : null;
     if (ssrHeader && ssrHeader.length > 0) {
-      const linkCategoryIds = ssrHeader.map(
-        (item: { linkCategory: number }) => item.linkCategory,
-      );
-      setMenuList(
-        taxonomies.categories.filter((c) => linkCategoryIds.includes(c.id)),
-      );
+      setMenuList(deriveMenuList(taxonomies.categories, ssrHeader));
       return;
     }
     (async () => {
@@ -89,15 +95,7 @@ const Footer: React.FC = () => {
         const getTemplate = await getTemplateByUrl("/header");
         if (getTemplate?.data && getTemplate.status_code == 200) {
           const jsonData = JSON.parse(getTemplate.data.content);
-          const linkCategoryIds = jsonData.map(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (item: any) => item.linkCategory,
-          );
-          setMenuList(
-            taxonomies.categories?.filter((c) =>
-              linkCategoryIds.includes(c.id),
-            ) ?? [],
-          );
+          setMenuList(deriveMenuList(taxonomies.categories ?? [], jsonData));
         } else {
           setMenuList(taxonomies.categories ?? []);
         }
@@ -108,7 +106,7 @@ const Footer: React.FC = () => {
   }, [taxonomies.categories, initialData?.header]);
 
   return (
-    <footer className="footer bg-front-icewhite">
+    <footer className="footer bg-front-icewhite" style={{ minHeight: "280px" }}>
       <div className="container ">
         <div className="w-full bg-front-navy"></div>
         <div className="flex flex-col items-center py-5 logo-and-menu-wrapper gap-y-10">
@@ -155,7 +153,6 @@ const Footer: React.FC = () => {
       <AdvertiseModal open={advertiseOpen} onClose={() => setAdvertiseOpen(false)} />
     </footer>
   );
-  // }
 };
 
 export default Footer;

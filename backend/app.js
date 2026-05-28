@@ -53,6 +53,24 @@ dotenv.config();
 // to switch into.
 
 const port = process.env.PORT || 7777;
+
+// Scan built assets at startup to get content-hashed chunk filenames
+// for <link rel="modulepreload"> hints injected into every SSR response.
+const _modulepreloadHints = (() => {
+  try {
+    const assetsDir = frontendPath
+      ? path.resolve(frontendPath, "dist/client/assets")
+      : null;
+    if (!assetsDir || !fs.existsSync(assetsDir)) return "";
+    const hints = fs.readdirSync(assetsDir)
+      .filter(f => /^vendor-(react|misc)-[^/]+\.js$/.test(f))
+      .map(f => `<link rel="modulepreload" href="/assets/${f}">`)
+      .join("\n");
+    return hints;
+  } catch {
+    return "";
+  }
+})();
 const url = process.env.URL || "";
 const app = express();
 // Trust nginx reverse proxy: makes req.protocol read x-forwarded-proto (https),
@@ -603,6 +621,7 @@ const initialData = {
       `${helmet?.title?.toString() ?? ""}
          ${helmet?.meta?.toString() ?? ""}
          ${helmet?.link?.toString() ?? ""}
+         ${_modulepreloadHints}
          ${initialHeroImage ? '<link rel="preload" as="image" href="' + (/^https?:\/\//i.test(initialHeroImage) ? initialHeroImage : (process.env.IMAGE_URL || "") + initialHeroImage) + '" fetchpriority="high" type="image/webp">' : ""}
          ${initialHeadScript ? initialHeadScript : ""}
          `,
