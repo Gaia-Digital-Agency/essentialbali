@@ -117,7 +117,7 @@ export default buildConfig({
     },
     // For Phase D foundation: auto-push schema instead of using migration files.
     // Switch to migration-based once schema stabilizes.
-    push: true,
+    push: false,
   }),
   // GCS bucket for all media uploads. Falls back to local disk when
   // GCS_BUCKET env is not set (dev / first-run).
