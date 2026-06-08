@@ -14,18 +14,18 @@ Target: 1 listing hero + 20 articles per cell (640 articles total across 64 cell
 
 `✓` = active with image · `—` = empty placeholder
 
-| Area        | Activities | Dine | Featured | Health & Wellness | News | Nightlife | People & Culture | Events |
-|-------------|:----------:|:----:|:--------:|:-----------------:|:----:|:---------:|:----------------:|:------:|
-| Ubud        | —          | —    | —        | ✓                 | —    | —         | —                | —      |
-| Canggu      | —          | ✓    | —        | —                 | —    | ✓         | —                | —      |
-| Kuta        | —          | —    | —        | —                 | —    | —         | —                | —      |
-| Jimbaran    | —          | —    | —        | —                 | —    | —         | —                | —      |
-| Denpasar    | —          | —    | —        | —                 | —    | —         | —                | —      |
-| Singaraja   | —          | —    | —        | —                 | —    | —         | —                | —      |
-| Kintamani   | —          | —    | —        | —                 | —    | —         | —                | —      |
-| Nusa Penida | —          | —    | —        | —                 | —    | —         | —                | —      |
+| Area           | Activities         | Dine               | Featured           | Health & Wellness  | News               | Nightlife          | People & Culture   | Events             |
+|----------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|
+| Ubud           | —                  | —                  | —                  | ✓                  | —                  | —                  | —                  | —                  |
+| Canggu         | —                  | ✓                  | —                  | —                  | —                  | ✓                  | —                  | —                  |
+| Kuta           | —                  | —                  | —                  | —                  | —                  | —                  | —                  | —                  |
+| Jimbaran       | —                  | —                  | —                  | —                  | —                  | —                  | —                  | —                  |
+| Denpasar       | —                  | —                  | —                  | —                  | —                  | —                  | —                  | —                  |
+| Singaraja      | —                  | —                  | —                  | —                  | —                  | —                  | —                  | —                  |
+| Kintamani      | —                  | —                  | —                  | —                  | —                  | —                  | —                  | —                  |
+| Nusa Penida    | —                  | —                  | —                  | —                  | —                  | —                  | ✓                  | ✓                  |
 
-**Active: 3 / 64 · Empty: 61 / 64**
+**Active: 5 / 64 · Empty: 59 / 64**
 
 ---
 
@@ -33,16 +33,16 @@ Target: 1 listing hero + 20 articles per cell (640 articles total across 64 cell
 
 Number = article count in that cell. `—` = none yet.
 
-| Area        | Activities | Dine | Featured | Health & Wellness | News | Nightlife | People & Culture | Events |
-|-------------|:----------:|:----:|:--------:|:-----------------:|:----:|:---------:|:----------------:|:------:|
-| Ubud        | 2          | 1    | —        | 1                 | 1    | —         | —                | 1      |
-| Canggu      | 1          | 1    | 1        | —                 | —    | 1         | —                | —      |
-| Kuta        | 1          | —    | —        | —                 | —    | 1         | —                | —      |
-| Jimbaran    | —          | 2    | 1        | —                 | —    | —         | —                | —      |
-| Denpasar    | —          | 1    | —        | —                 | —    | —         | 2                | —      |
-| Singaraja   | —          | —    | 1        | 1                 | 1    | —         | —                | —      |
-| Kintamani   | 1          | —    | 1        | —                 | —    | —         | —                | —      |
-| Nusa Penida | 1          | —    | 1        | —                 | —    | —         | —                | —      |
+| Area           | Activities         | Dine               | Featured           | Health & Wellness  | News               | Nightlife          | People & Culture   | Events             |
+|----------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|
+| Ubud           | 1                  | —                  | —                  | 1                  | 1                  | —                  | —                  | 1                  |
+| Canggu         | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  |
+| Kuta           | 1                  | —                  | —                  | —                  | —                  | 1                  | —                  | —                  |
+| Jimbaran       | —                  | 1                  | 1                  | —                  | —                  | —                  | —                  | —                  |
+| Denpasar       | —                  | 1                  | —                  | —                  | —                  | —                  | 2                  | —                  |
+| Singaraja      | —                  | —                  | 1                  | 1                  | 1                  | —                  | —                  | —                  |
+| Kintamani      | 1                  | —                  | 1                  | —                  | —                  | —                  | —                  | —                  |
+| Nusa Penida    | 1                  | —                  | 1                  | —                  | —                  | —                  | —                  | —                  |
 
-**25 articles total · 20 / 64 cells with at least one article · 44 cells empty**  
-All 25 articles have a dedicated hero image (stored in GCS: `gda-essentialbali-media`).
+**26 articles total · 25 / 64 cells with at least one article · 39 cells empty**
+All published articles have a dedicated hero image (stored in GCS: `gda-essentialbali-media`).

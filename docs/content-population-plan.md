@@ -31,30 +31,31 @@ Current state: 3 hero-ads active · 25 articles published.
 ```
 trend-scan.mjs (area, topic)         ← Crawler: 4 benchmark sites, 1 req/s
   → top research_url
-    → dispatch-article.mjs           ← persona + brief + research_url
+    → dispatch-article.mjs           ← persona + brief + research_url + status=published
         → copywriter (draft-article)
         → imager (generate-hero)     ← Vertex Imagen 3, article-specific image
         → seo (optimize-meta)
-        → web-manager (submit)       → status: pending_review
+        → web-manager (submit)       → status: published (auto-approved)
 ```
 
-**Orchestrator:** `plan-wave.mjs --execute --limit=20 --gap=90`
+**Orchestrator:** `plan-wave.mjs --execute --limit=16 --gap=90 --status=published`
 - Reads Payload state, auto-prioritises empty cells (Wave 1 first)
 - Assigns persona by topic-affinity
-- Generates brief per cell
-- **Gap to fix before starting:** wire `trend-scan` output as `research_url` per dispatch
+- Calls `trend-scan.mjs` per dispatch for `research_url`
+- Articles land as `published` directly (no pending_review queue)
 
 **Script location:** `gda-ai01:/opt/.openclaw-ess/workspace-main/scripts/`
 
 ### Hero-ad images (listing page banners)
 ```
-generate-hero-ad.mjs (area, topic)   ← NEW SCRIPT NEEDED
-  → Vertex Imagen 3 (1200×628, editorial banner style)
-  → upload to GCS gda-essentialbali-media
+generate-hero-ad.mjs --limit=8
+  → query inactive hero-ads from Payload
+  → Vertex Imagen 3 (16:9, editorial banner style)
+  → upload to Payload media (kind=hero_ads)
   → PATCH /api/hero-ads/{id} with creative + active=true
 ```
 
-**Gap:** script does not exist yet. Estimated effort: ~1 hour to build from `generate-hero.mjs` base.
+**Script:** `gda-ai01:/opt/.openclaw-ess/workspace-imager/scripts/generate-hero-ad.mjs`
 
 ---
 
@@ -62,61 +63,89 @@ generate-hero-ad.mjs (area, topic)   ← NEW SCRIPT NEEDED
 
 | Asset | Per day | Runtime | Tool |
 |---|---|---|---|
-| Listing hero images | 10 | ~10 min | `generate-hero-ad.mjs` (TBD) |
-| Articles | 20 | ~35 min | `plan-wave.mjs --execute --limit=20 --gap=90` |
-| Vertex Imagen calls | 30 total | | well within 1,000/day quota |
-| Vertex Gemini calls | ~40 total | | well within 60/min quota |
+| Listing hero images | 8 | ~10 min | `generate-hero-ad.mjs --limit=8` |
+| Articles | 16 | ~29 min | `plan-wave.mjs --execute --limit=16 --gap=90 --status=published` |
+| Vertex Imagen calls | 24 total | | well within 1,000/day quota |
+| Vertex Gemini calls | ~32 total | | well within 60/min quota |
 
-Run both as cron jobs on `gda-ai01` at 02:00 SGT. Articles land as `pending_review`; batch-approve in Payload admin `/admin/collections/articles`.
+Run by cron at **02:00 SGT (18:00 UTC)** on `gda-ai01`.
+Articles are auto-published — no manual approval needed.
 
 ---
 
 ## Timeline
 
-### Pre-flight (before Day 1)
-- [ ] Wire `trend-scan.mjs` into `plan-wave.mjs` dispatch calls (pass top URL as `research_url`)
-- [ ] Build `generate-hero-ad.mjs` script
-- [ ] Add both as cron jobs on gda-ai01
+### Pre-flight ✓ COMPLETE
 
-### Wave 1 — Full first coverage (Days 1–6)
-**Priority: every empty cell gets at least 2 articles before any cell gets a 3rd.**
+- [x] Wire `trend-scan.mjs` into `plan-wave.mjs` per-dispatch (pass top URL as `research_url`)
+- [x] Build `generate-hero-ad.mjs` script
+- [x] `--status=published` flag wired in `plan-wave.mjs`
+- [x] Daily cron at 02:00 SGT on gda-ai01 (stops after Wave 1)
+- [x] `update-progress.mjs` on gda-pn01 (post-run doc updater)
 
-- 44 empty article cells × 2 articles = 88 articles (4–5 days at 20/day)
-- All 64 hero-ad slots filled (61 needed ÷ 10/day = 7 days)
+### Wave 1 — Full first coverage (Days 1–8)
+**Priority: every empty cell gets at least 1 article before any cell gets a 2nd.**
 
-Milestone: all 64 cells have a listing banner + at least 2 articles.
+- 44 empty article cells × 1 article = 44 articles (3 days at 16/day)
+- All 64 hero-ad slots filled (61 needed ÷ 8/day = 8 days)
 
-### Wave 2 — Depth building (Days 7–30)
-- 20 articles/day, plan-wave auto-prioritises biggest gaps
-- +460 articles over 23 days
+Milestone: all 64 cells have a listing banner + at least 1 article.
 
-**End of month forecast:**
+**Gate: cron self-stops. Review progress here before starting Wave 2.**
+
+### Wave 2 — Depth building (Days 9–30+)
+**To be replanned after Wave 1 gate review.**
+
+Indicative targets at 16/day:
+- +352 articles over 22 days
+
+**End of Wave 2 forecast (Day 30):**
 
 | Metric | Start | After 30 days | Full target |
 |---|---|---|---|
 | Hero-ads active | 3 / 64 | 64 / 64 ✓ | 64 / 64 |
-| Articles total | 25 | ~625 | 1,280 |
+| Articles total | 25 | ~505 | 1,280 |
 | Cells with articles | 20 / 64 | 64 / 64 ✓ | 64 / 64 |
-| Avg articles per cell | 0.4 | ~9.8 | 20 |
+| Avg articles per cell | 0.4 | ~7.9 | 20 |
 
-### Wave 3 — Completion (Days 31–63)
-- Continue at 20/day
-- All 1,280 articles complete ~Day 63
+### Wave 3 — Completion (Days 31–93)
+- Continue at 16/day
+- All 1,280 articles complete ~Day 93
 
 ---
 
 ## Human review
 
-Articles land as `pending_review`. Approve in batches via Payload admin:
-`/admin/collections/articles?where[status][equals]=pending_review`
-
-Expected review queue: ~20 new articles/day. Spot-check title, hero image, body opening paragraph. One-click approve → status = `published` → live on site + sitemap.
+Articles are auto-published. Spot-check at any time via:
+`/admin/collections/articles?where[status][equals]=published`
 
 ---
 
-## Open gaps (must fix before Day 1)
+## Automation (gda-ai01)
 
-| # | Gap | Effort |
-|---|---|---|
-| 1 | Wire `trend-scan.mjs` into `plan-wave.mjs` per-dispatch | ~2h on gda-ai01 |
-| 2 | Build `generate-hero-ad.mjs` (imager → GCS → hero-ads PATCH) | ~1h on gda-ai01 |
+```
+crontab: 0 18 * * *   /opt/.openclaw-ess/workspace-main/scripts/daily-run.sh
+```
+
+- Self-stops when Wave 1 is complete (all 64 cells + 64 hero-ads)
+- After each run, SSHes to gda-pn01 and runs `node scripts/update-progress.mjs`
+- Progress committed to `docs/publish_inventory.md` + this file automatically
+
+---
+
+## Progress (auto-updated 2026-06-08)
+
+| Metric | Current | Wave 1 target | Final target |
+|---|---|---|---|
+| Hero-ads active | 5 / 64 | 64 / 64 | 64 / 64 |
+| Articles total | 26 | ≥ 64 (one per cell) | 1,280 |
+| Cells with articles | 25 / 64 | 64 / 64 | 64 / 64 |
+| Avg articles per cell | 0.4 | 1.0 | 20 |
+
+**Wave 1 status:** in progress
+
+---
+
+## Open gaps
+
+All pre-flight gaps resolved. No blockers.
