@@ -1,7 +1,7 @@
 import React, { useEffect, useState, lazy, Suspense } from "react"
 import { CountryProps, CityProps, RegionProps, TaxonomyProps, useTaxonomies } from "../../context/TaxonomyContext"
 import { Category } from "../../types/category.type"
-const HomeTemplate = lazy(() => import('./Templates/Home'))
+import HomeTemplate from './Templates/Home'
 // const Single = lazy(() => import('./Templates/Single'))
 const SingleV2 = lazy(() => import('./Templates/SingleV2'))
 const Deals = lazy(() => import('./Templates/Deals'))
@@ -182,7 +182,7 @@ const PathResolver: React.FC = () => {
             return <Suspense fallback={<></>}><Housing key="housing" /></Suspense>
         case "LISTING_HOME":
         case "HOME":
-            return <Suspense fallback={<></>}><HomeTemplate key="home" /></Suspense>
+            return <HomeTemplate key="home" />
         case "LOADING":
             return null
         default:

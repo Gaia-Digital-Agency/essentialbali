@@ -254,31 +254,54 @@ export const fetchDailyFeed = async () => {
  * via Payload REST. Falls back to false on any failure — preload is
  * a hint, not a hard requirement; an empty hint is safe.
  */
-let _heroAdCache = { url: false, expiresAt: 0 };
+let _heroAdCache = { url: false, doc: null, expiresAt: 0 };
+
+const _fetchHeroAd = async () => {
+  const res = await payload.find("hero-ads", {
+    "where[area][exists]": false,
+    "where[topic][exists]": false,
+    "where[active][equals]": true,
+    depth: 2,
+    limit: 1,
+  });
+  return (res?.docs || [])[0] || null;
+};
 
 export const getInitialArticleHeroImage = async (initialRoute) => {
   if (!initialRoute || initialRoute.type !== "LISTING_HOME") return false;
   const now = Date.now();
   if (_heroAdCache.expiresAt > now) return _heroAdCache.url;
   try {
-    const res = await payload.find("hero-ads", {
-      "where[area][exists]": false,
-      "where[topic][exists]": false,
-      "where[active][equals]": true,
-      depth: 2,
-      limit: 1,
-    });
-    const doc = (res?.docs || [])[0];
+    const doc = await _fetchHeroAd();
     const c = doc?.creative;
-    if (!c || typeof c !== "object") return false;
+    if (!c || typeof c !== "object") {
+      _heroAdCache = { url: false, doc: null, expiresAt: now + 30_000 };
+      return false;
+    }
     // Prefer the card-size variant (768x432) — that's what HeroBanner
     // will end up rendering on mobile + most desktops, so preloading
     // the same URL avoids a double-fetch.
     const url = c?.sizes?.card?.url || c?.url || false;
-    _heroAdCache = { url, expiresAt: now + 30_000 };
+    _heroAdCache = { url, doc, expiresAt: now + 30_000 };
     return url;
   } catch (e) {
     console.error("[ssr/articles.fetch:getInitialArticleHeroImage]", e?.message || e);
     return false;
+  }
+};
+
+export const fetchHomeHeroAd = async (initialRoute) => {
+  if (!initialRoute || initialRoute.type !== "LISTING_HOME") return null;
+  const now = Date.now();
+  if (_heroAdCache.expiresAt > now) return _heroAdCache.doc;
+  try {
+    const doc = await _fetchHeroAd();
+    const c = doc?.creative;
+    const url = c && typeof c === "object" ? c?.sizes?.card?.url || c?.url || false : false;
+    _heroAdCache = { url, doc: doc || null, expiresAt: now + 30_000 };
+    return doc || null;
+  } catch (e) {
+    console.error("[ssr/articles.fetch:fetchHomeHeroAd]", e?.message || e);
+    return null;
   }
 };

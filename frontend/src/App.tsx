@@ -19,7 +19,7 @@ const App: React.FC<MainAppProps> = ({children, initialData}) => {
               <TaxonomyProvider initialData={initialData?.initialTaxonomies}>
                   <RouteProvider initialData={initialData?.initialRoute}>
                       <ContentProvider initialData={
-                        (initialData?.initialNewsletterNotice || initialData?.initialDailyFeed)
+                        (initialData?.initialNewsletterNotice || initialData?.initialDailyFeed || initialData?.initialHeroAd)
                           ? {
                               ...(initialData?.initialContent || {}),
                               ...(initialData?.initialNewsletterNotice
@@ -27,6 +27,9 @@ const App: React.FC<MainAppProps> = ({children, initialData}) => {
                                 : {}),
                               ...(initialData?.initialDailyFeed
                                 ? { initialDailyFeed: initialData.initialDailyFeed }
+                                : {}),
+                              ...(initialData?.initialHeroAd
+                                ? { initialHeroAd: initialData.initialHeroAd }
                                 : {}),
                             }
                           : initialData?.initialContent

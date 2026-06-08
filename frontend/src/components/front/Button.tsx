@@ -1,6 +1,4 @@
 import React, { useRef } from "react";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
 import { Link } from "react-router";
 import { ButtonChevron } from "../../icons";
 
@@ -25,27 +23,15 @@ const Button: React.FC<ButtonProps> = ({
   className = "",
   // borderOnly = false,
 }) => {
-  const buttonRef = useRef<HTMLDivElement | null>(null);
+  const iconRef = useRef<HTMLDivElement | null>(null);
 
-  const { contextSafe } = useGSAP({ scope: buttonRef });
+  const mouseEnterHandler = () => {
+    if (iconRef.current) iconRef.current.style.maxWidth = "40px";
+  };
 
-  const mouseEnterHandler = contextSafe(() => {
-    if (!buttonRef.current) return;
-    const icon = buttonRef.current.querySelector(".icon");
-    gsap.to(icon, {
-      width: "auto",
-      duration: 0.2,
-    });
-  });
-
-  const mouseLeaveHandler = contextSafe(() => {
-    if (!buttonRef.current) return;
-    const icon = buttonRef.current.querySelector(".icon");
-    gsap.to(icon, {
-      width: "0px",
-      duration: 0.2,
-    });
-  });
+  const mouseLeaveHandler = () => {
+    if (iconRef.current) iconRef.current.style.maxWidth = "0px";
+  };
 
   const renderSVG = () => {
     // if(borderOnly) return <ButtonChevronBorder />
@@ -55,13 +41,12 @@ const Button: React.FC<ButtonProps> = ({
   const PrimaryButtonElement = () => {
     return (
       <div
-        className={`button md:px-8 px-4 flex justify-center md:inline-flex text-front-body font-light cursor-pointer 
+        className={`button md:px-8 px-4 flex justify-center md:inline-flex text-front-body font-light cursor-pointer
                             rounded-sm border !border-color-navy text-front-navy
                             hover:bg-front-navy hover:text-front-icewhite hover:border-front-navy
                             transition-all duration-300 ease-in-out
                             ${uppercase ? "uppercase " : ""}
                             ${bigger ? "py-4" : "py-3"} ${className}`}
-        ref={buttonRef}
         onClick={onClick}
       >
         {text}
@@ -72,13 +57,12 @@ const Button: React.FC<ButtonProps> = ({
   const PrimaryWhiteButtonElement = () => {
     return (
       <div
-        className={`button md:px-8 px-4 flex justify-center md:inline-flex text-front-body font-light cursor-pointer 
+        className={`button md:px-8 px-4 flex justify-center md:inline-flex text-front-body font-light cursor-pointer
                             rounded-sm border !border-color-icewhite text-front-icewhite
                             hover:bg-front-icewhite hover:text-front-navy hover:border-front-icewhite
                             transition-all duration-300 ease-in-out
                             ${uppercase ? "uppercase " : ""}
                             ${bigger ? "py-4" : "py-3"} ${className}`}
-        ref={buttonRef}
         onClick={onClick}
       >
         {text}
@@ -95,13 +79,13 @@ const Button: React.FC<ButtonProps> = ({
                           ${bigger ? "py-4" : "py-3"} ${className}`}
         onMouseEnter={mouseEnterHandler}
         onMouseLeave={mouseLeaveHandler}
-        ref={buttonRef}
         onClick={onClick}
       >
         {text}
         <div
-          className="icon overflow-hidden"
-          style={{ width: "0", color: "white" }}
+          ref={iconRef}
+          className="icon overflow-hidden transition-[max-width] duration-200"
+          style={{ maxWidth: "0px", color: "white" }}
         >
           <div className="inner pl-2">{renderSVG()}</div>
         </div>

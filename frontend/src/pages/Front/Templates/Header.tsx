@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react"; // useMemo
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { NavLink, useNavigate, Link } from "react-router-dom"; //useNavigate
 import NavLogo from "../../../components/front/NavLogo";
 import MobileMenu from "../../../components/front/MobileMenu";
@@ -14,7 +14,6 @@ import { Category } from "../../../types/category.type";
 import { SearchIcon, X, MapPin, ChevronDown } from "lucide-react";
 import AreaMenuToggleButton from "../../../components/front/AreaMenuToggleButton";
 import AreaMenuPanel from "../../../components/front/AreaMenuPanel";
-import { getTemplateByUrl } from "../../../services/template.service";
 import { useHeaderContent } from "../../../context/HeaderContext";
 import { isBaliAreaSlug } from "../../../utils/baliAreas";
 
@@ -82,46 +81,23 @@ const Header: React.FC = () => {
   const [selectedAreaLabel, setSelectedAreaLabel] =
     useState<string>("All Area");
 
-  const [headerMenus, setHeaderMenus] = useState<Category[]>([]);
   // const [areaSearch, setAreaSearch] = useState<string>("");
   const { taxonomies } = useTaxonomies();
   const { actualRoute } = useRoute();
   const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!taxonomies.categories) return;
-    const ssrHeader = Array.isArray(initialData?.header) ? initialData.header : null;
-    if (ssrHeader && ssrHeader.length > 0) {
-      const linkCategoryIds = ssrHeader.map(
-        (item: { linkCategory: number }) => item.linkCategory,
-      );
-      setHeaderMenus(
-        taxonomies.categories.filter((c) => linkCategoryIds.includes(c.id)),
-      );
-      return;
+  // Derived synchronously from context — same value on SSR and client,
+  // eliminating the empty→populated shift that caused CLS.
+  const headerMenus = useMemo(() => {
+    const cats = taxonomies.categories;
+    if (!cats || cats.length === 0) return [];
+    const header = Array.isArray(initialData?.header) ? initialData.header : null;
+    if (header && header.length > 0) {
+      const linkCategoryIds = header.map((item: { linkCategory: number }) => item.linkCategory);
+      return cats.filter((c) => linkCategoryIds.includes(c.id));
     }
-    (async () => {
-      try {
-        const getTemplate = await getTemplateByUrl("/header");
-        if (getTemplate?.data && getTemplate.status_code == 200) {
-          const jsonData = JSON.parse(getTemplate.data.content);
-          const linkCategoryIds = jsonData.map(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (item: any) => item.linkCategory,
-          );
-          setHeaderMenus(
-            taxonomies.categories?.filter((c) =>
-              linkCategoryIds.includes(c.id),
-            ) ?? [],
-          );
-        } else {
-          setHeaderMenus(taxonomies.categories ?? []);
-        }
-      } catch (e) {
-        console.error("Error fetching header template:", e);
-      }
-    })();
+    return cats;
   }, [taxonomies.categories, initialData?.header]);
 
   useEffect(() => {
@@ -132,7 +108,6 @@ const Header: React.FC = () => {
     }
   }, [actualRoute]);
 
-  const forcedMenuCategories = headerMenus;
 
   useEffect(() => {
     setIsModalOpen(false);
@@ -282,13 +257,13 @@ const Header: React.FC = () => {
             className="container relative flex flex-wrap items-center justify-center menus-wrapper md:gap-x-1 gap-x-4 gap-y-3"
             aria-label="Categories"
           >
-            {forcedMenuCategories.map((menu: Category, index: number) => (
+            {headerMenus.map((menu: Category, index: number) => (
               <React.Fragment key={`header-menu-container-${menu.slug_title}`}>
                 <MenuNav
                   menu={menu}
-                  menus={forcedMenuCategories}
+                  menus={headerMenus}
                 />
-                {index < forcedMenuCategories.length - 1 && (
+                {index < headerMenus.length - 1 && (
                   <span className="mx-2 text-front-icewhite/40 text-[1em]">
                     |
                   </span>

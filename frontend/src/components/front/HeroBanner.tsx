@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import apiClient from "../../api";
+import { useContent } from "../../context/ContentContext";
 
 /**
  * One full-width hero image, sourced from the `hero-ads` collection.
@@ -61,8 +62,13 @@ function pickImageUrl(creative: HeroAdMedia | null | undefined): string | null {
 }
 
 const HeroBanner: React.FC<Props> = ({ area, topic }) => {
-  const [doc, setDoc] = useState<HeroAdDoc | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const { initialData } = useContent();
+  // Use SSR-injected hero-ad for the homepage (area=null, topic=null) to avoid
+  // the skeleton→hero layout shift. For area/topic pages, initialHeroAd is null.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ssrHero = (!area && !topic) ? (initialData as any)?.initialHeroAd as HeroAdDoc | null : null;
+  const [doc, setDoc] = useState<HeroAdDoc | null>(ssrHero ?? null);
+  const [loaded, setLoaded] = useState(ssrHero != null);
 
   useEffect(() => {
     let cancelled = false;

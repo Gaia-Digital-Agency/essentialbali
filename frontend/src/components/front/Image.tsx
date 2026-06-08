@@ -4,8 +4,6 @@ import {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
 import { Link } from "react-router-dom";
 const API_URL = import.meta.env.VITE_WHATSNEW_BACKEND_URL;
 const IMAGE_URL = import.meta.env.VITE_IMAGE_URL || API_URL;
@@ -49,49 +47,14 @@ const Image = forwardRef<any, ImageProps>(
 
     useImperativeHandle(ref, () => ({
       zoomIn: () => {
-        if (imgRef.current) {
-          gsap.to(imgRef.current, {
-            scale: 1.1,
-            duration: 0.4,
-            ease: "power3.out",
-          });
-        }
+        if (imgRef.current) imgRef.current.style.transform = "scale(1.1)";
       },
       zoomOut: () => {
-        if (imgRef.current) {
-          gsap.to(imgRef.current, {
-            scale: 1,
-            duration: 0.4,
-            ease: "power3.out",
-          });
-        }
+        if (imgRef.current) imgRef.current.style.transform = "scale(1)";
       },
     }));
 
-    const { contextSafe } = useGSAP({ scope: containerRef });
     const theUrl = url ?? `${IMAGE_URL}/logo.png`;
-
-    const onMouseEnter = contextSafe(() => {
-      const imageEl = containerRef.current;
-      if (imageEl) {
-        gsap.to(imageEl.querySelector("img"), {
-          scale: 1.1,
-          duration: 0.4,
-          ease: "power3.out",
-        });
-      }
-    });
-
-    const onMouseLeave = contextSafe(() => {
-      const imageEl = containerRef.current;
-      if (imageEl) {
-        gsap.to(imageEl.querySelector("img"), {
-          scale: 1,
-          duration: 0.4,
-          ease: "power3.out",
-        });
-      }
-    });
 
     useEffect(() => {
       const imageEl = containerRef.current;
@@ -99,12 +62,11 @@ const Image = forwardRef<any, ImageProps>(
 
       const applyPadding = () => {
         if (noRatio) {
-          gsap.set(imageEl, { paddingTop: "unset" });
+          imageEl.style.paddingTop = "";
           return;
         }
         const isMobile = window.innerWidth < 768;
-        const targetPadding = isMobile ? mobileRatio || ratio : ratio;
-        gsap.set(imageEl, { paddingTop: targetPadding });
+        imageEl.style.paddingTop = (isMobile ? mobileRatio || ratio : ratio) as string;
       };
 
       applyPadding();
@@ -114,48 +76,50 @@ const Image = forwardRef<any, ImageProps>(
 
     useEffect(() => {
       const imageEl = containerRef.current;
-      if (imageEl) {
-        imageEl.style.aspectRatio = "auto";
-      }
+      if (imageEl) imageEl.style.aspectRatio = "auto";
     }, []);
 
-    const theImage = () => {
-      return (
-        <img
-          src={theUrl}
-          {...({ fetchpriority: fetchPriority } as any)}
-          width={width ?? undefined}
-          height={height ?? undefined}
-          style={{ objectFit: fit }}
-          loading={isLazy ? "lazy" : "eager"}
-          className={`absolute inset-0 w-full h-full z-[1] rounded-[10px]`}
-          alt={alt}
-          ref={imgRef}
-        />
-      );
-    };
+    const onMouseEnter = link
+      ? () => { if (imgRef.current) imgRef.current.style.transform = "scale(1.1)"; }
+      : undefined;
 
-    const content = () => {
-      return (
+    const onMouseLeave = link
+      ? () => { if (imgRef.current) imgRef.current.style.transform = "scale(1)"; }
+      : undefined;
+
+    const theImage = () => (
+      <img
+        src={theUrl}
+        {...({ fetchpriority: fetchPriority } as any)}
+        width={width ?? undefined}
+        height={height ?? undefined}
+        style={{ objectFit: fit }}
+        loading={isLazy ? "lazy" : "eager"}
+        // power3.out ≈ cubic-bezier(0.215,0.61,0.355,1)
+        className="absolute inset-0 w-full h-full z-[1] rounded-[10px] transition-transform duration-[400ms] ease-[cubic-bezier(0.215,0.61,0.355,1)]"
+        alt={alt}
+        ref={imgRef}
+      />
+    );
+
+    const content = () => (
+      <div
+        ref={containerRef}
+        className="image-container relative overflow-hidden rounded-[10px]"
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        style={{
+          paddingTop: noRatio ? undefined : ratio,
+          aspectRatio: width && height ? `${width} / ${height}` : undefined,
+        }}
+      >
         <div
-          ref={containerRef}
-          className="image-container relative overflow-hidden rounded-[10px]"
-          onMouseEnter={link ? onMouseEnter : undefined}
-          onMouseLeave={link ? onMouseLeave : undefined}
-          style={{
-            // Reserve space before GSAP useEffect runs — eliminates CLS from image containers
-            paddingTop: noRatio ? undefined : ratio,
-            aspectRatio: width && height ? `${width} / ${height}` : undefined,
-          }}
-        >
-          <div
-            className="overlay absolute inset-0 w-full h-full bg-front-navy z-[2]"
-            style={{ opacity: overlay ? 0.6 : 0 }}
-          ></div>
-          {theImage()}
-        </div>
-      );
-    };
+          className="overlay absolute inset-0 w-full h-full bg-front-navy z-[2]"
+          style={{ opacity: overlay ? 0.6 : 0 }}
+        />
+        {theImage()}
+      </div>
+    );
 
     return link ? (
       <Link aria-label={alt} to={link}>

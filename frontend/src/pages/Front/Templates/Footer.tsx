@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import NavLogo from "../../../components/front/NavLogo";
 import { NavLink } from "react-router";
 import { useTaxonomies } from "../../../context/TaxonomyContext";
 import { Category } from "../../../types/category.type";
 import { RouteProps, useRoute } from "../../../context/RouteContext";
-import { getTemplateByUrl } from "../../../services/template.service";
 import { useHeaderContent } from "../../../context/HeaderContext";
 import { AdvertiseModal } from "../../../components/front/AdvertiseModal";
 
@@ -14,17 +13,6 @@ const deriveMenuList = (
 ): Category[] => {
   const linkCategoryIds = header.map((item) => item.linkCategory);
   return categories.filter((c) => linkCategoryIds.includes(c.id));
-};
-
-const getInitialMenuList = (): Category[] => {
-  if (typeof window === "undefined") return [];
-  const raw = (window as unknown as { __INITIAL_DATA__?: Record<string, unknown> }).__INITIAL_DATA__;
-  if (!raw) return [];
-  const cats = (raw.initialTaxonomies as { categories?: Category[] } | undefined)?.categories;
-  const header = (raw.initialTemplateContent as { header?: { linkCategory: number }[] } | undefined)?.header;
-  if (!cats) return [];
-  if (!header || !Array.isArray(header) || header.length === 0) return cats;
-  return deriveMenuList(cats, header);
 };
 
 const MenuNav: React.FC<{
@@ -78,31 +66,19 @@ const MenuNav: React.FC<{
 };
 
 const Footer: React.FC = () => {
-  const [menuList, setMenuList] = useState<Category[]>(getInitialMenuList);
   const [advertiseOpen, setAdvertiseOpen] = useState(false);
   const { taxonomies } = useTaxonomies();
   const { initialData } = useHeaderContent();
 
-  useEffect(() => {
-    if (!taxonomies.categories) return;
-    const ssrHeader = Array.isArray(initialData?.header) ? initialData.header : null;
-    if (ssrHeader && ssrHeader.length > 0) {
-      setMenuList(deriveMenuList(taxonomies.categories, ssrHeader));
-      return;
-    }
-    (async () => {
-      try {
-        const getTemplate = await getTemplateByUrl("/header");
-        if (getTemplate?.data && getTemplate.status_code == 200) {
-          const jsonData = JSON.parse(getTemplate.data.content);
-          setMenuList(deriveMenuList(taxonomies.categories ?? [], jsonData));
-        } else {
-          setMenuList(taxonomies.categories ?? []);
-        }
-      } catch (e) {
-        console.error("Error fetching header template:", e);
-      }
-    })();
+  // Derived synchronously from context — populated on both SSR and client
+  // from the same provider data, eliminating the SSR→client mismatch that
+  // caused a 0.4 CLS when the footer went from empty to full after hydration.
+  const menuList = useMemo(() => {
+    const cats = taxonomies.categories;
+    if (!cats || cats.length === 0) return [];
+    const header = Array.isArray(initialData?.header) ? initialData.header : null;
+    if (header && header.length > 0) return deriveMenuList(cats, header);
+    return cats;
   }, [taxonomies.categories, initialData?.header]);
 
   return (

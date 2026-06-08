@@ -8,19 +8,13 @@
  * Imported by main.tsx (browser hydration) and entry-server.tsx (SSR).
  */
 import { RouteObject } from "react-router";
-import { lazy, Suspense } from "react";
-
-const FrontLayout = lazy(() => import("./layout/FrontLayout"));
-const PathResolver = lazy(() => import("./pages/Front/PathResolver"));
+import FrontLayout from "./layout/FrontLayout";
+import PathResolver from "./pages/Front/PathResolver";
 
 export const routes: RouteObject[] = [
   {
     path: "/",
-    element: (
-      <Suspense fallback={<></>}>
-        <FrontLayout />
-      </Suspense>
-    ),
+    element: <FrontLayout />,
     children: [
       { index: true, element: <PathResolver /> },
       { path: "*", element: <PathResolver /> },

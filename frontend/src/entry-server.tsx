@@ -104,11 +104,14 @@ export function render(url: string, initialData: InitialDataProps) {
     const initialNewsletterNotice = (initialData as any)?.initialNewsletterNotice;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const initialDailyFeed = (initialData as any)?.initialDailyFeed;
-    const enrichedContent = (initialNewsletterNotice || initialDailyFeed)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const initialHeroAd = (initialData as any)?.initialHeroAd;
+    const enrichedContent = (initialNewsletterNotice || initialDailyFeed || initialHeroAd)
       ? {
           ...(initialContent || {}),
           ...(initialNewsletterNotice ? { initialNewsletterNotice } : {}),
           ...(initialDailyFeed ? { initialDailyFeed } : {}),
+          ...(initialHeroAd ? { initialHeroAd } : {}),
         }
       : initialContent;
     const helmetContext: { helmet?: any } = {}

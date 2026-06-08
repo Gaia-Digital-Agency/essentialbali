@@ -26,6 +26,7 @@ import {
   fetchArticleDataByKeyword,
   getInitialArticleHeroImage,
   fetchDailyFeed,
+  fetchHomeHeroAd,
 } from "./src/ssr/articles.fetch.js";
 import redis from "./redisClient.js";
 
@@ -588,6 +589,7 @@ app.use("*", async (req, res, next) => {
       initialPostBodyScript,
       initialNewsletterNotice,
       initialDailyFeed,
+      initialHeroAd,
     ] = await Promise.all([
       fetchContentData(initialRoute, initialTaxonomies, search),
       fetchTemplateContent(initialRoute),
@@ -597,6 +599,7 @@ app.use("*", async (req, res, next) => {
       fetchTemplateRoute("/script/postbody"),
       fetchNewsletterNotice(),
       isHomeRoute ? fetchDailyFeed() : Promise.resolve(null),
+      fetchHomeHeroAd(initialRoute),
     ]);
     const initialTime = new Date().toISOString();
 const initialData = {
@@ -606,6 +609,7 @@ const initialData = {
       initialTemplateContent,
       initialNewsletterNotice,
       initialDailyFeed,
+      initialHeroAd,
       initialAuth,
       initialTime,
     };
@@ -627,10 +631,11 @@ const initialData = {
          `,
     );
 
-    html = html.replaceAll(
-      'link rel="stylesheet"',
-      `link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'"`,
-    );
+    // Stylesheets stay render-blocking (removed the old onload non-blocking
+    // trick). The critical CSS (front-*.css, 24KB) must block paint to
+    // prevent FOUC — deferring it was causing CLS ~0.97. The vendor-rsuite
+    // CSS (145KB) is lazy-loaded via dynamic-import chunks and never appears
+    // in the critical-path HTML, so there's nothing to defer here.
 
     // (cleanup-D) isAdmin early-return removed — admin SSR branch is gone.
     html = html.replace(
