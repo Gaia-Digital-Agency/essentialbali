@@ -137,6 +137,14 @@ crontab: 0 18 * * *   /opt/.openclaw-ess/workspace-main/scripts/daily-run.sh
 
 | Metric | Current | Wave 1 target | Final target |
 |---|---|---|---|
+| Hero-ads active | 13 / 64 | 64 / 64 | 64 / 64 |
+| Articles total | 35 | ≥ 64 (one per cell) | 1,280 |
+| Cells with articles | 34 / 64 | 64 / 64 | 64 / 64 |
+| Avg articles per cell | 0.5 | 1.0 | 20 |
+
+**Wave 1 status:** in progress
+
+---|---|---|---|
 | Hero-ads active | 5 / 64 | 64 / 64 | 64 / 64 |
 | Articles total | 26 | ≥ 64 (one per cell) | 1,280 |
 | Cells with articles | 25 / 64 | 64 / 64 | 64 / 64 |

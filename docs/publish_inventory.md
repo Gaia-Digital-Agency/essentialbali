@@ -21,11 +21,11 @@ Target: 1 listing hero + 20 articles per cell (640 articles total across 64 cell
 | Kuta           | —                  | —                  | —                  | —                  | —                  | —                  | —                  | —                  |
 | Jimbaran       | —                  | —                  | —                  | —                  | —                  | —                  | —                  | —                  |
 | Denpasar       | —                  | —                  | —                  | —                  | —                  | —                  | —                  | —                  |
-| Singaraja      | —                  | —                  | —                  | —                  | —                  | —                  | —                  | —                  |
+| Singaraja      | —                  | —                  | —                  | —                  | —                  | —                  | ✓                  | ✓                  |
 | Kintamani      | —                  | —                  | —                  | —                  | —                  | —                  | —                  | —                  |
-| Nusa Penida    | —                  | —                  | —                  | —                  | —                  | —                  | ✓                  | ✓                  |
+| Nusa Penida    | ✓                  | ✓                  | ✓                  | ✓                  | ✓                  | ✓                  | ✓                  | ✓                  |
 
-**Active: 5 / 64 · Empty: 59 / 64**
+**Active: 13 / 64 · Empty: 51 / 64**
 
 ---
 
@@ -38,11 +38,11 @@ Number = article count in that cell. `—` = none yet.
 | Ubud           | 1                  | —                  | —                  | 1                  | 1                  | —                  | —                  | 1                  |
 | Canggu         | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  |
 | Kuta           | 1                  | —                  | —                  | —                  | —                  | 1                  | —                  | —                  |
-| Jimbaran       | —                  | 1                  | 1                  | —                  | —                  | —                  | —                  | —                  |
-| Denpasar       | —                  | 1                  | —                  | —                  | —                  | —                  | 2                  | —                  |
+| Jimbaran       | 1                  | 1                  | 1                  | 1                  | —                  | —                  | —                  | 1                  |
+| Denpasar       | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 2                  | 1                  |
 | Singaraja      | —                  | —                  | 1                  | 1                  | 1                  | —                  | —                  | —                  |
 | Kintamani      | 1                  | —                  | 1                  | —                  | —                  | —                  | —                  | —                  |
 | Nusa Penida    | 1                  | —                  | 1                  | —                  | —                  | —                  | —                  | —                  |
 
-**26 articles total · 25 / 64 cells with at least one article · 39 cells empty**
+**35 articles total · 34 / 64 cells with at least one article · 30 cells empty**
 All published articles have a dedicated hero image (stored in GCS: `gda-essentialbali-media`).
