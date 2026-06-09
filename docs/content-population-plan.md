@@ -133,10 +133,18 @@ crontab: 0 18 * * *   /opt/.openclaw-ess/workspace-main/scripts/daily-run.sh
 
 ---
 
-## Progress (auto-updated 2026-06-08)
+## Progress (auto-updated 2026-06-09)
 
 | Metric | Current | Wave 1 target | Final target |
 |---|---|---|---|
+| Hero-ads active | 21 / 64 | 64 / 64 | 64 / 64 |
+| Articles total | 64 | ≥ 64 (one per cell) | 1,280 |
+| Cells with articles | 59 / 64 | 64 / 64 | 64 / 64 |
+| Avg articles per cell | 1.0 | 1.0 | 20 |
+
+**Wave 1 status:** in progress
+
+---|---|---|---|
 | Hero-ads active | 21 / 64 | 64 / 64 | 64 / 64 |
 | Articles total | 58 | ≥ 64 (one per cell) | 1,280 |
 | Cells with articles | 57 / 64 | 64 / 64 | 64 / 64 |

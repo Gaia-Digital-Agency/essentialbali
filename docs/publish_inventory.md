@@ -1,6 +1,6 @@
 # Publish Inventory
 
-Last updated: 2026-06-08
+Last updated: 2026-06-09
 
 **Two separate assets per cell:**
 - **Listing Page Hero** (`hero-ads` collection) — the full-width banner image shown at the top of each area/topic listing page. One slot per cell; `✓` = active with image, `—` = empty placeholder.
@@ -35,14 +35,14 @@ Number = article count in that cell. `—` = none yet.
 
 | Area           | Activities         | Dine               | Featured           | Health & Wellness  | News               | Nightlife          | People & Culture   | Events             |
 |----------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|
-| Ubud           | 1                  | —                  | —                  | 1                  | 1                  | —                  | —                  | 1                  |
-| Canggu         | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  |
+| Ubud           | 2                  | 2                  | —                  | 1                  | 1                  | —                  | —                  | 1                  |
+| Canggu         | 1                  | 2                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  |
 | Kuta           | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  |
-| Jimbaran       | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  |
+| Jimbaran       | 1                  | 2                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  |
 | Denpasar       | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 2                  | 1                  |
 | Singaraja      | 1                  | 1                  | 1                  | 1                  | 1                  | —                  | —                  | 1                  |
-| Kintamani      | 1                  | —                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  |
+| Kintamani      | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  |
 | Nusa Penida    | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  | 1                  |
 
-**58 articles total · 57 / 64 cells with at least one article · 7 cells empty**
+**64 articles total · 59 / 64 cells with at least one article · 5 cells empty**
 All published articles have a dedicated hero image (stored in GCS: `gda-essentialbali-media`).
