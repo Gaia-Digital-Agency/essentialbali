@@ -31,7 +31,7 @@ for (const p of [credPath, envPath]) {
   }
 }
 
-const PAYLOAD_BASE_URL = process.env.PAYLOAD_BASE_URL || "https://essentialbali.gaiada2.online";
+const PAYLOAD_BASE_URL = process.env.PAYLOAD_BASE_URL || "http://localhost:4008";
 const PAYLOAD_AGENT_EMAIL = process.env.PAYLOAD_AGENT_EMAIL || "elliot@gaiada.com";
 const PAYLOAD_AGENT_PASSWORD = process.env.PAYLOAD_AGENT_PASSWORD;
 
